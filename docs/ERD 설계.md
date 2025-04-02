@@ -52,6 +52,7 @@ Table payment{
   order_id integer [ref: > user_order.order_id] // 주문 id
   total_amount integer // 총 결제 금액  
   status varchar // 결제 상태 (예: 성공, 실패, 대기)
+  description varchar // 결제 실패 시 사유 입력
   create_date timestamp // 결제 일자  
 }
 
