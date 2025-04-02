@@ -36,6 +36,7 @@ Table product{
 Table user_order{
   order_id integer [primary key] // 주문 id
   user_id integer [ref: > user_point.user_id] // 사용자 id
+  status varchar // 주문 상태 (대기, 성공, 실패) -> 대기 시 재고 점유, 실패는 결제를 5분이내 안한 경우
   create_date timestamp // 주문 생성일
 }
 
@@ -52,7 +53,7 @@ Table payment{
   order_id integer [ref: > user_order.order_id] // 주문 id
   total_amount integer // 총 결제 금액  
   status varchar // 결제 상태 (예: 성공, 실패, 대기)
-  description varchar // 결제 실패 시 사유 입력
+  description varchar // 결제 실패 시 설명 추가
   create_date timestamp // 결제 일자  
 }
 
@@ -70,7 +71,7 @@ Table coupon{
   coupon_name varchar // 쿠폰 명 
   total_quantity integer // 쿠폰의 총 발급 수량 (선착순)
   issued_quantity integer // 실제 발급된 수량 
-  discount_rete integer // 할인율
+  discount_rate integer // 할인율
   discount_amount integer // 금액 할인 (예: 5000원 할인)
   status varchar // 쿠폰 상태 (예: 활성, 종료)
   start_date timestamp // 쿠폰 발급 시작일 
@@ -79,8 +80,8 @@ Table coupon{
   update_date timestamp // 쿠폰 수정일 
 }
 
-Table coupon_detail{
-  coupon_detail_id integer [primary key] // 쿠폰 상세 id 
+Table user_coupon{
+  user_coupon_id integer [primary key] // 쿠폰 상세 id 
   user_id integer [ref: > user_point.user_id] // 사용자 id 
   coupon_id integer [ref: > coupon.coupon_id] // 쿠폰 id 
 }
