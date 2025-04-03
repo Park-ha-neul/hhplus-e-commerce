@@ -44,8 +44,17 @@ dependencies {
 	testImplementation("org.testcontainers:junit-jupiter")
 	testImplementation("org.testcontainers:mysql")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-}
 
+	// Swagger-ui
+	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0")
+
+	// lombok
+	implementation("org.projectlombok:lombok:1.18.28")
+	annotationProcessor("org.projectlombok:lombok:1.18.28")
+
+	testImplementation("org.projectlombok:lombok:1.18.28")
+	testAnnotationProcessor("org.projectlombok:lombok:1.18.28")
+}
 tasks.withType<Test> {
 	useJUnitPlatform()
 	systemProperty("user.timezone", "UTC")
