@@ -4,6 +4,7 @@ erDiagram
   USER_POINT {
     integer user_id PK "사용자 id"
     integer point "보유 포인트"
+    boolean admin_yn "관리자 여부"
     timestamp create_date "등록일"
     timestamp update_date "수정일"
   }
@@ -33,20 +34,22 @@ erDiagram
   USER_ORDER {
     integer order_id PK "주문 id"
     integer user_id FK "사용자 id"
+    integer user_coupon_id FK "사용자가 사용한 쿠폰 id"
     varchar status "주문 상태 (대기, 성공, 실패)"
     timestamp create_date "주문 생성일"
   }
   USER_ORDER }|--|| USER_POINT : "belongs to"
+  USER_ORDER }|--|| USER_COUPON : "belongs to"
 
-  ORDER_DETAIL {
-    integer order_detail_id PK "주문 상세 id"
+  ORDER_ITEMS {
+    integer order_items_id PK "주문 상세 id"
     integer order_id FK "주문 id"
     integer product_id FK "상품 id"
     integer quantity "주문한 상품 갯수"
     integer unit_price "주문 당시 개별 상품 가격"
   }
-  ORDER_DETAIL }|--|| USER_ORDER : "has many"
-  ORDER_DETAIL }|--|| PRODUCT : "refers to"
+  ORDER_ITEMS }|--|| USER_ORDER : "has many"
+  ORDER_ITEMS }|--|| PRODUCT : "refers to"
 
   PAYMENT {
     integer payment_id PK "결제 id"
@@ -59,20 +62,12 @@ erDiagram
   }
   PAYMENT }|--|| USER_ORDER : "belongs to"
 
-  PAYMENT_DETAIL {
-    integer payment_detail_id PK "결제 상세 id"
-    integer payment_id FK "결제 id"
-    integer product_id FK "상품 id"
-    integer quantity "구매한 상품 개수"
-  }
-  PAYMENT_DETAIL }|--|| PAYMENT : "has many"
-  PAYMENT_DETAIL }|--|| PRODUCT : "refers to"
-
   COUPON {
     integer coupon_id PK "쿠폰 id"
     varchar coupon_name "쿠폰 명"
     integer total_quantity "쿠폰의 총 발급 수량"
     integer issued_quantity "실제 발급된 수량"
+    varchar coupon_type "쿠폰 타입(예: 할인율, 금액 할인)"
     integer discount_rate "할인율"
     integer discount_amount "금액 할인"
     varchar status "쿠폰 상태 (예: 활성, 종료)"
@@ -92,4 +87,16 @@ erDiagram
   }
   USER_COUPON }|--|| USER_POINT : "belongs to"
   USER_COUPON }|--|| COUPON : "refers to"
+  
+%%  📊 인기 상품 통계 테이블 (배치 처리로 매일 생성)
+%%- 기준: 결제 성공 건 기준
+%%- 사용처: 상위 상품 추천 API
+    TOP_PRODUCT {
+        integer top_product_id PK "상위 제품 id"
+        integer rank "상품 순위"
+        integer product_id FK "상품 id"
+        integer total_count "집계 기간 동안 해당 상품이 결제된 횟수(또는 수량)"
+        timestamp calculated_date "계산된 시점(예: 매일 자정에 배치 처리된 날짜/시간)"
+        varchar period_type "통계 기간 구분 값(예: daily, weekly, monthly)"
+    }
 ```
