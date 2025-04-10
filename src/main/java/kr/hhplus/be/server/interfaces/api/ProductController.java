@@ -1,4 +1,4 @@
-package kr.hhplus.be.server.product;
+package kr.hhplus.be.server.interfaces.api;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -8,7 +8,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import kr.hhplus.be.server.common.CustomApiResponse;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -19,7 +18,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/products")
 @Tag(name = "📌 상품 관리", description = "상품 관련 API 모음")
-public class productController {
+public class ProductController {
     @GetMapping("/")
     @Operation(summary = "상품 목록 조회", description = "상품의 목록을 조회합니다.")
     @ApiResponses({

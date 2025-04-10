@@ -1,4 +1,4 @@
-package kr.hhplus.be.server.coupon;
+package kr.hhplus.be.server.interfaces.api;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -8,7 +8,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import kr.hhplus.be.server.common.CustomApiResponse;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -19,7 +18,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/coupons")
 @Tag(name = "📌 쿠폰 관리", description = "쿠폰 관련 API 모음")
-public class couponController {
+public class CouponController {
     @PostMapping("/")
     @Operation(summary = "쿠폰 생성", description = "쿠폰을 생성합니다.")
     @ApiResponses({

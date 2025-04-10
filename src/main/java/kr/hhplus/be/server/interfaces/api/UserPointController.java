@@ -1,4 +1,4 @@
-package kr.hhplus.be.server.point.controller;
+package kr.hhplus.be.server.interfaces.api;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -8,7 +8,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import kr.hhplus.be.server.common.CustomApiResponse;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
@@ -16,7 +15,7 @@ import java.util.*;
 @RestController
 @RequestMapping("/points")
 @Tag(name = "📌 사용자 포인트 관리", description = "포인트 관련 API 모음")
-public class pointController {
+public class UserPointController {
 
     @GetMapping("/{userId}")
     @Operation(summary = "사용자 포인트 조회", description = "사용자의 보유 포인트를 조회합니다.")

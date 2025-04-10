@@ -1,4 +1,4 @@
-package kr.hhplus.be.server.payment;
+package kr.hhplus.be.server.interfaces.api;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -8,7 +8,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import kr.hhplus.be.server.common.CustomApiResponse;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
@@ -16,7 +15,7 @@ import java.util.*;
 @RestController
 @RequestMapping("/payments")
 @Tag(name = "📌 결제 관리", description = "결제 관련 API 모음")
-public class paymentController {
+public class PaymentController {
     @PostMapping("/")
     @Operation(summary = "결제 생성", description = "결제 생성합니다.")
     @ApiResponses({
