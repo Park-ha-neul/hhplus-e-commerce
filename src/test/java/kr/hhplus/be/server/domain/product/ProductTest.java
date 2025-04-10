@@ -1,6 +1,5 @@
 package kr.hhplus.be.server.domain.product;
 
-import kr.hhplus.be.server.domain.common.ProductStatus;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;

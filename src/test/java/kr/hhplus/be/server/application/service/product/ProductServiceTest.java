@@ -1,6 +1,6 @@
 package kr.hhplus.be.server.application.service.product;
 
-import kr.hhplus.be.server.domain.common.ProductStatus;
+import kr.hhplus.be.server.domain.product.ProductStatus;
 import kr.hhplus.be.server.domain.product.Balance;
 import kr.hhplus.be.server.domain.product.Product;
 import kr.hhplus.be.server.domain.product.ProductRepository;

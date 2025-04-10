@@ -1,7 +1,7 @@
 package kr.hhplus.be.server.application.service.order;
 
 import jakarta.transaction.Transactional;
-import kr.hhplus.be.server.domain.common.OrderType;
+import kr.hhplus.be.server.domain.order.OrderType;
 import kr.hhplus.be.server.domain.order.*;
 import kr.hhplus.be.server.domain.user.UserPoint;
 import kr.hhplus.be.server.domain.user.UserPointRepository;

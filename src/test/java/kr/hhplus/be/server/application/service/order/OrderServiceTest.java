@@ -1,6 +1,6 @@
 package kr.hhplus.be.server.application.service.order;
 
-import kr.hhplus.be.server.domain.common.OrderType;
+import kr.hhplus.be.server.domain.order.OrderType;
 import kr.hhplus.be.server.domain.order.Order;
 import kr.hhplus.be.server.domain.order.OrderDto;
 import kr.hhplus.be.server.domain.order.OrderItemDto;
@@ -80,7 +80,7 @@ public class OrderServiceTest {
         UserPoint userPoint = new UserPoint(1L, 100L, false);
         Long couponId = 1L;
         OrderType type = OrderType.PENDING;
-        Order order = new Order(orderId, userPoint, couponId, type);
+        Order order = new Order();
 
         when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
 

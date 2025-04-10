@@ -1,14 +1,11 @@
 package kr.hhplus.be.server.application.service.order;
 
-import kr.hhplus.be.server.domain.common.ProductStatus;
 import kr.hhplus.be.server.domain.order.Order;
 import kr.hhplus.be.server.domain.order.OrderItemDto;
 import kr.hhplus.be.server.domain.order.OrderItemRepository;
 import kr.hhplus.be.server.domain.product.Balance;
 import kr.hhplus.be.server.domain.product.Product;
 import kr.hhplus.be.server.domain.product.ProductRepository;
-import org.antlr.v4.runtime.atn.SemanticContext;
-import org.aspectj.weaver.ast.Or;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
