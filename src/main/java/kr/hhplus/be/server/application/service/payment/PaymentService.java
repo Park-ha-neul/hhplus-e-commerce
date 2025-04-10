@@ -45,9 +45,16 @@ public class PaymentService {
     public Payment createPayment(PaymentCreateRequest request){
         Order order = orderService.getOrderById(request.getOrderId());
 
+        long discount = 0;
+        if (order.getUserCoupon() != null) {
+            discount = order.getUserCoupon().getCoupon().calculateDiscount(request.getTotalAmount());
+        }
+
+        long finalAmount = request.getTotalAmount() - discount;
+
         Payment payment = new Payment();
         payment.setOrder(order);
-        payment.setTotalAmount(request.getTotalAmount());
+        payment.setTotalAmount(finalAmount);
         payment.setPending();
 
         return paymentRepository.save(payment);

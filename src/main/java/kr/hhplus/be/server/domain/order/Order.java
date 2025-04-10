@@ -2,7 +2,7 @@ package kr.hhplus.be.server.domain.order;
 
 import jakarta.persistence.*;
 import kr.hhplus.be.server.domain.common.BaseEntity;
-import kr.hhplus.be.server.domain.common.OrderType;
+import kr.hhplus.be.server.domain.coupon.UserCoupon;
 import kr.hhplus.be.server.domain.user.UserPoint;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -28,7 +28,8 @@ public class Order extends BaseEntity {
     @ManyToOne
     private UserPoint userPoint;
 
-    private Long couponId;
+    @ManyToOne
+    private UserCoupon userCoupon;
 
     @Enumerated(EnumType.STRING)
     private OrderType type; // pending, success, fail
