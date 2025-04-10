@@ -5,7 +5,7 @@ import kr.hhplus.be.server.application.service.order.OrderItemService;
 import kr.hhplus.be.server.application.service.order.OrderService;
 import kr.hhplus.be.server.application.service.product.ProductService;
 import kr.hhplus.be.server.application.service.userPoint.UserService;
-import kr.hhplus.be.server.domain.common.OrderType;
+import kr.hhplus.be.server.domain.order.OrderType;
 import kr.hhplus.be.server.domain.order.Order;
 import kr.hhplus.be.server.domain.order.OrderDto;
 import kr.hhplus.be.server.domain.order.OrderItemDto;

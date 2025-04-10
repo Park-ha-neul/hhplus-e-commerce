@@ -1,11 +1,10 @@
 package kr.hhplus.be.server.application.service.product;
 
 import jakarta.transaction.Transactional;
-import kr.hhplus.be.server.domain.common.ProductStatus;
+import kr.hhplus.be.server.domain.product.ProductStatus;
 import kr.hhplus.be.server.domain.product.Balance;
 import kr.hhplus.be.server.domain.product.Product;
 import kr.hhplus.be.server.domain.product.ProductRepository;
-import org.apache.tomcat.util.net.jsse.JSSEUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
