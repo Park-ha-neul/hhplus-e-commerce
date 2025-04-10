@@ -62,7 +62,6 @@ public class PaymentService {
             throw new IllegalArgumentException("이미 완료된 결제입니다.");
         }
 
-        // 서비스를 넣으면 안되나
         Long userId = payment.getOrder().getUserPoint().getUserId();
         Long amount = payment.getTotalAmount();
         userPointFacadeService.usePoint(userId, amount);
