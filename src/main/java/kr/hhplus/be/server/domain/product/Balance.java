@@ -1,14 +1,25 @@
 package kr.hhplus.be.server.domain.product;
 
+import jakarta.persistence.Embeddable;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-@NoArgsConstructor
-@AllArgsConstructor
-@Getter
+@Embeddable
 public class Balance {
     private Long quantity;
+
+    private Balance(Long quantity){
+        this.quantity = quantity;
+    }
+
+    public static Balance create(Long quantity){
+        return new Balance(quantity);
+    }
+
+    public Long getQuantity(){
+        return this.quantity;
+    }
 
     public void increase(Long amount){
         if(amount == null || amount <= 0){

@@ -1,39 +1,51 @@
 package kr.hhplus.be.server.domain.user;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import kr.hhplus.be.server.domain.common.BaseEntity;
-import kr.hhplus.be.server.domain.point.Point;
-import lombok.AllArgsConstructor;
+import jakarta.persistence.Embeddable;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
-@Entity
-@AllArgsConstructor
-@NoArgsConstructor
+@Embeddable
 @Getter
-@Setter
-public class UserPoint extends BaseEntity {
-    @Id
+public class UserPoint{
     private Long userId;
-
     private Long point;
-    private boolean adminYN;
 
-    public static UserPoint from(User user) {
-        return new UserPoint(user.getUserId(), user.getPoint(), user.isAdminYN());
+    private static final Long MAX_CHARGE_PER_ONCE = 100_000L;
+    private static final Long MAX_TOTAL_POINT = 1_000_000L;
+
+    private UserPoint(Long userId, Long point){
+        this.userId = userId;
+        this.point = point;
     }
 
-    public void chargePoint(Long amount){
-        Point point = new Point(this.userId, this.point);
-        point.charge(amount);
-        this.point = point.getPoint();
+    public static UserPoint create(Long userId, Long point){
+        return new UserPoint(userId, point);
     }
 
-    public void usePoint(Long amount){
-        Point point = new Point(this.userId, this.point);
-        point.use(amount);
-        this.point = point.getPoint();
+    public static UserPoint createNew(Long userId){
+        return new UserPoint(userId, 0L);
+    }
+
+    public void charge(Long amount){
+        if(amount <= 0){
+            throw new IllegalArgumentException("충전 금액은 0보다 커야 합니다.");
+        }
+        if(amount > MAX_CHARGE_PER_ONCE){
+            throw new IllegalArgumentException("1회 충전 한도를 초과했습니다.");
+        }
+        if(this.point + amount > MAX_TOTAL_POINT){
+            throw new IllegalArgumentException("충전 시 보유 포인트가 최대 한도를 초과합니다.");
+        }
+
+        this.point += amount;
+    }
+
+    public void use(Long amount){
+        if (amount <= 0){
+            throw new IllegalArgumentException("사용 금액은 0보다 커야 합니다.");
+        }
+        if (this.point < amount){
+            throw new IllegalArgumentException("잔액이 부족합니다.");
+        }
+        this.point -= amount;
     }
 }

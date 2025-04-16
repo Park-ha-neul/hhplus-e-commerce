@@ -54,8 +54,8 @@ public class TopProductTest {
     }
     @Test
     void calculateCalculatedDate_기간별_정상계산() {
-        assertEquals(LocalDate.now(), TopProduct.calculateCalculatedDate(PeriodType.DAILY));
-        assertEquals(LocalDate.now().with(DayOfWeek.MONDAY), TopProduct.calculateCalculatedDate(PeriodType.WEEKLY));
-        assertEquals(LocalDate.now().withDayOfMonth(1), TopProduct.calculateCalculatedDate(PeriodType.MONTHLY));
+        assertEquals(LocalDate.now(), TopProduct.calculateDate(PeriodType.DAILY));
+        assertEquals(LocalDate.now().with(DayOfWeek.MONDAY), TopProduct.calculateDate(PeriodType.WEEKLY));
+        assertEquals(LocalDate.now().withDayOfMonth(1), TopProduct.calculateDate(PeriodType.MONTHLY));
     }
 }

@@ -1,22 +1,25 @@
 package kr.hhplus.be.server.domain.user;
 
-import kr.hhplus.be.server.domain.common.BaseEntity;
-import lombok.AllArgsConstructor;
+import jakarta.persistence.Embeddable;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
-@AllArgsConstructor
-@NoArgsConstructor
-@Getter
-@Setter
+@Embeddable
 public class User{
+    @Getter
     private Long userId;
-    private Long point;
-    private boolean adminYN;
+    private boolean isAdmin;
 
-    public static User createUser(Long userId, boolean isAdmin){
-        return new User(userId, 0L, isAdmin);
+    private User(Long userId, boolean isAdmin){
+        this.userId = userId;
+        this.isAdmin = isAdmin;
+    }
+
+    public static User create(Long userId, boolean isAdmin){
+        return new User(userId, isAdmin);
+    }
+
+    public boolean isAdmin(){
+        return isAdmin;
     }
 }
 

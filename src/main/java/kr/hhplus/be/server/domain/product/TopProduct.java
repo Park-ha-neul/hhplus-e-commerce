@@ -12,10 +12,7 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 
 @Entity
-@AllArgsConstructor
-@NoArgsConstructor
 @Getter
-@Setter
 public class TopProduct {
     @Id
     private Long topProductId;
@@ -26,12 +23,12 @@ public class TopProduct {
 
     private int rank;
     private Long totalCount;
-    private LocalDate calculateDate; // 통계 계산 기준일
+    private LocalDate calculateDate;
 
     @Enumerated(EnumType.STRING)
     private PeriodType periodType;
 
-    public static LocalDate calculateCalculatedDate(PeriodType periodType){
+    public static LocalDate calculateDate(PeriodType periodType){
         switch (periodType){
             case DAILY :
                 return LocalDate.now();
