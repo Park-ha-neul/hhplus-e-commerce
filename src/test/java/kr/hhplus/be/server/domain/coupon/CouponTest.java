@@ -3,59 +3,100 @@ package kr.hhplus.be.server.domain.coupon;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.testcontainers.shaded.org.checkerframework.checker.units.qual.C;
+
+import java.time.LocalDate;
 
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class CouponTest {
     @Test
     public void 발급_가능한_경우_true_반환(){
-        Coupon coupon = new Coupon();
-        coupon.setTotalCount(10L);
-        coupon.setIssuedCount(5L);
+        CouponCreateRequest request = mock(CouponCreateRequest.class);
+
+        when(request.getDiscountType()).thenReturn(DiscountType.AMOUNT);
+        when(request.getDiscountAmount()).thenReturn(1000L);
+        when(request.getName()).thenReturn("테스트쿠폰");
+        when(request.getTotalCount()).thenReturn(100L);
+        when(request.getStartDate()).thenReturn(LocalDate.now().atStartOfDay());
+        when(request.getEndDate()).thenReturn(LocalDate.now().plusDays(7).atStartOfDay());
+
+        Coupon coupon = Coupon.create(request);
 
         assertTrue(coupon.isIssuable());
     }
 
     @Test
     public void 발급_한도_초과한_경우_false_반환(){
-        Coupon coupon = new Coupon();
-        coupon.setTotalCount(10L);
-        coupon.setIssuedCount(10L);
+        CouponCreateRequest request = mock(CouponCreateRequest.class);
+
+        when(request.getDiscountType()).thenReturn(DiscountType.AMOUNT);
+        when(request.getDiscountAmount()).thenReturn(1000L);
+        when(request.getName()).thenReturn("테스트쿠폰");
+        when(request.getTotalCount()).thenReturn(1L);
+        when(request.getStartDate()).thenReturn(LocalDate.now().atStartOfDay());
+        when(request.getEndDate()).thenReturn(LocalDate.now().plusDays(7).atStartOfDay());
+
+        Coupon coupon = Coupon.create(request);
+        coupon.increaseIssuedCount();
 
         assertFalse(coupon.isIssuable());
     }
 
     @Test
     public void 쿠폰_발급시_count_증가(){
-        Coupon coupon = new Coupon();
-        coupon.setTotalCount(10L);
-        coupon.setIssuedCount(2L);
+        CouponCreateRequest request = mock(CouponCreateRequest.class);
 
+        when(request.getDiscountType()).thenReturn(DiscountType.AMOUNT);
+        when(request.getDiscountAmount()).thenReturn(1000L);
+        when(request.getName()).thenReturn("테스트쿠폰");
+        when(request.getTotalCount()).thenReturn(1L);
+        when(request.getStartDate()).thenReturn(LocalDate.now().atStartOfDay());
+        when(request.getEndDate()).thenReturn(LocalDate.now().plusDays(7).atStartOfDay());
+
+        Coupon coupon = Coupon.create(request);
         coupon.increaseIssuedCount();
 
-        assertEquals(Long.valueOf(3L), coupon.getIssuedCount());
+        assertEquals(Long.valueOf(1L), coupon.getIssuedCount());
     }
 
     @Test
     public void 쿠폰_발급_한도_초과시_예외_발생(){
-        Coupon coupon = new Coupon();
-        coupon.setTotalCount(10L);
-        coupon.setIssuedCount(10L);
+        CouponCreateRequest request = mock(CouponCreateRequest.class);
+
+        when(request.getDiscountType()).thenReturn(DiscountType.AMOUNT);
+        when(request.getDiscountAmount()).thenReturn(1000L);
+        when(request.getName()).thenReturn("테스트쿠폰");
+        when(request.getTotalCount()).thenReturn(1L);
+        when(request.getStartDate()).thenReturn(LocalDate.now().atStartOfDay());
+        when(request.getEndDate()).thenReturn(LocalDate.now().plusDays(7).atStartOfDay());
+
+        Coupon coupon = Coupon.create(request);
+        coupon.increaseIssuedCount();
 
         IllegalArgumentException e = assertThrows(IllegalArgumentException.class, () -> {
             coupon.increaseIssuedCount();
         });
 
-        assertEquals("쿠폰 발급 한도를 초과했습니다.", e.getMessage());
+        assertEquals(ErrorCode.COUPON_ISSUED_EXCEED.getMessage(), e.getMessage());
 
     }
 
     @Test
     void rate_타입_쿠폰으로_할인금액_계산() {
-        Coupon coupon = new Coupon();
-        coupon.setDiscountType(DiscountType.RATE);
-        coupon.setDiscountRate(10L);  // 10% 할인
+        CouponCreateRequest request = mock(CouponCreateRequest.class);
+
+        when(request.getDiscountType()).thenReturn(DiscountType.RATE);
+        when(request.getDiscountRate()).thenReturn(10L);
+        when(request.getName()).thenReturn("테스트쿠폰");
+        when(request.getTotalCount()).thenReturn(1L);
+        when(request.getStartDate()).thenReturn(LocalDate.now().atStartOfDay());
+        when(request.getEndDate()).thenReturn(LocalDate.now().plusDays(7).atStartOfDay());
+
+        Coupon coupon = Coupon.create(request);
 
         long originalAmount = 20000L;
 
@@ -66,9 +107,16 @@ public class CouponTest {
 
     @Test
     void amount_타입_쿠폰으로_할인금액_계산() {
-        Coupon coupon = new Coupon();
-        coupon.setDiscountType(DiscountType.AMOUNT);
-        coupon.setDiscountAmount(3000L);  // 3000원 할인
+        CouponCreateRequest request = mock(CouponCreateRequest.class);
+
+        when(request.getDiscountType()).thenReturn(DiscountType.AMOUNT);
+        when(request.getDiscountAmount()).thenReturn(3000L);
+        when(request.getName()).thenReturn("테스트쿠폰");
+        when(request.getTotalCount()).thenReturn(1L);
+        when(request.getStartDate()).thenReturn(LocalDate.now().atStartOfDay());
+        when(request.getEndDate()).thenReturn(LocalDate.now().plusDays(7).atStartOfDay());
+
+        Coupon coupon = Coupon.create(request);
 
         long originalAmount = 20000L;
 
@@ -78,14 +126,59 @@ public class CouponTest {
     }
 
     @Test
-    void 지원하지않는_할인타입_예외처리() {
-        Coupon coupon = new Coupon();
-        coupon.setDiscountType(null);  // 또는 일부러 INVALID enum을 만들어서 테스트할 수도 있음
+    void 쿠폰_등록_성공(){
+        CouponCreateRequest request = mock(CouponCreateRequest.class);
 
-        long originalAmount = 20000L;
+        when(request.getDiscountType()).thenReturn(DiscountType.AMOUNT);
+        when(request.getDiscountAmount()).thenReturn(1000L);
+        when(request.getName()).thenReturn("테스트쿠폰");
+        when(request.getTotalCount()).thenReturn(100L);
+        when(request.getStartDate()).thenReturn(LocalDate.now().atStartOfDay());
+        when(request.getEndDate()).thenReturn(LocalDate.now().plusDays(7).atStartOfDay());
 
-        assertThrows(IllegalStateException.class, () -> {
-            coupon.calculateDiscount(originalAmount);
+        Coupon coupon = Coupon.create(request);
+
+        assertEquals(DiscountType.AMOUNT, coupon.getDiscountType());
+    }
+
+    @Test
+    void 쿠폰_등록시_할인율이_없는경우_예외처리(){
+        CouponCreateRequest request = mock(CouponCreateRequest.class);
+
+        when(request.getDiscountType()).thenReturn(DiscountType.RATE);
+        when(request.getDiscountRate()).thenReturn(null);
+
+        IllegalArgumentException e = assertThrows(IllegalArgumentException.class, () -> {
+            Coupon.create(request);
         });
+
+        assertEquals(ErrorCode.DISCOUNT_RATE_NOT_FOUND.getMessage(), e.getMessage());
+    }
+
+    @Test
+    void 쿠폰_등록시_할인금액이_없는경우_예외처리(){
+        CouponCreateRequest request = mock(CouponCreateRequest.class);
+
+        when(request.getDiscountType()).thenReturn(DiscountType.AMOUNT);
+        when(request.getDiscountAmount()).thenReturn(null);
+
+        IllegalArgumentException e = assertThrows(IllegalArgumentException.class, () -> {
+            Coupon.create(request);
+        });
+
+        assertEquals(ErrorCode.DISCOUNT_AMOUNT_NOT_FOUND.getMessage(), e.getMessage());
+    }
+
+    @Test
+    void 지원하지않는_할인타입_예외처리() {
+        CouponCreateRequest request = mock(CouponCreateRequest.class);
+
+        when(request.getDiscountType()).thenReturn(null);
+
+        IllegalArgumentException e = assertThrows(IllegalArgumentException.class, () -> {
+            Coupon.create(request);
+        });
+
+        assertEquals(ErrorCode.COUPON_TYPE_NOT_FOUND.getMessage(), e.getMessage());
     }
 }

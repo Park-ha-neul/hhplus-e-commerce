@@ -1,6 +1,6 @@
 package kr.hhplus.be.server.domain.userPoint;
 
-import kr.hhplus.be.server.domain.point.Point;
+import kr.hhplus.be.server.domain.user.UserPoint;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -13,17 +13,17 @@ public class PointTest {
 
     @Test
     public void 포인트_충전_성공(){
-        Point point = new Point(1L, 100L);
+        UserPoint point = UserPoint.createNew(1L);
 
         point.charge(100L);
 
-        assertEquals(Long.valueOf(200L), point.getPoint());
+        assertEquals(Long.valueOf(100L), point.getPoint());
     }
 
     @Test
     public void 충전_금액이_0보다_작은_경우(){
         long amount = -100L;
-        Point point = new Point(1L, 100L);
+        UserPoint point = UserPoint.createNew(1L);
 
         IllegalArgumentException e = assertThrows(IllegalArgumentException.class, () -> {
             point.charge(amount);
@@ -35,7 +35,7 @@ public class PointTest {
     @Test
     public void 일회_충전_금액을_초과한_경우(){
         long amount = 100001L;
-        Point point = new Point(1L, 100L);
+        UserPoint point = UserPoint.createNew(1L);
 
         IllegalArgumentException e = assertThrows(IllegalArgumentException.class, () -> {
             point.charge(amount);
@@ -47,7 +47,7 @@ public class PointTest {
     @Test
     public void 충전_시_보유_포인트가_최대한도를_초과한_경우(){
         long amount = 100L;
-        Point point = new Point(1L, 1000000L);
+        UserPoint point = UserPoint.create(1L, 1000000L);
 
         IllegalArgumentException e = assertThrows(IllegalArgumentException.class, () -> {
             point.charge(amount);
@@ -59,7 +59,7 @@ public class PointTest {
     @Test
     public void 포인트_사용_성공(){
         long amount = 100L;
-        Point point = new Point(1L, 200L);
+        UserPoint point = UserPoint.create(1L, 200L);
 
         point.use(amount);
 
@@ -69,7 +69,7 @@ public class PointTest {
     @Test
     public void 사용_금액이_0보다_작은_경우(){
         long amount = -100L;
-        Point point = new Point(1L, 200L);
+        UserPoint point = UserPoint.create(1L, 200L);
 
         IllegalArgumentException e = assertThrows(IllegalArgumentException.class, () -> {
             point.use(amount);
@@ -81,7 +81,7 @@ public class PointTest {
     @Test
     public void 사용_잔액이_부족한_경우(){
         long amount = 200L;
-        Point point = new Point(1L, 100L);
+        UserPoint point = UserPoint.create(1L, 100L);
 
         IllegalArgumentException e = assertThrows(IllegalArgumentException.class, () -> {
             point.use(amount);

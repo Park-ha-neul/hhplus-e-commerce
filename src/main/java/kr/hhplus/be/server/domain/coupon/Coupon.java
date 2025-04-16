@@ -2,18 +2,12 @@ package kr.hhplus.be.server.domain.coupon;
 
 import jakarta.persistence.*;
 import kr.hhplus.be.server.domain.common.BaseEntity;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 import java.time.LocalDateTime;
 
 @Entity
-@AllArgsConstructor
-@NoArgsConstructor
 @Getter
-@Setter
 public class Coupon extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -33,44 +27,53 @@ public class Coupon extends BaseEntity {
     private LocalDateTime startDate;
     private LocalDateTime endDate;
 
+    private Coupon(String name, Long totalCount,Long issuedCount, DiscountType dstype, Long discountRate, Long discountAmount, CouponStatus status, LocalDateTime startDate, LocalDateTime endDate){
+        this.name = name;
+        this.totalCount = totalCount;
+        this.issuedCount = issuedCount;
+        this.discountType = dstype;
+        this.discountRate = discountRate;
+        this.discountAmount = discountAmount;
+        this.status = status;
+        this.startDate = startDate;
+        this.endDate = endDate;
+    }
+
+    public static Coupon create(CouponCreateRequest request){
+        if (request.getDiscountType() == DiscountType.RATE) {
+            if (request.getDiscountRate() == null) {
+                throw new IllegalArgumentException(ErrorCode.DISCOUNT_RATE_NOT_FOUND.getMessage());
+            }
+        } else if (request.getDiscountType() == DiscountType.AMOUNT) {
+            if (request.getDiscountAmount() == null) {
+                throw new IllegalArgumentException(ErrorCode.DISCOUNT_AMOUNT_NOT_FOUND.getMessage());
+            }
+        } else {
+            throw new IllegalArgumentException(ErrorCode.COUPON_TYPE_NOT_FOUND.getMessage());
+        }
+
+        return new Coupon(
+                request.getName(),
+                request.getTotalCount(),
+                0L,
+                request.getDiscountType(),
+                request.getDiscountRate(),
+                request.getDiscountAmount(),
+                CouponStatus.ACTIVE,
+                request.getStartDate(),
+                request.getEndDate()
+        );
+    }
+
     public boolean isIssuable() {
         return (issuedCount != null ? issuedCount : 0L) < totalCount;
     }
 
     public void increaseIssuedCount() {
         if (!isIssuable()) {
-            throw new IllegalArgumentException("쿠폰 발급 한도를 초과했습니다.");
+            throw new IllegalArgumentException(ErrorCode.COUPON_ISSUED_EXCEED.getMessage());
         }
         this.issuedCount++;
-    }
-    public static Coupon createFrom(CouponCreateRequest request) {
-        Coupon coupon = new Coupon();
-
-        coupon.setName(request.getName());
-        coupon.setTotalCount(request.getTotalCount());
-        coupon.setIssuedCount(0L);
-        coupon.setDiscountType(request.getDiscountType());
-
-        if (request.getDiscountType() == DiscountType.RATE) {
-            if (request.getDiscountRate() == null) {
-                throw new IllegalArgumentException("할인율이 필요합니다.");
-            }
-            coupon.setDiscountRate(request.getDiscountRate());
-            coupon.setDiscountAmount(null);
-        } else if (request.getDiscountType() == DiscountType.AMOUNT) {
-            if (request.getDiscountAmount() == null) {
-                throw new IllegalArgumentException("할인금액이 필요합니다.");
-            }
-            coupon.setDiscountAmount(request.getDiscountAmount());
-            coupon.setDiscountRate(null);
-        } else {
-            throw new IllegalArgumentException("유효하지 않은 할인 타입입니다.");
-        }
-
-        coupon.setStartDate(request.getStartDate());
-        coupon.setEndDate(request.getEndDate());
-        coupon.setStatus(CouponStatus.ACTIVE);
-        return coupon;
     }
 
     public long calculateDiscount(long originalAmount) {
@@ -79,7 +82,7 @@ public class Coupon extends BaseEntity {
         } else if (this.discountType == DiscountType.AMOUNT) {
             return this.discountAmount;
         } else {
-            throw new IllegalStateException("유효하지 않은 할인 타입입니다.");
+            throw new IllegalStateException(ErrorCode.COUPON_TYPE_NOT_FOUND.getMessage());
         }
     }
 }

@@ -8,10 +8,10 @@ import java.util.List;
 import java.util.Optional;
 
 public interface TopProductRepository extends JpaRepository<TopProduct, Long> {
+    Optional<TopProduct> findByProductId(Long productId);
     List<TopProduct> findByPeriodTypeAndCalculatedDateOrderByRankAsc(PeriodType periodType, LocalDate calculatedDate);
-
     Optional<TopProduct> findByProductIdAndPeriodTypeAndCalculatedDate(
-            Product product,
+            Long productId,
             PeriodType periodType,
             LocalDate calculatedDate
     );

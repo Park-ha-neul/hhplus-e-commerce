@@ -4,19 +4,13 @@ import jakarta.persistence.*;
 import kr.hhplus.be.server.domain.common.BaseEntity;
 import kr.hhplus.be.server.domain.coupon.UserCoupon;
 import kr.hhplus.be.server.domain.user.UserPoint;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@AllArgsConstructor
-@NoArgsConstructor
 @Getter
-@Setter
 public class Order extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -25,16 +19,30 @@ public class Order extends BaseEntity {
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
     private List<OrderItem> orderItems = new ArrayList<>();
 
-    @ManyToOne
+    @Embedded
     private UserPoint userPoint;
 
-    @ManyToOne
+    @OneToOne
     private UserCoupon userCoupon;
 
     @Enumerated(EnumType.STRING)
     private OrderType type; // pending, success, fail
 
-    public void setType(){
-        this.type = OrderType.PENDING;
+    private Order(UserPoint userPoint, UserCoupon userCoupon, OrderType type) {
+        this.userPoint = userPoint;
+        this.userCoupon = userCoupon;
+        this.type = type;
+    }
+
+    public static Order create(UserPoint point, UserCoupon coupon) {
+        return new Order(point, coupon, OrderType.PENDING);
+    }
+
+    public void complete() {
+        this.type = OrderType.SUCCESS;
+    }
+
+    public void cancle() {
+        this.type = OrderType.FAIL;
     }
 }

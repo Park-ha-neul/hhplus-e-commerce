@@ -8,10 +8,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-@AllArgsConstructor
-@NoArgsConstructor
+@Entity
 @Getter
-@Setter
 public class Payment extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -27,8 +25,20 @@ public class Payment extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private PaymentType type;
 
-    public void setPending(){
-        this.type = PaymentType.PENDING;
+    private Payment(Order order, Long totalAmount, String failureReason, PaymentType type){
+        this.order = order;
+        this.totalAmount = totalAmount;
+        this.failureReason = failureReason;
+        this.type = type;
+    }
+
+    public static Payment create(PaymentCreateRequest request) {
+        return new Payment(
+                request.getOrder(),
+                request.getTotalAmount(),
+                null,
+                PaymentType.PENDING
+        );
     }
 
     public void complete(){

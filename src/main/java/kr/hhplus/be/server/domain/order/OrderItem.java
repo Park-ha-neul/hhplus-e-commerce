@@ -8,10 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@AllArgsConstructor
-@NoArgsConstructor
 @Getter
-@Setter
 public class OrderItem {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -25,6 +22,21 @@ public class OrderItem {
     @JoinColumn(name = "product_id")
     private Product product;
 
-    private Long quantity; // 주문 수량
-    private Long unitPrice;// 상품 단가
+    private Long quantity;
+    private Long unitPrice;
+
+    public OrderItem(Order order, Product product, Long quantity, Long price) {
+        this.order = order;
+        this.product = product;
+        this.quantity = quantity;
+        this.unitPrice = price;
+    }
+
+    public static OrderItem create(Order order, Product product, Long quantity, Long price) {
+        return new OrderItem(order, product, quantity, price);
+    }
+
+    public Long getTotalPrice() {
+        return unitPrice * quantity;
+    }
 }
