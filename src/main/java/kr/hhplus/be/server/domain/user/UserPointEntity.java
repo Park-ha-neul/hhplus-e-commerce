@@ -1,11 +1,19 @@
 package kr.hhplus.be.server.domain.user;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 
 @Entity
+@Builder
+@AllArgsConstructor
 @Table(name = "user_point")
 public class UserPointEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Getter
+    private Long userId;
 
     @Embedded
     @Getter
@@ -15,17 +23,8 @@ public class UserPointEntity {
     @Getter
     private UserPoint point;
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long userId;
-
-    private UserPointEntity(User user, UserPoint point) {
-        this.userId = user.getUserId();
+    public UserPointEntity(User user, UserPoint point) {
         this.user = user;
         this.point = point;
-    }
-
-    public static UserPointEntity create(User user, UserPoint point){
-        return new UserPointEntity(user, point);
     }
 }

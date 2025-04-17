@@ -9,17 +9,12 @@ public class User{
     private Long userId;
     private boolean isAdmin;
 
-    private User(Long userId, boolean isAdmin){
-        this.userId = userId;
+    public User(boolean isAdmin){
         this.isAdmin = isAdmin;
     }
 
-    public static User create(Long userId, boolean isAdmin){
-        return new User(userId, isAdmin);
-    }
-
-    public boolean isAdmin(){
-        return isAdmin;
+    public boolean isAdmin() {
+        return this.isAdmin;
     }
 }
 

@@ -7,48 +7,49 @@ import kr.hhplus.be.server.domain.user.UserPointEntity;
 import lombok.Getter;
 
 @Entity
+@Table(name = "point_history")
+@Getter
 public class PointHistoryEntity extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long historyId;
 
-    private Long userId;
-    private Long amount; // 사용 포인트
-    private Long balanceBefore; // 변경 전 잔액
-    private Long balanceAfter; // 변경 후 잔액
+    @Embedded
+    @ManyToOne
+    private UserPointEntity userPointEntity;
 
-    @Getter
+    private Long amount;
+    private Long balanceBefore;
+    private Long balanceAfter;
+
     @Enumerated(EnumType.STRING)
     private TransactionType type; // charge, use
 
-    @ManyToOne
-    @JoinColumn(name = "userId", referencedColumnName = "userId", insertable = false, updatable = false)
-    private UserPointEntity userPointEntity; // 관련된 사용자 정보
-
-
-    public PointHistoryEntity(Long userId, Long amount, Long balanceBefore, Long balanceAfter, TransactionType type){
-        this.userId = userId;
+    public PointHistoryEntity(UserPointEntity userPointEntity, Long amount, Long balanceBefore, Long balanceAfter, TransactionType type){
+        this.userPointEntity = userPointEntity;
         this.amount = amount;
         this.balanceBefore = balanceBefore;
         this.balanceAfter = balanceAfter;
         this.type = type;
     }
 
-    public static PointHistoryEntity createHistory(Long userId, Long amount, Long balanceBefore, Long balanceAfter, String typeName){
-        TransactionType type;
-        try {
-            type = TransactionType.valueOf(typeName);
-        } catch (IllegalArgumentException | NullPointerException e) {
-            throw new IllegalArgumentException("존재하지 않는 거래 유형입니다: " + typeName, e);
-        }
-
+    public static PointHistoryEntity chargeHistory(UserPointEntity userPointEntity, Long amount, Long balanceBefore, Long balanceAfter){
         return new PointHistoryEntity(
-                userId,
+                userPointEntity,
                 amount,
                 balanceBefore,
                 balanceAfter,
-                type
+                TransactionType.CHARGE
         );
     }
 
+    public static PointHistoryEntity useHistory(UserPointEntity userPointEntity, Long amount, Long balanceBefore, Long balanceAfter){
+        return new PointHistoryEntity(
+                userPointEntity,
+                amount,
+                balanceBefore,
+                balanceAfter,
+                TransactionType.USE
+        );
+    }
 }

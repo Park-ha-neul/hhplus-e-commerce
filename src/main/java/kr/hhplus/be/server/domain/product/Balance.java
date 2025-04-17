@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 public class Balance {
     private Long quantity;
 
-    private Balance(Long quantity){
+    Balance(Long quantity){
         this.quantity = quantity;
     }
 
@@ -23,22 +23,22 @@ public class Balance {
 
     public void increase(Long amount){
         if(amount == null || amount <= 0){
-            throw new IllegalArgumentException("증가량은 0보다 커야 합니다.");
+            throw new IllegalArgumentException(ProductErrorCode.INCREASE_MUST_BE_POSITIVE.getMessage());
         }
         this.quantity += amount;
     }
 
     public void decrease(Long amount){
         if(amount == null || amount <= 0){
-            throw new IllegalArgumentException("차감량은 0보다 커야 합니다.");
+            throw new IllegalArgumentException(ProductErrorCode.DECREASE_MUST_BE_POSITIVE.getMessage());
         }
         if(amount > quantity){
-            throw new IllegalArgumentException("재고 부족");
+            throw new IllegalArgumentException(ProductErrorCode.NOT_ENOUGH_STOCK.getMessage());
         }
         this.quantity -= amount;
     }
 
     public boolean isSoldOut(){
-        return this.quantity == 0;
+        return this.quantity == 0L;
     }
 }
