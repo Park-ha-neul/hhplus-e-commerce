@@ -4,11 +4,13 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Entity
-@Builder
-@AllArgsConstructor
 @Table(name = "user_point")
+@AllArgsConstructor
+@NoArgsConstructor
+@Getter
 public class UserPointEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -16,13 +18,12 @@ public class UserPointEntity {
     private Long userId;
 
     @Embedded
-    @Getter
     private User user;
 
     @Embedded
-    @Getter
     private UserPoint point;
 
+    @Builder
     public UserPointEntity(User user, UserPoint point) {
         this.user = user;
         this.point = point;

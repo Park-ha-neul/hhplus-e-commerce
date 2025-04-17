@@ -14,7 +14,6 @@ public class PointHistoryEntity extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long historyId;
 
-    @Embedded
     @ManyToOne
     private UserPointEntity userPointEntity;
 

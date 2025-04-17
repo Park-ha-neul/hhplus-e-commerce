@@ -3,7 +3,6 @@ package kr.hhplus.be.server.domain.product;
 import jakarta.persistence.*;
 import kr.hhplus.be.server.domain.common.BaseEntity;
 import kr.hhplus.be.server.interfaces.api.product.ProductRequest;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 

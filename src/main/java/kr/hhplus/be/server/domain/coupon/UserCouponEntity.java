@@ -9,7 +9,7 @@ import lombok.Getter;
 
 @Entity
 @Getter
-@Table(name = "coupon")
+@Table(name = "user_coupon")
 @Builder
 @AllArgsConstructor
 public class UserCouponEntity extends BaseEntity {
