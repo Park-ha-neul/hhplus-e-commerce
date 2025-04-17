@@ -1,7 +1,15 @@
 package kr.hhplus.be.server.domain.order;
 
-import kr.hhplus.be.server.domain.coupon.UserCoupon;
+import kr.hhplus.be.server.domain.coupon.*;
+import kr.hhplus.be.server.domain.product.ProductEntity;
+import kr.hhplus.be.server.domain.product.ProductEntityRepository;
+import kr.hhplus.be.server.domain.product.ProductErrorCode;
 import kr.hhplus.be.server.domain.user.UserPoint;
+import kr.hhplus.be.server.domain.user.UserPointEntity;
+import kr.hhplus.be.server.domain.user.UserPointEntityRepository;
+import kr.hhplus.be.server.domain.user.UserPointErrorCode;
+import kr.hhplus.be.server.interfaces.api.order.OrderItemRequest;
+import kr.hhplus.be.server.interfaces.api.order.OrderReqeust;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -11,39 +19,50 @@ import java.util.List;
 @RequiredArgsConstructor
 public class OrderService {
 
-    private OrderRepository orderRepository;
-    private OrderItemRepository orderItemRepository;
+    private OrderEntityRepository orderEntityRepository;
+    private UserPointEntityRepository userPointEntityRepository;
+    private UserCouponEntityRepository userCouponEntityRepository;
+    private ProductEntityRepository productEntityRepository;
 
-    public Order create(UserPoint point, UserCoupon coupon){
+    public OrderEntity createOrder(OrderReqeust request){
+        UserPointEntity userPointEntity = userPointEntityRepository.findById(request.getUserId())
+                .orElseThrow(() -> new IllegalArgumentException(UserPointErrorCode.USER_NOT_FOUND.getMessage()));
 
-        Order order = Order.create(point, coupon);
-        return orderRepository.save(order);
-    }
+        UserCouponEntity userCouponEntity = userCouponEntityRepository.findByUserAndCoupon(request.getUserId(), request.getCouponId());
 
-    public Order getOrder(Long orderId){
-        return orderRepository.findById(orderId)
-                .orElseThrow(() -> new IllegalArgumentException(ErrorCode.ORDER_NOT_FOUND.getMessage()));
-    }
+        OrderEntity orderEntity = OrderEntity.create(userPointEntity, userCouponEntity);
 
-    public List<Order> getOrderByUserId(Long userId) {
-        List<Order> orders = orderRepository.findByUserId(userId);
-
-        if (orders.isEmpty()) {
-            throw new IllegalArgumentException(ErrorCode.ORDER_NOT_FOUND.getMessage());
+        for (OrderItemRequest orderItemRequest : request.getOrderItems()) {
+            ProductEntity productEntity = productEntityRepository.findById(orderItemRequest.getProductId())
+                    .orElseThrow(() -> new IllegalArgumentException(ProductErrorCode.PRODUCT_NOT_FOUND.getMessage()));
+            OrderItemEntity orderItemEntity = OrderItemEntity.create(orderEntity, productEntity, orderItemRequest.getQuantity(), productEntity.getPrice());
+            orderEntity.addOrderItem(orderItemEntity);
         }
 
-        return orders;
+        orderEntityRepository.save(orderEntity);
+        orderEntity.complete();
+        return orderEntity;
     }
 
-    public void completeOrder(Long orderId){
-        Order order = getOrder(orderId);
-        order.complete();
-        orderRepository.save(order);
+    public List<OrderEntity> getOrders(OrderStatus status){
+        List<OrderEntity> orders = orderEntityRepository.findByStatus(status);
+        return orders;
+
+    }
+
+    public OrderEntity getOrder(Long orderId){
+        return orderEntityRepository.findById(orderId)
+                .orElseThrow(() -> new IllegalArgumentException(OrderErrorCode.ORDER_NOT_FOUND.getMessage()));
+    }
+
+    public List<OrderEntity> getOrderByUserId(Long userId) {
+        List<OrderEntity> orderEntities = orderEntityRepository.findByUserId(userId);
+        return orderEntities;
     }
 
     public void cancleOrder(Long orderId){
-        Order order = getOrder(orderId);
-        order.cancle();
-        orderRepository.save(order);
+        OrderEntity orderEntity = getOrder(orderId);
+        orderEntity.cancel();
+        orderEntityRepository.save(orderEntity);
     }
 }

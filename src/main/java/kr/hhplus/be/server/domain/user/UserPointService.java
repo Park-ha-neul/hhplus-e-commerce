@@ -1,36 +1,47 @@
 package kr.hhplus.be.server.domain.user;
 
+import kr.hhplus.be.server.domain.point.PointHistoryEntity;
+import kr.hhplus.be.server.domain.point.PointHistoryEntityRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
+@RequiredArgsConstructor
 public class UserPointService {
 
-    private final UserPointEntityRepository repository;
-
-    public UserPointService(UserPointEntityRepository repository){
-        this.repository = repository;
-    }
-
-    public UserPoint getUserPoint(Long userId) {
-        UserPointEntity entity = repository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 사용자의 포인트 정보가 없습니다."));
-
-        return entity.getPoint();
-    }
+    private final UserPointEntityRepository userPointEntityRepository;
+    private final PointHistoryEntityRepository pointHistoryEntityRepository;
 
     public void charge(Long userId, Long amount) {
-        UserPointEntity entity = repository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("사용자 포인트 정보 없음"));
+        UserPointEntity entity = userPointEntityRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException(UserPointErrorCode.USER_NOT_FOUND.getMessage()));
 
+        Long balanceBefore = entity.getPoint().getPoint();
         entity.getPoint().charge(amount);
-        repository.save(entity);
+        Long balanceAfter = entity.getPoint().getPoint();
+        PointHistoryEntity pointHistoryEntity = PointHistoryEntity.chargeHistory(entity, amount, balanceBefore, balanceAfter);
+        pointHistoryEntityRepository.save(pointHistoryEntity);
+        userPointEntityRepository.save(entity);
     }
 
     public void use(Long userId, Long amount) {
-        UserPointEntity entity = repository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("사용자 포인트 정보 없음"));
+        UserPointEntity entity = userPointEntityRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException(UserPointErrorCode.USER_NOT_FOUND.getMessage()));
 
+        Long balanceBefore = entity.getPoint().getPoint();
         entity.getPoint().use(amount);
-        repository.save(entity);
+        Long balanceAfter = entity.getPoint().getPoint();
+        PointHistoryEntity pointHistoryEntity = PointHistoryEntity.useHistory(entity, amount, balanceBefore, balanceAfter);
+        pointHistoryEntityRepository.save(pointHistoryEntity);
+        userPointEntityRepository.save(entity);
+    }
+
+    public List<PointHistoryEntity> getUserPointHistory(Long userId){
+        UserPointEntity entity = userPointEntityRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException(UserPointErrorCode.USER_NOT_FOUND.getMessage()));
+
+        return pointHistoryEntityRepository.findAllByUserIdOrderByCreatedAtDesc(userId);
     }
 }
