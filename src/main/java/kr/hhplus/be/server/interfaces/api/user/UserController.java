@@ -9,17 +9,14 @@ import kr.hhplus.be.server.domain.order.OrderEntity;
 import kr.hhplus.be.server.domain.order.OrderService;
 import kr.hhplus.be.server.domain.payment.PaymentEntity;
 import kr.hhplus.be.server.domain.payment.PaymentService;
-import kr.hhplus.be.server.domain.point.PointHistoryEntity;
-import kr.hhplus.be.server.domain.user.UserPointEntity;
-import kr.hhplus.be.server.domain.user.UserPointService;
-import kr.hhplus.be.server.domain.user.UserService;
+import kr.hhplus.be.server.domain.point.PointHistory;
+import kr.hhplus.be.server.domain.user.*;
 import kr.hhplus.be.server.support.ApiMessage;
 import kr.hhplus.be.server.support.CustomApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequiredArgsConstructor
@@ -34,31 +31,25 @@ public class UserController {
     private final PaymentService paymentService;
 
     @GetMapping("/{userId}")
-    @Operation(summary = "사용자 포인트 조회", description = "사용자 정보를 조회합니다.")
+    @Operation(summary = "사용자 조회", description = "사용자 정보를 조회합니다.")
     public CustomApiResponse getUser(@PathVariable("userId") @Parameter(name = "userId", description = "사용자의 ID") Long userId){
-        Optional<UserPointEntity> userPointEntityOptional = userService.getUser(userId);
-
-        if (userPointEntityOptional.isPresent()) {
-            UserPointEntity data = userPointEntityOptional.get();
-            return CustomApiResponse.success(ApiMessage.VIEW_SUCCESS, data);
-        } else {
-            return CustomApiResponse.badRequest(ApiMessage.INVALID_USER);
-        }
+        UserWithPointResponse data = userService.getUser(userId);
+        return CustomApiResponse.success(ApiMessage.VIEW_SUCCESS, data);
     }
 
     @PostMapping("/")
     @Operation(summary = "사용자 등록", description = "처음 생성되는 사용자의 포인트는 0으로 초기화 됩니다.")
     public CustomApiResponse registPoint(@RequestBody UserRegisterRequest request){
-        UserPointEntity userPointEntity = userService.createUser(request.isAdmin());
-        return CustomApiResponse.success(ApiMessage.CREATE_SUCCESS, userPointEntity);
+        User user = userService.createUser(request.getUserName(), request.isAdmin());
+        return CustomApiResponse.success(ApiMessage.CREATE_SUCCESS, user);
     }
 
     @GetMapping("/{userId}/histories")
     @Operation(summary = "사용자 포인트 이력 조회", description = "사용자 포인트 사용 이력을 조회합니다.")
     public CustomApiResponse getUserHistory(@PathVariable("userId") @Parameter(name = "userId", description = "사용자의 ID") Long userId){
         try{
-            List<PointHistoryEntity> pointHistoryEntity = userPointService.getUserPointHistory(userId);
-            return CustomApiResponse.success(ApiMessage.VIEW_SUCCESS, pointHistoryEntity);
+            List<PointHistory> pointHistory = userPointService.getUserPointHistory(userId);
+            return CustomApiResponse.success(ApiMessage.VIEW_SUCCESS, pointHistory);
         } catch (RuntimeException e) {
             return CustomApiResponse.badRequest(ApiMessage.INVALID_USER);
         }
@@ -81,7 +72,7 @@ public class UserController {
             @PathVariable Long userId,
             @RequestBody IssueUserCouponRequest request
     ){
-        UserCouponEntity result = couponService.issueCouponToUser(userId, request.getCouponId());
+        UserCouponEntity result = couponService.issue(userId, request.getCouponId());
         return CustomApiResponse.success(ApiMessage.ISSUED_SUCCESS, result);
     }
 

@@ -13,14 +13,14 @@ public class UserPointTest {
 
     @Test
     void 포인트_충전_정상(){
-        UserPoint userPoint = new UserPoint(500L);
+        UserPoint userPoint = new UserPoint(1L, 500L);
         userPoint.charge(200L);
         assertEquals(Long.valueOf(700L), userPoint.getPoint());
     }
 
     @Test
     void 포인트_충전_시_금액이_0보다_작은경우_예외처리(){
-        UserPoint userPoint = new UserPoint(500L);
+        UserPoint userPoint = new UserPoint(1L, 500L);
         IllegalArgumentException e = assertThrows(IllegalArgumentException.class, () -> {
             userPoint.charge(-100L);
         });
@@ -30,7 +30,7 @@ public class UserPointTest {
 
     @Test
     void 포인트_1회충전_한도_초과시_예외처리(){
-        UserPoint userPoint = new UserPoint(500L);
+        UserPoint userPoint = new UserPoint(1L, 500L);
         IllegalArgumentException e = assertThrows(IllegalArgumentException.class, () -> {
             userPoint.charge(100001L);
         });
@@ -40,7 +40,7 @@ public class UserPointTest {
 
     @Test
     void 포인트_충전시_보유포인트_한도_초과시_예외처리(){
-        UserPoint userPoint = new UserPoint(1000000L);
+        UserPoint userPoint = new UserPoint(1L, 1000000L);
         IllegalArgumentException e = assertThrows(IllegalArgumentException.class, () -> {
             userPoint.charge(100L);
         });
@@ -50,14 +50,14 @@ public class UserPointTest {
 
     @Test
     void 포인트_사용_정상(){
-        UserPoint userPoint = new UserPoint(500L);
+        UserPoint userPoint = new UserPoint(1L, 500L);
         userPoint.use(100L);
         assertEquals(Long.valueOf(400L), userPoint.getPoint());
     }
 
     @Test
     void 포인트_사용시_포인트가_음수인경우_예외처리(){
-        UserPoint userPoint = new UserPoint(500L);
+        UserPoint userPoint = new UserPoint(1L, 500L);
         IllegalArgumentException e = assertThrows(IllegalArgumentException.class, () -> {
             userPoint.use(-100L);
         });
@@ -67,7 +67,7 @@ public class UserPointTest {
 
     @Test
     void 포인트_사용시_잔액_부족_예외처리(){
-        UserPoint userPoint = new UserPoint(500L);
+        UserPoint userPoint = new UserPoint(1L, 500L);
         IllegalArgumentException e = assertThrows(IllegalArgumentException.class, () -> {
             userPoint.use(600L);
         });

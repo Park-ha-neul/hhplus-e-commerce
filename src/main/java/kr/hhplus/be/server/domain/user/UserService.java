@@ -3,24 +3,26 @@ package kr.hhplus.be.server.domain.user;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
-
 @Service
 @RequiredArgsConstructor
 public class UserService {
 
-    private final UserPointEntityRepository userPointEntityRepository;
+    private final UserRepository userRepository;
+    private final UserPointRepository userPointRepository;
 
-    public UserPointEntity createUser(boolean isAdmin){
-        User user = new User(isAdmin);
-        UserPoint userPoint = new UserPoint(0L);
+    public User createUser(String userName, boolean isAdmin){
+        User user = new User(userName, isAdmin);
+        UserPoint userPoint = new UserPoint(user.getUserId(),0L);
 
-        UserPointEntity userPointEntity = new UserPointEntity(user, userPoint);
+        userRepository.save(user);
+        userPointRepository.save(userPoint);
 
-        return userPointEntityRepository.save(userPointEntity);
+        return user;
     }
 
-    public Optional<UserPointEntity> getUser(Long userId){
-        return userPointEntityRepository.findById(userId);
+    public UserWithPointResponse getUser(Long userId){
+        User user = userRepository.findById(userId);
+        UserPoint userPoint = userPointRepository.findByUserId(userId);
+        return new UserWithPointResponse(user, userPoint);
     }
 }

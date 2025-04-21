@@ -1,25 +1,34 @@
 package kr.hhplus.be.server.domain.user;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Embeddable;
+import jakarta.persistence.*;
+import kr.hhplus.be.server.domain.common.BaseEntity;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-@Embeddable
-@NoArgsConstructor
-@AllArgsConstructor
-public class User{
-    @Getter
-    @Column(name = "admin_yn")
-    private Boolean admin;
+@Entity
+@Table(name = "user")
+@Getter
+public class User extends BaseEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long userId;
 
-//    public User(boolean admin){
-//        this.admin = admin;
-//    }
+    @Column(name = "name")
+    private String userName;
+
+    @Column(name = "admin_yn")
+    private Boolean adminYn;
+
+    @Builder
+    public User(String userName, boolean adminYn){
+        this.userName = userName;
+        this.adminYn = adminYn;
+    }
 
     public boolean isAdmin() {
-        return this.admin;
+        return this.adminYn;
     }
 }
 

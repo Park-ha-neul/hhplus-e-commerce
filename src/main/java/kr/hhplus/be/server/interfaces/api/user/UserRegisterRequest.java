@@ -6,5 +6,6 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public class UserRegisterRequest {
+    private String userName;
     private boolean isAdmin;
 }

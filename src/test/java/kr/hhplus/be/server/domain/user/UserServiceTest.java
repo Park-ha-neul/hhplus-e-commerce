@@ -1,10 +1,13 @@
 package kr.hhplus.be.server.domain.user;
 
+import jakarta.persistence.EntityNotFoundException;
+import kr.hhplus.be.server.infrastructure.user.UserJpaRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Optional;
 
@@ -18,46 +21,69 @@ public class UserServiceTest {
     private UserService userService;
 
     @Mock
-    private UserPointEntityRepository userPointEntityRepository;
+    private UserRepository userRepository;
+
+    @Mock
+    private UserPointRepository userPointRepository;
+
+    @Mock
+    private UserJpaRepository userJpaRepository;
 
     @Test
     void 사용자_유저_생성(){
-        User user = new User(false);
-        UserPoint userPoint = new UserPoint(0L);
-        UserPointEntity mockUserPoinEntity = new UserPointEntity(user, userPoint);
-        when(userPointEntityRepository.save(any(UserPointEntity.class))).thenReturn(mockUserPoinEntity);
+        User user = new User("하늘", false);
+        when(userRepository.save(any(User.class))).thenReturn(user);
 
-        UserPointEntity result = userService.createUser(false);
+        User result = userService.createUser("하늘", false);
 
-        assertFalse(result.getUser().isAdmin());
-        verify(userPointEntityRepository).save(any(UserPointEntity.class));
+        assertFalse(result.isAdmin());
+        assertEquals("하늘", result.getUserName());
+        verify(userRepository).save(any(User.class));
+        verify(userPointRepository).save(any(UserPoint.class));
     }
 
     @Test
     void 관리자_유저_생성(){
-        User user = new User(true);
-        UserPoint userPoint = new UserPoint(0L);
-        UserPointEntity mockUserPoinEntity = new UserPointEntity(user, userPoint);
-        when(userPointEntityRepository.save(any(UserPointEntity.class))).thenReturn(mockUserPoinEntity);
+        User user = new User("관리자", false);
+        when(userRepository.save(any(User.class))).thenReturn(user);
 
-        UserPointEntity result = userService.createUser(true);
+        User result = userService.createUser("관리자", false);
 
-        assertTrue(result.getUser().isAdmin());
-        verify(userPointEntityRepository).save(any(UserPointEntity.class));
+        assertTrue(result.isAdmin());
+        assertEquals("관리자", result.getUserName());
+        verify(userRepository).save(any(User.class));
+        verify(userPointRepository).save(any(UserPoint.class));
     }
 
     @Test
-    void 사용자_정보_조회(){
-        User user = new User(false);
-        UserPoint userPoint = new UserPoint(100L);
-        UserPointEntity mockEntity = new UserPointEntity(user, userPoint);
+    void 사용자_정보_조회_있는_사용자인_경우(){
+        Long userId = 1L;
+        User mockUser = User.builder()
+                .userName("하늘")
+                .adminYn(false)
+                .build();
 
-        when(userPointEntityRepository.findById(anyLong())).thenReturn(Optional.of(mockEntity));
+        ReflectionTestUtils.setField(mockUser, "userId", userId);
 
-        Optional<UserPointEntity> result = userService.getUser(1L);
+        when(userRepository.findById(userId)).thenReturn(mockUser);
 
-        assertEquals(Long.valueOf(100L), result.get().getPoint().getPoint());
-        verify(userPointEntityRepository).findById(1L);
+        UserWithPointResponse result = userService.getUser(userId);
+
+        assertEquals("하늘", result.getUser().getUserName());
+        assertFalse(result.getUser().isAdmin());
+    }
+
+    @Test
+    void 사용자_정보_조회_없는_사용자인_경우_EntityNotFoundException_반환(){
+        Long userId = 999L;
+        when(userJpaRepository.findById(userId)).thenReturn(Optional.empty());
+
+        EntityNotFoundException e = assertThrows(
+                EntityNotFoundException.class,
+                () -> userService.getUser(userId)
+        );
+
+        assertEquals(UserErrorCode.USER_NOT_FOUND.getMessage(), e.getMessage());
     }
 
 }
