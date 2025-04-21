@@ -6,6 +6,7 @@ public class ApiMessage {
     public static final String CHARGE_SUCCESS = "충전 완료";
     public static final String ISSUED_SUCCESS = "발급 완료";
     public static final String USE_SUCCESS = "사용 완료";
+    public static final String CANCLE_SUCCESS = "취소 완료";
     public static final String PAYMENT_SUCCESS = "결제 완료";
 
     // error

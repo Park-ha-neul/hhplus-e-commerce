@@ -1,13 +1,11 @@
 package kr.hhplus.be.server.domain.order;
 
 import kr.hhplus.be.server.domain.coupon.*;
-import kr.hhplus.be.server.domain.product.ProductEntity;
-import kr.hhplus.be.server.domain.product.ProductEntityRepository;
+import kr.hhplus.be.server.domain.product.Product;
+import kr.hhplus.be.server.domain.product.ProductRepository;
 import kr.hhplus.be.server.domain.product.ProductErrorCode;
-import kr.hhplus.be.server.domain.user.UserPoint;
-import kr.hhplus.be.server.domain.user.UserPointEntity;
-import kr.hhplus.be.server.domain.user.UserPointEntityRepository;
-import kr.hhplus.be.server.domain.user.UserPointErrorCode;
+import kr.hhplus.be.server.domain.user.User;
+import kr.hhplus.be.server.domain.user.UserRepository;
 import kr.hhplus.be.server.interfaces.api.order.OrderItemRequest;
 import kr.hhplus.be.server.interfaces.api.order.OrderReqeust;
 import lombok.RequiredArgsConstructor;
@@ -19,50 +17,46 @@ import java.util.List;
 @RequiredArgsConstructor
 public class OrderService {
 
-    private OrderEntityRepository orderEntityRepository;
-    private UserPointEntityRepository userPointEntityRepository;
-    private UserCouponEntityRepository userCouponEntityRepository;
-    private ProductEntityRepository productEntityRepository;
+    private OrderRepository orderRepository;
+    private UserRepository userRepository;
+    private UserCouponRepository userCouponRepository;
+    private ProductRepository productRepository;
 
-    public OrderEntity createOrder(OrderReqeust request){
-        UserPointEntity userPointEntity = userPointEntityRepository.findById(request.getUserId())
-                .orElseThrow(() -> new IllegalArgumentException(UserPointErrorCode.USER_NOT_FOUND.getMessage()));
+    public Order create(OrderReqeust request){
+        User user = userRepository.findById(request.getUserId());
+        UserCoupon userCoupon = userCouponRepository.findByUserAndCoupon(request.getUserId(), request.getCouponId());
 
-        UserCouponEntity userCouponEntity = userCouponEntityRepository.findByUserAndCoupon(request.getUserId(), request.getCouponId());
-
-        OrderEntity orderEntity = OrderEntity.create(userPointEntity, userCouponEntity);
+        Order order = new Order(user.getUserId(), userCoupon.getUserCouponId());
 
         for (OrderItemRequest orderItemRequest : request.getOrderItems()) {
-            ProductEntity productEntity = productEntityRepository.findById(orderItemRequest.getProductId())
+            Product product = productRepository.findById(orderItemRequest.getProductId())
                     .orElseThrow(() -> new IllegalArgumentException(ProductErrorCode.PRODUCT_NOT_FOUND.getMessage()));
-            OrderItemEntity orderItemEntity = OrderItemEntity.create(orderEntity, productEntity, orderItemRequest.getQuantity(), productEntity.getPrice());
-            orderEntity.addOrderItem(orderItemEntity);
+            OrderItem orderItem = new OrderItem(order, orderItemRequest.getProductId(), orderItemRequest.getQuantity(), product.getPrice());
+            order.addOrderItem(orderItem);
         }
 
-        orderEntityRepository.save(orderEntity);
-        orderEntity.complete();
-        return orderEntity;
+        orderRepository.save(order);
+        order.complete();
+        return order;
     }
 
-    public List<OrderEntity> getOrders(OrderStatus status){
-        List<OrderEntity> orders = orderEntityRepository.findByStatus(status);
+    public List<Order> getOrders(Order.OrderStatus status){
+        List<Order> orders = orderRepository.findByStatus(status);
         return orders;
-
     }
 
-    public OrderEntity getOrder(Long orderId){
-        return orderEntityRepository.findById(orderId)
+    public Order getOrder(Long orderId){
+        return orderRepository.findById(orderId)
                 .orElseThrow(() -> new IllegalArgumentException(OrderErrorCode.ORDER_NOT_FOUND.getMessage()));
     }
 
-    public List<OrderEntity> getOrderByUserId(Long userId) {
-        List<OrderEntity> orderEntities = orderEntityRepository.findByUserId(userId);
-        return orderEntities;
+    public List<Order> getOrderByUserId(Long userId) {
+        List<Order> result = orderRepository.findByUserId(userId);
+        return result;
     }
 
-    public void cancleOrder(Long orderId){
-        OrderEntity orderEntity = getOrder(orderId);
-        orderEntity.cancel();
-        orderEntityRepository.save(orderEntity);
+    public void cancel(Long orderId){
+        Order order = getOrder(orderId);
+        order.cancel();
     }
 }
