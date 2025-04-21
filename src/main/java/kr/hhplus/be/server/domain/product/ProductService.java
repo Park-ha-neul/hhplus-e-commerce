@@ -40,15 +40,15 @@ public class ProductService {
         }
     }
 
-    public void increaseProductBalance(Long productId, Long quantity) {
+    public void increaseProductBalance(Long productId) {
         Product product = getProductDetails(productId);
-        product.increaseBalance(productId, quantity);
+        product.increaseBalance(quantity);
         productRepository.save(product);
     }
 
-    public void decreaseProductBalance(Long productId, Long quantity) {
+    public void decreaseProductBalance(Long productId) {
         Product product = getProductDetails(productId);
-        product.decreaseBalance(productId, quantity);
+        product.decreaseBalance(quantity);
         productRepository.save(product);
     }
 }

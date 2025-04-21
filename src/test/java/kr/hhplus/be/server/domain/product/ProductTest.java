@@ -17,7 +17,7 @@ public class ProductTest {
                 .name("Test Product")
                 .description("Test Description")
                 .price(1000L)
-                .balance(new Balance(100L)) // 초기 재고 100
+                .quantity(100L)
                 .build();
 
         // when
@@ -27,7 +27,7 @@ public class ProductTest {
         assertNotNull(product);
         assertEquals("Test Product", product.getName());
         assertEquals(Long.valueOf(1000L), product.getPrice());
-        assertEquals(Long.valueOf(100L), product.getBalance().getQuantity());
+        assertEquals(Long.valueOf(100L), product.getQuantity());
         assertEquals(Product.ProductStatus.AVAILABLE, product.getStatus());
     }
 
@@ -38,7 +38,7 @@ public class ProductTest {
                 .name("Test Product")
                 .description("Test Description")
                 .price(-100L) // 잘못된 가격
-                .balance(new Balance(100L))
+                .quantity(100L)
                 .build();
 
         // when & then
@@ -55,7 +55,7 @@ public class ProductTest {
                 .name("Test Product")
                 .description("Test Description")
                 .price(1000L)
-                .balance(new Balance(-10L)) // 잘못된 재고
+                .quantity(-10L)
                 .build();
 
         // when & then
@@ -72,16 +72,16 @@ public class ProductTest {
                 .name("Test Product")
                 .description("Test Description")
                 .price(1000L)
-                .balance(new Balance(100L))
+                .quantity(100L)
                 .build();
 
         Product product = Product.create(request);
 
         // when
-        product.increaseBalance(product.getProductId(), 50L);
+        product.increaseBalance(50L);
 
         // then
-        assertEquals(Long.valueOf(150L), product.getBalance().getQuantity());
+        assertEquals(Long.valueOf(150L), product.getQuantity());
         assertEquals(Product.ProductStatus.AVAILABLE, product.getStatus()); // 재고가 0이 아니라면 상태는 AVAILABLE이어야 함
     }
 
@@ -92,16 +92,16 @@ public class ProductTest {
                 .name("Test Product")
                 .description("Test Description")
                 .price(1000L)
-                .balance(new Balance(100L))
+                .quantity(100L)
                 .build();
 
         Product product = Product.create(request);
 
         // when
-        product.decreaseBalance(product.getProductId(), 50L);
+        product.decreaseBalance(50L);
 
         // then
-        assertEquals(Long.valueOf(50L), product.getBalance().getQuantity());
+        assertEquals(Long.valueOf(50L), product.getQuantity());
         assertEquals(Product.ProductStatus.AVAILABLE, product.getStatus()); // 재고가 남아있다면 상태는 AVAILABLE이어야 함
     }
 
@@ -112,16 +112,16 @@ public class ProductTest {
                 .name("Test Product")
                 .description("Test Description")
                 .price(1000L)
-                .balance(new Balance(10L)) // 재고가 10
+                .quantity(10L)
                 .build();
 
         Product product = Product.create(request);
 
         // when
-        product.decreaseBalance(product.getProductId(), 10L); // 재고를 모두 소진
+        product.decreaseBalance(10L); // 재고를 모두 소진
 
         // then
-        assertEquals(Long.valueOf(0L), product.getBalance().getQuantity());
+        assertEquals(Long.valueOf(0L), product.getQuantity());
         assertEquals(Product.ProductStatus.SOLD_OUT, product.getStatus()); // 품절 상태로 변경되어야 함
     }
 }

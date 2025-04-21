@@ -24,10 +24,10 @@ public class Product extends BaseEntity {
     @Column(name = "price")
     private Long price;
 
-    @Embedded
-    @Getter
-    private Balance balance;
+    @Column(name = "stock")
+    private Long quantity;
 
+    @Column(name = "status")
     @Enumerated(EnumType.STRING)
     private ProductStatus status;
 
@@ -35,12 +35,12 @@ public class Product extends BaseEntity {
         AVAILABLE, SOLD_OUT
     }
 
-    public Product(Long productId, String name, String description, Long price, Balance balance, ProductStatus status){
+    public Product(Long productId, String name, String description, Long price, Long quantity, ProductStatus status){
         this.productId = productId;
         this.name = name;
         this.description = description;
         this.price = price;
-        this.balance = balance;
+        this.quantity = quantity;
         this.status = status;
     }
 
@@ -49,7 +49,7 @@ public class Product extends BaseEntity {
             throw new IllegalArgumentException(ProductErrorCode.PRODUCT_PRICE_MUST_BE_POSITIVE.getMessage());
         }
 
-        if (request.getBalance() == null || request.getBalance().getQuantity() == null || request.getBalance().getQuantity() < 0){
+        if (request.getQuantity() == null || request.getQuantity() == null || request.getQuantity() < 0){
             throw new IllegalArgumentException(ProductErrorCode.PRODUCT_STOCK_MUST_BE_POSITIVE.getMessage());
         }
 
@@ -58,24 +58,38 @@ public class Product extends BaseEntity {
                 request.getName(),
                 request.getDescription(),
                 request.getPrice(),
-                request.getBalance(),
+                request.getQuantity(),
                 ProductStatus.AVAILABLE
         );
     }
 
-    public void increaseBalance(Long productId, Long amount){
-        balance.increase(amount);
+    public void increaseBalance(Long amount){
+        if(amount == null || amount <= 0){
+            throw new IllegalArgumentException(ProductErrorCode.INCREASE_MUST_BE_POSITIVE.getMessage());
+        }
+        this.quantity += amount;
 
-        if (!this.balance.isSoldOut()) {
+
+        if (!this.isSoldOut()) {
             this.status = ProductStatus.AVAILABLE;
         }
     }
 
-    public void decreaseBalance(Long productId, Long amount){
-        balance.decrease(amount);
+    public void decreaseBalance(Long amount){
+        if(amount == null || amount <= 0){
+            throw new IllegalArgumentException(ProductErrorCode.DECREASE_MUST_BE_POSITIVE.getMessage());
+        }
+        if(amount > quantity){
+            throw new IllegalArgumentException(ProductErrorCode.NOT_ENOUGH_STOCK.getMessage());
+        }
+        this.quantity -= amount;
 
-        if (this.balance.isSoldOut()) {
+        if (this.isSoldOut()) {
             this.status = ProductStatus.SOLD_OUT;
         }
+    }
+
+    public boolean isSoldOut(){
+        return this.quantity == 0L;
     }
 }

@@ -1,7 +1,6 @@
 package kr.hhplus.be.server.domain.product;
 
 import kr.hhplus.be.server.domain.user.User;
-import kr.hhplus.be.server.domain.user.UserPointRepository;
 import kr.hhplus.be.server.domain.user.UserRepository;
 import kr.hhplus.be.server.interfaces.api.product.ProductRequest;
 import kr.hhplus.be.server.support.ForbiddenException;
@@ -26,9 +25,6 @@ public class ProductServiceTest {
     @Mock
     private UserRepository userRepository;
 
-    @Mock
-    private UserPointRepository userPointRepository;
-
     @InjectMocks
     private ProductService productService;
 
@@ -36,7 +32,7 @@ public class ProductServiceTest {
     void 상품_생성_성공() {
         // given
         Long userId = 1L;
-        ProductRequest request = new ProductRequest("Product Name", "Description", 100L, new Balance(10L));
+        ProductRequest request = new ProductRequest("Product Name", "Description", 100L, 10L);
 
         // UserPointEntity를 mock
         User user = new User("하늘", false);
@@ -62,7 +58,7 @@ public class ProductServiceTest {
     @Test
     void 상품_생성_실패_관리자만() {
         Long userId = 1L;
-        ProductRequest request = new ProductRequest("Product", "desc", 100L, new Balance(5L));
+        ProductRequest request = new ProductRequest("Product", "desc", 100L, 5L);
 
         User nonAdminUser = mock(User.class);
         when(userRepository.findById(userId)).thenReturn(nonAdminUser);
@@ -113,10 +109,10 @@ public class ProductServiceTest {
         when(productRepository.findById(productId)).thenReturn(Optional.of(product));
 
         // when
-        productService.increaseProductBalance(productId, quantity);
+        productService.increaseProductBalance(quantity);
 
         // then
-        verify(product).increaseBalance(productId, quantity);
+        verify(product).increaseBalance(quantity);
         verify(productRepository).save(product);
     }
 
@@ -129,10 +125,10 @@ public class ProductServiceTest {
         when(productRepository.findById(productId)).thenReturn(Optional.of(product));
 
         // when
-        productService.decreaseProductBalance(productId, quantity);
+        productService.decreaseProductBalance(quantity);
 
         // then
-        verify(product).decreaseBalance(productId, quantity);
+        verify(product).decreaseBalance(quantity);
         verify(productRepository).save(product);
     }
 }
