@@ -2,40 +2,37 @@ package kr.hhplus.be.server.domain.payment;
 
 import jakarta.persistence.*;
 import kr.hhplus.be.server.domain.common.BaseEntity;
-import kr.hhplus.be.server.domain.order.OrderEntity;
 import lombok.Getter;
 
 @Entity
 @Getter
 @Table(name = "payment")
-public class PaymentEntity extends BaseEntity {
+public class Payment extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long paymentId;
 
-    @ManyToOne
-    private OrderEntity orderEntity;
+    @Column(name = "order_id")
+    private Long orderId;
 
+    @Column(name = "total_amount")
     private Long totalAmount;
+
+    @Column(name = "description")
     private String failureReason;
 
+    @Column(name = "status")
     @Enumerated(EnumType.STRING)
     private PaymentStatus type;
 
-    private PaymentEntity(OrderEntity orderEntity, Long totalAmount, String failureReason, PaymentStatus type){
-        this.orderEntity = orderEntity;
-        this.totalAmount = totalAmount;
-        this.failureReason = failureReason;
-        this.type = type;
+    public enum PaymentStatus {
+        PENDING, COMPLETED, FAIL
     }
 
-    public static PaymentEntity create(OrderEntity orderEntity, Long totalAmount) {
-        return new PaymentEntity(
-                orderEntity,
-                totalAmount,
-                null,
-                PaymentStatus.PENDING
-        );
+    public Payment(Long orderId, Long totalAmount){
+        this.orderId = orderId;
+        this.totalAmount = totalAmount;
+        this.type = PaymentStatus.PENDING;
     }
 
     public void complete(){

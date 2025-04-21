@@ -1,13 +1,14 @@
 package kr.hhplus.be.server.application.payment.facade;
 
 import jakarta.transaction.Transactional;
-import kr.hhplus.be.server.domain.coupon.UserCouponEntity;
-import kr.hhplus.be.server.domain.order.OrderEntity;
-import kr.hhplus.be.server.domain.order.OrderItemEntity;
-import kr.hhplus.be.server.domain.payment.ErrorCode;
-import kr.hhplus.be.server.domain.payment.PaymentEntity;
-import kr.hhplus.be.server.domain.payment.PaymentEntityRepository;
-import kr.hhplus.be.server.domain.user.UserPointEntity;
+import kr.hhplus.be.server.domain.coupon.Coupon;
+import kr.hhplus.be.server.domain.coupon.CouponService;
+import kr.hhplus.be.server.domain.order.Order;
+import kr.hhplus.be.server.domain.order.OrderItem;
+import kr.hhplus.be.server.domain.order.OrderService;
+import kr.hhplus.be.server.domain.payment.Payment;
+import kr.hhplus.be.server.domain.payment.PaymentService;
+import kr.hhplus.be.server.domain.user.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -15,33 +16,43 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class PaymentFacade {
 
-    private final PaymentEntityRepository paymentEntityRepository;
+    private final PaymentService paymentService;
+    private final OrderService orderService;
+    private final CouponService couponService;
+    private final UserService userService;
 
     @Transactional
-    public PaymentEntity completePayment(Long paymentId){
-        PaymentEntity paymentEntity = paymentEntityRepository.findById(paymentId)
-                .orElseThrow(() -> new IllegalArgumentException(String.valueOf(ErrorCode.PAYMENT_NOT_FOUND.getMessage())));
+    public Payment processPayment(Long paymentId){
 
-        OrderEntity orderEntity = paymentEntity.getOrderEntity();
+        Payment payment = paymentService.getPayment(paymentId);
+        Order order = orderService.getOrder(payment.getOrderId());
 
-        Long totalAmount = orderEntity.getOrderItemEntities().stream()
-                .mapToLong(OrderItemEntity::getTotalPrice)
-                .sum();
+        try{
+            Long totalAmount = order.getItems().stream()
+                    .mapToLong(OrderItem::getTotalPrice)
+                    .sum();
 
-        UserCouponEntity couponEntity = orderEntity.getUserCouponEntity();
-        long discount = 0L;
-        if (couponEntity != null){
-            discount = couponEntity.getCouponEntity().calculateDiscount(totalAmount);
-            couponEntity.use();
+            Coupon userCoupon = couponService.getCoupon(order.getCouponId());
+
+            long discount = 0L;
+            if (userCoupon != null){
+                couponService.use(order.getCouponId());
+                discount = userCoupon.calculateDiscount(totalAmount);
+            }
+            long finalAmount = totalAmount - discount;
+
+            UserWithPointResponse user = userService.getUser(order.getUserId());
+
+            // 포인트 부족하면 예외 발생
+            user.getUserPoint().use(finalAmount);
+            payment.complete();
+            order.complete();
+        }catch (Exception e){
+            String failReason = e.getMessage();
+            payment.fail(failReason);
+            order.fail();
         }
-        long finalAmount = totalAmount - discount;
 
-        UserPointEntity userPointEntity = orderEntity.getUserPointEntity();
-        userPointEntity.getPoint().use(finalAmount);
-
-        paymentEntity.complete();
-        orderEntity.complete();
-
-        return paymentEntityRepository.save(paymentEntity);
+        return payment;
     }
 }

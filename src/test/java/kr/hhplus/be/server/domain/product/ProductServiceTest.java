@@ -109,7 +109,7 @@ public class ProductServiceTest {
         when(productRepository.findById(productId)).thenReturn(Optional.of(product));
 
         // when
-        productService.increaseProductBalance(quantity);
+        productService.increaseProductBalance(productId, quantity);
 
         // then
         verify(product).increaseBalance(quantity);
@@ -125,7 +125,7 @@ public class ProductServiceTest {
         when(productRepository.findById(productId)).thenReturn(Optional.of(product));
 
         // when
-        productService.decreaseProductBalance(quantity);
+        productService.decreaseProductBalance(productId, quantity);
 
         // then
         verify(product).decreaseBalance(quantity);

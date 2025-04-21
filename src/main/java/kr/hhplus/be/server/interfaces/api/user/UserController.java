@@ -7,7 +7,7 @@ import kr.hhplus.be.server.domain.coupon.CouponService;
 import kr.hhplus.be.server.domain.coupon.UserCoupon;
 import kr.hhplus.be.server.domain.order.Order;
 import kr.hhplus.be.server.domain.order.OrderService;
-import kr.hhplus.be.server.domain.payment.PaymentEntity;
+import kr.hhplus.be.server.domain.payment.Payment;
 import kr.hhplus.be.server.domain.payment.PaymentService;
 import kr.hhplus.be.server.domain.point.PointHistory;
 import kr.hhplus.be.server.domain.user.*;
@@ -86,7 +86,7 @@ public class UserController {
     @GetMapping("/{userId}/payments")
     @Operation(summary = "사용자 결제 내역 조회", description = "사용자 결제 내역을 조회합니다.")
     public CustomApiResponse getUserPayment(@PathVariable("userId") @Parameter(name = "userId", description = "사용자의 ID") Long userId){
-        List<PaymentEntity> paymentEntityList = paymentService.getPaymentByUserId(userId);
-        return CustomApiResponse.success(ApiMessage.VIEW_SUCCESS, paymentEntityList);
+        List<Payment> paymentList = paymentService.getPaymentByUserId(userId);
+        return CustomApiResponse.success(ApiMessage.VIEW_SUCCESS, paymentList);
     }
 }

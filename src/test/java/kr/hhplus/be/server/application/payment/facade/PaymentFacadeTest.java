@@ -1,14 +1,15 @@
 package kr.hhplus.be.server.application.payment.facade;
 
-import kr.hhplus.be.server.domain.coupon.CouponEntity;
-import kr.hhplus.be.server.domain.coupon.UserCouponEntity;
-import kr.hhplus.be.server.domain.order.OrderEntity;
-import kr.hhplus.be.server.domain.order.OrderItemEntity;
-import kr.hhplus.be.server.domain.payment.ErrorCode;
-import kr.hhplus.be.server.domain.payment.PaymentEntity;
-import kr.hhplus.be.server.domain.payment.PaymentEntityRepository;
+import kr.hhplus.be.server.domain.coupon.Coupon;
+import kr.hhplus.be.server.domain.coupon.CouponService;
+import kr.hhplus.be.server.domain.order.Order;
+import kr.hhplus.be.server.domain.order.OrderItem;
+import kr.hhplus.be.server.domain.order.OrderService;
+import kr.hhplus.be.server.domain.payment.Payment;
+import kr.hhplus.be.server.domain.payment.PaymentService;
 import kr.hhplus.be.server.domain.user.UserPoint;
-import kr.hhplus.be.server.domain.user.UserPointEntity;
+import kr.hhplus.be.server.domain.user.UserService;
+import kr.hhplus.be.server.domain.user.UserWithPointResponse;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -16,7 +17,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
-import java.util.Optional;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
@@ -25,62 +25,82 @@ import static org.mockito.Mockito.*;
 public class PaymentFacadeTest {
 
     @Mock
-    private PaymentEntityRepository paymentEntityRepository;
+    private PaymentService paymentService;
+
+    @Mock
+    private OrderService orderService;
+
+    @Mock
+    private CouponService couponService;
+
+    @Mock
+    private UserService userService;
 
     @InjectMocks
     private PaymentFacade paymentFacade;
 
     @Test
-    void 결제_성공() {
-        // given
+    void 결제_성공_처리() {
         Long paymentId = 1L;
-        PaymentEntity paymentEntity = mock(PaymentEntity.class);
-        OrderEntity orderEntity = mock(OrderEntity.class);
-        OrderItemEntity orderItemEntity1 = mock(OrderItemEntity.class);
-        OrderItemEntity orderItemEntity2 = mock(OrderItemEntity.class);
-        UserCouponEntity userCouponEntity = mock(UserCouponEntity.class);
-        UserPointEntity userPointEntity = mock(UserPointEntity.class);
-        UserPoint userPoint = mock(UserPoint.class);
-        CouponEntity couponEntity = mock(CouponEntity.class);
+        Long orderId = 2L;
+        Long userId = 3L;
 
-        when(paymentEntityRepository.findById(paymentId)).thenReturn(Optional.of(paymentEntity));
-        when(paymentEntity.getOrderEntity()).thenReturn(orderEntity);
-        when(orderEntity.getOrderItemEntities()).thenReturn(List.of(orderItemEntity1, orderItemEntity2));
-        when(orderItemEntity1.getTotalPrice()).thenReturn(500L);
-        when(orderItemEntity2.getTotalPrice()).thenReturn(500L);
+        Payment payment = mock(Payment.class);
+        Order order = mock(Order.class);
+        Coupon coupon = mock(Coupon.class);
+        UserWithPointResponse user = mock(UserWithPointResponse.class);
+        UserPoint point = mock(UserPoint.class);
 
-        when(orderEntity.getUserCouponEntity()).thenReturn(userCouponEntity);
-        when(orderEntity.getUserPointEntity()).thenReturn(userPointEntity);
-        when(orderEntity.getUserPointEntity().getPoint()).thenReturn(userPoint);
+        List<OrderItem> items = List.of(new OrderItem(order, 1L, 1L, 500L));  // 총 1000원
+        when(payment.getOrderId()).thenReturn(orderId);
+        when(order.getUserId()).thenReturn(userId);
+        when(order.getItems()).thenReturn(items);
+        when(coupon.calculateDiscount(anyLong())).thenReturn(200L);
+        when(user.getUserPoint()).thenReturn(point);
 
-        when(userCouponEntity.getCouponEntity()).thenReturn(couponEntity);
-        when(couponEntity.calculateDiscount(1000L)).thenReturn(100L);
+        when(paymentService.getPayment(paymentId)).thenReturn(payment);
+        when(orderService.getOrder(orderId)).thenReturn(order);
+        when(couponService.getCoupon(any())).thenReturn(coupon);
+        when(userService.getUser(userId)).thenReturn(user);
 
-        doNothing().when(userPoint).use(900L); // finalAmount = 1000 - 100 = 900
+        Payment result = paymentFacade.processPayment(paymentId);
 
-        // when
-        PaymentEntity result = paymentFacade.completePayment(paymentId);
-
-        // then
-        verify(paymentEntityRepository).findById(paymentId);
-        verify(paymentEntityRepository).save(paymentEntity);
-        verify(paymentEntity).complete();
-        verify(orderEntity).complete();
-        verify(userPoint).use(900L);
-        verify(userCouponEntity).use();
+        verify(point).use(800L); // 1000 - 200
+        verify(payment).complete();
+        verify(order).complete();
+        assertEquals(payment, result);
     }
 
     @Test
-    void 결제_실패() {
-        // given
+    void 결제_실패_처리_포인트부족() {
         Long paymentId = 1L;
+        Long orderId = 2L;
+        Long userId = 3L;
 
-        // when & then
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-            paymentFacade.completePayment(paymentId);
-        });
+        Payment payment = mock(Payment.class);
+        Order order = mock(Order.class);
+        Coupon coupon = mock(Coupon.class);
+        UserWithPointResponse user = mock(UserWithPointResponse.class);
+        UserPoint point = mock(UserPoint.class);
 
-        // ErrorCode.PAYMENT_NOT_FOUND의 메시지가 예외 메시지와 일치하는지 검증
-        assertEquals(ErrorCode.PAYMENT_NOT_FOUND.getMessage(), exception.getMessage());
+        List<OrderItem> items = List.of(new OrderItem(order, 1L, 1L, 500L)); // 총 1000원
+        when(payment.getOrderId()).thenReturn(orderId);
+        when(order.getUserId()).thenReturn(userId);
+        when(order.getItems()).thenReturn(items);
+        when(coupon.calculateDiscount(anyLong())).thenReturn(0L);
+        when(user.getUserPoint()).thenReturn(point);
+
+        when(paymentService.getPayment(paymentId)).thenReturn(payment);
+        when(orderService.getOrder(orderId)).thenReturn(order);
+        when(couponService.getCoupon(any())).thenReturn(coupon);
+        when(userService.getUser(userId)).thenReturn(user);
+
+        // 포인트 부족 예외
+        doThrow(new IllegalArgumentException("포인트가 부족합니다")).when(point).use(anyLong());
+
+        Payment result = paymentFacade.processPayment(paymentId);
+
+        verify(payment).fail("포인트가 부족합니다");
+        verify(order).fail();
     }
 }

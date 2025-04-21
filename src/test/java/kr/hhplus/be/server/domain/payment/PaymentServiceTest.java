@@ -1,8 +1,8 @@
 package kr.hhplus.be.server.domain.payment;
 
-import kr.hhplus.be.server.domain.order.OrderEntity;
-import kr.hhplus.be.server.domain.order.OrderEntityRepository;
-import kr.hhplus.be.server.domain.order.OrderItemEntity;
+import kr.hhplus.be.server.domain.order.Order;
+import kr.hhplus.be.server.domain.order.OrderRepository;
+import kr.hhplus.be.server.domain.order.OrderItem;
 import kr.hhplus.be.server.interfaces.api.payment.PaymentCreateRequest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -24,10 +24,10 @@ public class PaymentServiceTest {
     private PaymentService paymentService;
 
     @Mock
-    private PaymentEntityRepository paymentEntityRepository;
+    private PaymentRepository paymentRepository;
 
     @Mock
-    private OrderEntityRepository orderEntityRepository;
+    private OrderRepository orderRepository;
 
     @Test
     void 결제_생성_성공() {
@@ -35,41 +35,41 @@ public class PaymentServiceTest {
         Long orderId = 1L;
         Long totalPrice = 5000L;
 
-        OrderItemEntity item1 = OrderItemEntity.builder().quantity(1L).unitPrice(3000L).build();
-        OrderItemEntity item2 = OrderItemEntity.builder().quantity(1L).unitPrice(2000L).build();
-        List<OrderItemEntity> items = List.of(item1, item2);
+        OrderItem item1 = OrderItem.builder().quantity(1L).price(3000L).build();
+        OrderItem item2 = OrderItem.builder().quantity(1L).price(2000L).build();
+        List<OrderItem> items = List.of(item1, item2);
 
-        OrderEntity order = OrderEntity.builder()
+        Order order = Order.builder()
                 .orderId(orderId)
-                .orderItemEntities(new ArrayList<>())
+                .items(new ArrayList<>())
                 .build();
-        order.getOrderItemEntities().addAll(items);
+        order.getItems().addAll(items);
 
-        when(orderEntityRepository.findById(orderId)).thenReturn(Optional.of(order));
-        when(paymentEntityRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
+        when(paymentRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
         PaymentCreateRequest request = new PaymentCreateRequest(orderId);
 
         // when
-        PaymentEntity result = paymentService.create(request);
+        Payment result = paymentService.create(request);
 
         // then
         assertNotNull(result);
-        assertEquals(order, result.getOrderEntity());
+        assertEquals(order.getOrderId(), result.getOrderId());
         assertEquals(totalPrice, result.getTotalAmount());
-        assertEquals(PaymentStatus.PENDING, result.getType());
-        verify(paymentEntityRepository).save(any(PaymentEntity.class));
+        assertEquals(Payment.PaymentStatus.PENDING, result.getType());
+        verify(paymentRepository).save(any(Payment.class));
     }
 
     @Test
     void 결제_조회_성공() {
         // given
         Long paymentId = 1L;
-        PaymentEntity payment = mock(PaymentEntity.class);
-        when(paymentEntityRepository.findById(paymentId)).thenReturn(Optional.of(payment));
+        Payment payment = mock(Payment.class);
+        when(paymentRepository.findById(paymentId)).thenReturn(Optional.of(payment));
 
         // when
-        PaymentEntity result = paymentService.getPayment(paymentId);
+        Payment result = paymentService.getPayment(paymentId);
 
         // then
         assertEquals(payment, result);
@@ -79,7 +79,7 @@ public class PaymentServiceTest {
     void 결제_조회_실패() {
         // given
         Long paymentId = 99L;
-        when(paymentEntityRepository.findById(paymentId)).thenReturn(Optional.empty());
+        when(paymentRepository.findById(paymentId)).thenReturn(Optional.empty());
 
         // when & then
         assertThrows(IllegalArgumentException.class, () -> paymentService.getPayment(paymentId));
@@ -89,15 +89,17 @@ public class PaymentServiceTest {
     void 결제_성공_처리() {
         // given
         Long paymentId = 1L;
-        PaymentEntity payment = PaymentEntity.create(mock(OrderEntity.class), 10000L);
-        when(paymentEntityRepository.findById(paymentId)).thenReturn(Optional.of(payment));
+        Long orderId = 1L;
+        Long totalAmount = 2000L;
+        Payment payment = new Payment(orderId, totalAmount);
+        when(paymentRepository.findById(paymentId)).thenReturn(Optional.of(payment));
 
         // when
         paymentService.updateStatusComplete(paymentId);
 
         // then
-        assertEquals(PaymentStatus.COMPLETED, payment.getType());
-        verify(paymentEntityRepository).save(payment);
+        assertEquals(Payment.PaymentStatus.COMPLETED, payment.getType());
+        verify(paymentRepository).save(payment);
     }
 
     @Test
@@ -105,27 +107,29 @@ public class PaymentServiceTest {
         // given
         Long paymentId = 2L;
         String reason = "카드 한도 초과";
-        PaymentEntity payment = PaymentEntity.create(mock(OrderEntity.class), 15000L);
-        when(paymentEntityRepository.findById(paymentId)).thenReturn(Optional.of(payment));
+        Long orderId = 1L;
+        Long totalAmount = 2000L;
+        Payment payment = new Payment(orderId, totalAmount);
+        when(paymentRepository.findById(paymentId)).thenReturn(Optional.of(payment));
 
         // when
         paymentService.updateStatusFail(paymentId, reason);
 
         // then
-        assertEquals(PaymentStatus.FAIL, payment.getType());
+        assertEquals(Payment.PaymentStatus.FAIL, payment.getType());
         assertEquals(reason, payment.getFailureReason());
-        verify(paymentEntityRepository).save(payment);
+        verify(paymentRepository).save(payment);
     }
 
     @Test
     void 상태별_결제_조회() {
         // given
-        PaymentStatus status = PaymentStatus.COMPLETED;
-        List<PaymentEntity> list = List.of(mock(PaymentEntity.class));
-        when(paymentEntityRepository.findAllByStatus(status)).thenReturn(list);
+        Payment.PaymentStatus status = Payment.PaymentStatus.COMPLETED;
+        List<Payment> list = List.of(mock(Payment.class));
+        when(paymentRepository.findAllByStatus(status)).thenReturn(list);
 
         // when
-        List<PaymentEntity> result = paymentService.getPayments(status);
+        List<Payment> result = paymentService.getPayments(status);
 
         // then
         assertEquals(1, result.size());
@@ -136,11 +140,11 @@ public class PaymentServiceTest {
     void 유저별_결제_조회() {
         // given
         Long userId = 123L;
-        List<PaymentEntity> list = List.of(mock(PaymentEntity.class));
-        when(paymentEntityRepository.findByUserId(userId)).thenReturn(list);
+        List<Payment> list = List.of(mock(Payment.class));
+        when(paymentRepository.findByUserId(userId)).thenReturn(list);
 
         // when
-        List<PaymentEntity> result = paymentService.getPaymentByUserId(userId);
+        List<Payment> result = paymentService.getPaymentByUserId(userId);
 
         // then
         assertEquals(1, result.size());
