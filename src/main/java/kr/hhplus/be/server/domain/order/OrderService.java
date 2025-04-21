@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -24,9 +25,9 @@ public class OrderService {
 
     public Order create(OrderReqeust request){
         User user = userRepository.findById(request.getUserId());
-        UserCoupon userCoupon = userCouponRepository.findByUserAndCoupon(request.getUserId(), request.getCouponId());
+        Optional<UserCoupon> userCoupon = userCouponRepository.findById(request.getUserCouponId());
 
-        Order order = new Order(user.getUserId(), userCoupon.getUserCouponId());
+        Order order = new Order(user.getUserId(), userCoupon.get().getCouponId());
 
         for (OrderItemRequest orderItemRequest : request.getOrderItems()) {
             Product product = productRepository.findById(orderItemRequest.getProductId())

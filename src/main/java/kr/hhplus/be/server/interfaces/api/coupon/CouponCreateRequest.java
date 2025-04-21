@@ -1,8 +1,7 @@
 package kr.hhplus.be.server.interfaces.api.coupon;
 
-import kr.hhplus.be.server.domain.coupon.DiscountType;
+import kr.hhplus.be.server.domain.coupon.Coupon;
 import lombok.Data;
-import lombok.RequiredArgsConstructor;
 
 import java.time.LocalDateTime;
 
@@ -10,7 +9,7 @@ import java.time.LocalDateTime;
 public class CouponCreateRequest {
     private String name;
     private Long totalCount;
-    private DiscountType discountType;
+    private Coupon.DiscountType discountType;
     private Long discountRate;
     private Long discountAmount;
     private LocalDateTime startDate;

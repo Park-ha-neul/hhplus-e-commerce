@@ -3,42 +3,60 @@ package kr.hhplus.be.server.domain.coupon;
 import jakarta.persistence.*;
 import kr.hhplus.be.server.domain.common.BaseEntity;
 import kr.hhplus.be.server.interfaces.api.coupon.CouponCreateRequest;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Getter
 @Builder
-@AllArgsConstructor
 @Table(name = "coupon")
-public class CouponEntity extends BaseEntity {
+public class Coupon extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long couponId;
 
+    @Column(name = "coupon_name")
     private String name;
+
+    @Column(name = "total_quantity")
     private Long totalCount;
+
+    @Column(name = "issued_quantity")
     private Long issuedCount;
 
+    @Column(name = "coupon_type")
     private DiscountType discountType;
+
+    @Column(name = "discount_rate")
     private Long discountRate;
+
+    @Column(name = "discount_amount")
     private Long discountAmount;
 
+    @Column(name = "status")
     @Enumerated(EnumType.STRING)
     private CouponStatus status;
 
+    @Column(name = "start_date")
     private LocalDateTime startDate;
+    @Column(name = "end_date")
     private LocalDateTime endDate;
 
-    private CouponEntity(String name, Long totalCount, Long issuedCount, DiscountType dstype, Long discountRate, Long discountAmount, CouponStatus status, LocalDateTime startDate, LocalDateTime endDate){
+    public enum DiscountType{
+        RATE, AMOUNT;
+    }
+
+    public enum CouponStatus {
+        ACTIVE, INACTIVE
+    }
+
+    public Coupon(String name, Long totalCount, Long issuedCount, DiscountType dsType, Long discountRate, Long discountAmount, CouponStatus status, LocalDateTime startDate, LocalDateTime endDate){
         this.name = name;
         this.totalCount = totalCount;
         this.issuedCount = issuedCount;
-        this.discountType = dstype;
+        this.discountType = dsType;
         this.discountRate = discountRate;
         this.discountAmount = discountAmount;
         this.status = status;
@@ -46,7 +64,7 @@ public class CouponEntity extends BaseEntity {
         this.endDate = endDate;
     }
 
-    public static CouponEntity create(CouponCreateRequest request){
+    public static Coupon create(CouponCreateRequest request){
         if (request.getDiscountType() == DiscountType.RATE) {
             if (request.getDiscountRate() == null) {
                 throw new IllegalArgumentException(ErrorCode.DISCOUNT_RATE_NOT_FOUND.getMessage());
@@ -59,7 +77,7 @@ public class CouponEntity extends BaseEntity {
             throw new IllegalArgumentException(ErrorCode.COUPON_TYPE_NOT_FOUND.getMessage());
         }
 
-        return new CouponEntity(
+        return new Coupon(
                 request.getName(),
                 request.getTotalCount(),
                 0L,

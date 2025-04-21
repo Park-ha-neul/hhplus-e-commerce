@@ -2,8 +2,7 @@ package kr.hhplus.be.server.domain.coupon;
 
 import kr.hhplus.be.server.domain.user.User;
 import kr.hhplus.be.server.domain.user.UserPoint;
-import kr.hhplus.be.server.domain.user.UserPointEntity;
-import kr.hhplus.be.server.domain.user.UserPointEntityRepository;
+import kr.hhplus.be.server.domain.user.UserPointRepository;
 import kr.hhplus.be.server.interfaces.api.coupon.CouponCreateRequest;
 import kr.hhplus.be.server.support.ForbiddenException;
 import org.junit.jupiter.api.Test;
@@ -28,56 +27,56 @@ public class CouponServiceTest {
     private CouponService couponService;
 
     @Mock
-    private CouponEntityRepository couponEntityRepository;
+    private CouponRepository couponRepository;
 
     @Mock
-    private UserCouponEntityRepository userCouponEntityRepository;
+    private UserCouponRepository userCouponRepository;
 
     @Mock
-    private UserPointEntityRepository userPointEntityRepository;
+    private UserPointRepository userPointRepository;
 
     @Test
     void 사용가능한_쿠폰_목록_조회(){
-        CouponEntity coupon1 = CouponEntity.builder()
+        Coupon coupon1 = Coupon.builder()
                 .couponId(1L)
                 .name("할인쿠폰")
-                .status(CouponStatus.INACTIVE)
+                .status(Coupon.CouponStatus.INACTIVE)
                 .build();
-        CouponEntity coupon2 = CouponEntity.builder()
+        Coupon coupon2 = Coupon.builder()
                 .couponId(2L)
                 .name("할인쿠폰")
-                .status(CouponStatus.ACTIVE)
+                .status(Coupon.CouponStatus.ACTIVE)
                 .build();
-        List<CouponEntity> activeCoupons = List.of(coupon2);
-        when(couponEntityRepository.findAllByStatus(CouponStatus.ACTIVE))
+        List<Coupon> activeCoupons = List.of(coupon2);
+        when(couponRepository.findAllByStatus(Coupon.CouponStatus.ACTIVE))
                 .thenReturn(activeCoupons);
 
         // when
-        List<CouponEntity> result = couponService.getCoupons(CouponStatus.ACTIVE);
+        List<Coupon> result = couponService.getCoupons(Coupon.CouponStatus.ACTIVE);
 
         // then
         assertEquals(1, result.size());
-        assertEquals(CouponStatus.ACTIVE, result.get(0).getStatus());
+        assertEquals(Coupon.CouponStatus.ACTIVE, result.get(0).getStatus());
     }
 
     @Test
     void 조건없이_쿠폰목록_모두_조회(){
-        CouponEntity coupon1 = CouponEntity.builder()
+        Coupon coupon1 = Coupon.builder()
                 .name("할인쿠폰")
                 .totalCount(2000L)
-                .status(CouponStatus.INACTIVE)
+                .status(Coupon.CouponStatus.INACTIVE)
                 .build();
-        CouponEntity coupon2 = CouponEntity.builder()
+        Coupon coupon2 = Coupon.builder()
                 .name("할인쿠폰")
                 .totalCount(2000L)
-                .status(CouponStatus.ACTIVE)
+                .status(Coupon.CouponStatus.ACTIVE)
                 .build();
 
-        List<CouponEntity> allCoupons = List.of(coupon1, coupon2);
-        when(couponEntityRepository.findAll()).thenReturn(allCoupons);
+        List<Coupon> allCoupons = List.of(coupon1, coupon2);
+        when(couponRepository.findAllCoupons()).thenReturn(allCoupons);
 
         // when
-        List<CouponEntity> result = couponService.getCoupons(null);
+        List<Coupon> result = couponService.getCoupons(null);
 
         // then
         assertEquals(2, result.size());
@@ -85,14 +84,14 @@ public class CouponServiceTest {
 
     @Test
     void 쿠폰_상세_조회(){
-        CouponEntity coupon1 = CouponEntity.builder()
+        Coupon coupon1 = Coupon.builder()
                 .couponId(1L)
                 .name("할인 쿠폰")
                 .build();
-        when(couponEntityRepository.findById(1L)).thenReturn(Optional.of(coupon1));
+        when(couponRepository.findById(1L)).thenReturn(Optional.of(coupon1));
 
         // when
-        CouponEntity result = couponService.getCoupon(1L);
+        Coupon result = couponService.getCoupon(1L);
 
         // then
         assertEquals(Long.valueOf(1L), result.getCouponId());
@@ -101,40 +100,39 @@ public class CouponServiceTest {
 
     @Test
     void 쿠폰_등록(){
-        User user = new User(true);
+        User user = new User("하늘", true);
         ReflectionTestUtils.setField(user, "userId", 1L);
 
-        UserPoint point = new UserPoint(1000L);
-        UserPointEntity userPointEntity = new UserPointEntity(user, point);
+        UserPoint point = new UserPoint(user.getUserId(), 1000L);
 
-        when(userPointEntityRepository.findById(1L)).thenReturn(Optional.of(userPointEntity));
+        when(userPointRepository.findByUserId(user.getUserId())).thenReturn(point);
 
         CouponCreateRequest request = mock(CouponCreateRequest.class);
-        when(request.getDiscountType()).thenReturn(DiscountType.AMOUNT);
+        when(request.getDiscountType()).thenReturn(Coupon.DiscountType.AMOUNT);
         when(request.getDiscountAmount()).thenReturn(1000L);
         when(request.getName()).thenReturn("테스트쿠폰");
         when(request.getTotalCount()).thenReturn(100L);
         when(request.getStartDate()).thenReturn(LocalDateTime.now());
         when(request.getEndDate()).thenReturn(LocalDateTime.now().plusDays(7));
 
-        when(couponEntityRepository.save(any(CouponEntity.class)))
+        when(couponRepository.save(any(Coupon.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
-        CouponEntity result = couponService.create(request, 1L);
+        Coupon result = couponService.create(request, 1L);
 
         assertNotNull(result);
-        verify(couponEntityRepository).save(any(CouponEntity.class));
+        verify(couponRepository).save(any(Coupon.class));
     }
 
     @Test
     void 쿠폰_등록시_관리자가_아닌경우_예외처리(){
-        User user = new User(false); // isAdmin = false
-        ReflectionTestUtils.setField(user, "userId", 1L);
+        Long userId = 1L;
+        User user = new User("하늘", false); // isAdmin = false
+        ReflectionTestUtils.setField(user, "userId", userId);
 
-        UserPoint point = new UserPoint(1000L);
-        UserPointEntity userPointEntity = new UserPointEntity(user, point);
+        UserPoint point = new UserPoint(userId,1000L);
 
-        when(userPointEntityRepository.findById(1L)).thenReturn(Optional.of(userPointEntity));
+        when(userPointRepository.findByUserId(userId)).thenReturn(point);
 
         CouponCreateRequest request = mock(CouponCreateRequest.class);
 
@@ -150,59 +148,62 @@ public class CouponServiceTest {
     @Test
     void 사용자_쿠폰_정상_발급(){
         Long userId = 1L;
+        Long point = 200L;
         Long couponId = 100L;
 
-        UserPointEntity user = UserPointEntity.builder().userId(userId).build();
-        CouponEntity coupon = CouponEntity.builder()
+        UserPoint user = new UserPoint(userId, point);
+        Coupon coupon = Coupon.builder()
                 .couponId(couponId)
                 .totalCount(1000L)
-                .status(CouponStatus.ACTIVE)
+                .status(Coupon.CouponStatus.ACTIVE)
                 .issuedCount(0L)
                 .build();
 
-        when(userPointEntityRepository.findById(userId)).thenReturn(Optional.of(user));
-        when(couponEntityRepository.findById(couponId)).thenReturn(Optional.of(coupon));
-        when(userCouponEntityRepository.save(any(UserCouponEntity.class)))
+        when(userPointRepository.findByUserId(userId)).thenReturn(user);
+        when(couponRepository.findById(couponId)).thenReturn(Optional.of(coupon));
+        when(userCouponRepository.save(any(UserCoupon.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
-        UserCouponEntity result = couponService.issueCouponToUser(userId, couponId);
+        UserCoupon result = couponService.issue(userId, couponId);
 
         assertNotNull(result);
-        verify(userCouponEntityRepository).save(any(UserCouponEntity.class));
-        verify(couponEntityRepository).save(coupon);
+        verify(userCouponRepository).save(any(UserCoupon.class));
+        verify(couponRepository).save(coupon);
     }
 
     @Test
     void 비활성화된_쿠폰_발급_실패_예외처리(){
         Long userId = 1L;
+        Long point = 200L;
         Long couponId = 100L;
 
-        UserPointEntity user = UserPointEntity.builder().userId(userId).build();
-        CouponEntity coupon = CouponEntity.builder()
+        UserPoint user = new UserPoint(userId, point);
+        Coupon coupon = Coupon.builder()
                 .couponId(couponId)
-                .status(CouponStatus.INACTIVE)
+                .status(Coupon.CouponStatus.INACTIVE)
                 .build();
 
-        when(userPointEntityRepository.findById(userId)).thenReturn(Optional.of(user));
-        when(couponEntityRepository.findById(couponId)).thenReturn(Optional.of(coupon));
+        when(userPointRepository.findByUserId(userId)).thenReturn(user);
+        when(couponRepository.findById(couponId)).thenReturn(Optional.of(coupon));
 
         assertThrows(IllegalArgumentException.class,
-                () -> couponService.issueCouponToUser(userId, couponId));
+                () -> couponService.issue(userId, couponId));
     }
 
     @Test
     void 사용자_발급_쿠폰_목록조회(){
         Long userId = 1L;
-        UserPointEntity user = UserPointEntity.builder().userId(userId).build();
+        Long point = 200L;
+        UserPoint user = new UserPoint(userId, point);
 
-        UserCouponEntity coupon1 = mock(UserCouponEntity.class);
-        UserCouponEntity coupon2 = mock(UserCouponEntity.class);
-        List<UserCouponEntity> coupons = List.of(coupon1, coupon2);
+        UserCoupon coupon1 = mock(UserCoupon.class);
+        UserCoupon coupon2 = mock(UserCoupon.class);
+        List<UserCoupon> coupons = List.of(coupon1, coupon2);
 
-        when(userPointEntityRepository.findById(userId)).thenReturn(Optional.of(user));
-        when(userCouponEntityRepository.findByUserId(userId)).thenReturn(coupons);
+        when(userPointRepository.findByUserId(userId)).thenReturn(user);
+        when(userCouponRepository.findByUserId(userId)).thenReturn(coupons);
 
-        List<UserCouponEntity> result = couponService.getUserCoupons(userId);
+        List<UserCoupon> result = couponService.getUserCoupons(userId);
 
         assertEquals(2, result.size());
     }

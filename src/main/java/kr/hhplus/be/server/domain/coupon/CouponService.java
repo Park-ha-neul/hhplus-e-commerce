@@ -1,9 +1,8 @@
 package kr.hhplus.be.server.domain.coupon;
 
 import jakarta.transaction.Transactional;
-import kr.hhplus.be.server.domain.user.UserPointEntity;
-import kr.hhplus.be.server.domain.user.UserPointEntityRepository;
-import kr.hhplus.be.server.domain.user.UserPointErrorCode;
+import kr.hhplus.be.server.domain.user.User;
+import kr.hhplus.be.server.domain.user.UserRepository;
 import kr.hhplus.be.server.interfaces.api.coupon.CouponCreateRequest;
 import kr.hhplus.be.server.support.CustomBadRequestException;
 import kr.hhplus.be.server.support.ForbiddenException;
@@ -16,78 +15,71 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CouponService {
 
-    private CouponEntityRepository couponEntityRepository;
-    private UserPointEntityRepository userPointEntityRepository;
-    private UserCouponEntityRepository userCouponEntityRepository;
+    private CouponRepository couponRepository;
+    private UserRepository userRepository;
+    private UserCouponRepository userCouponRepository;
 
-    public List<CouponEntity> getCoupons(CouponStatus status){
+    public List<Coupon> getCoupons(Coupon.CouponStatus status){
         if (status != null){
-            return couponEntityRepository.findAllByStatus(status);
+            return couponRepository.findAllByStatus(status);
         } else {
-            return couponEntityRepository.findAll();
+            return couponRepository.findAllCoupons();
         }
     }
 
-    public CouponEntity getCoupon(Long couponId){
-        return couponEntityRepository.findById(couponId)
+    public Coupon getCoupon(Long couponId){
+        return couponRepository.findById(couponId)
                 .orElseThrow(() -> new IllegalArgumentException(ErrorCode.COUPON_NOT_FOUND.getMessage()));
     }
 
-    public CouponEntity create(CouponCreateRequest request, Long userId){
-        UserPointEntity userPointEntity = userPointEntityRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException(UserPointErrorCode.USER_NOT_FOUND.getMessage()));
-
-        if(!userPointEntity.getUser().isAdmin()){
+    public Coupon create(CouponCreateRequest request, Long userId){
+        User user = userRepository.findById(userId);
+        if(!user.isAdmin()){
             throw new ForbiddenException(ErrorCode.CREATE_COUPON_MUST_BE_ADMIN.getMessage());
         }
 
         try {
-            CouponEntity coupon = CouponEntity.create(request);
-            return couponEntityRepository.save(coupon);
+            Coupon coupon = Coupon.create(request);
+            return couponRepository.save(coupon);
         } catch (IllegalArgumentException e) {
             throw new CustomBadRequestException(e.getMessage());
         }
     }
 
     @Transactional
-    public UserCouponEntity issueCouponToUser(Long userId, Long couponId){
-        UserPointEntity user = userPointEntityRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException(UserPointErrorCode.USER_NOT_FOUND.getMessage()));
+    public UserCoupon issue(Long userId, Long couponId){
+        User user = userRepository.findById(userId);
 
-        CouponEntity coupon = couponEntityRepository.findById(couponId)
+        Coupon coupon = couponRepository.findById(couponId)
                 .orElseThrow(() -> new IllegalArgumentException(ErrorCode.COUPON_NOT_FOUND.getMessage()));
 
-        if(coupon.getStatus() != CouponStatus.ACTIVE){
+        if(coupon.getStatus() != Coupon.CouponStatus.ACTIVE){
             throw new IllegalArgumentException(ErrorCode.INACTIVE_COUPON.getMessage());
         }
 
-        UserCouponEntity userCouponEntity = UserCouponEntity.create(user, coupon);
-        userCouponEntityRepository.save(userCouponEntity);
-
+        UserCoupon userCoupon = new UserCoupon(userId, couponId);
+        userCouponRepository.save(userCoupon);
         coupon.increaseIssuedCount();
-        couponEntityRepository.save(coupon);
 
-        return userCouponEntity;
+        return userCoupon;
     }
 
-    public List<UserCouponEntity> getUserCoupons(Long userId){
-        UserPointEntity userPointEntity = userPointEntityRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException(UserPointErrorCode.USER_NOT_FOUND.getMessage()));
-
-        return userCouponEntityRepository.findByUserId(userId);
+    public List<UserCoupon> getUserCoupons(Long userId){
+        User user = userRepository.findById(userId);
+        return userCouponRepository.findByUserId(userId);
     }
 
 
-    public void useCoupon(Long userCouponId){
-        UserCouponEntity userCouponEntity = userCouponEntityRepository.findById(userCouponId)
+    public void use(Long userCouponId){
+        UserCoupon userCoupon = userCouponRepository.findById(userCouponId)
                 .orElseThrow(() -> new IllegalArgumentException(ErrorCode.USER_COUPON_NOT_FOUND.getMessage()));
 
-        if (userCouponEntity.getStatus() == UserCouponStatus.USED) {
+        if (userCoupon.getStatus() == UserCoupon.UserCouponStatus.USED) {
             throw new IllegalArgumentException(ErrorCode.ALREADY_USED_COUPON.getMessage());
         }
 
-        userCouponEntity.use();
+        userCoupon.use();
 
-        userCouponEntityRepository.save(userCouponEntity);
+        userCouponRepository.save(userCoupon);
     }
 }

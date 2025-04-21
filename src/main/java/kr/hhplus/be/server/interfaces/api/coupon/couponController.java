@@ -3,14 +3,10 @@ package kr.hhplus.be.server.interfaces.api.coupon;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import kr.hhplus.be.server.domain.coupon.CouponEntity;
+import kr.hhplus.be.server.domain.coupon.Coupon;
 import kr.hhplus.be.server.domain.coupon.CouponService;
-import kr.hhplus.be.server.domain.coupon.CouponStatus;
-import kr.hhplus.be.server.domain.product.ProductEntity;
-import kr.hhplus.be.server.domain.product.ProductStatus;
 import kr.hhplus.be.server.support.ApiMessage;
 import kr.hhplus.be.server.support.CustomApiResponse;
-import kr.hhplus.be.server.support.CustomBadRequestException;
 import kr.hhplus.be.server.support.ForbiddenException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -28,9 +24,9 @@ public class couponController {
     @GetMapping("/")
     @Operation(summary = "쿠폰 목록 조회", description = "쿠폰 목록을 조회합니다.")
     public CustomApiResponse getCoupons(
-            @RequestParam(required = false)CouponStatus status
+            @RequestParam(required = false) Coupon.CouponStatus status
     ){
-        List<CouponEntity> data = couponService.getCoupons(status);
+        List<Coupon> data = couponService.getCoupons(status);
         return CustomApiResponse.success(ApiMessage.VIEW_SUCCESS, data);
     }
 
@@ -38,7 +34,7 @@ public class couponController {
     @GetMapping("/{coupon_id}")
     @Operation(summary = "쿠폰 상세 조회", description = "쿠폰 상세 내용을 조회합니다.")
     public CustomApiResponse getProduct(@PathVariable("couponId") @Parameter(name = "couponId", description = "쿠폰 ID") Long couponId){
-        CouponEntity data = couponService.getCoupon(couponId);
+        Coupon data = couponService.getCoupon(couponId);
         return CustomApiResponse.success(ApiMessage.VIEW_SUCCESS, data);
     }
 
@@ -49,7 +45,7 @@ public class couponController {
             @RequestParam Long userId
     ){
         try{
-            CouponEntity data = couponService.create(request, userId);
+            Coupon data = couponService.create(request, userId);
             return CustomApiResponse.success(ApiMessage.CREATE_SUCCESS, data);
         } catch (ForbiddenException e){
             return CustomApiResponse.forbidden(ApiMessage.FORBIDDEN_ACCESS);

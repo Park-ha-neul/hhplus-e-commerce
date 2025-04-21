@@ -56,7 +56,7 @@ public class OrderServiceTest {
         Product product = Product.builder().productId(productId).price(price).build();
 
         when(userPointRepository.findByUserId(userId)).thenReturn(userPoint);
-        when(userCouponRepository.findByUserAndCoupon(userId, couponId)).thenReturn(userCoupon);
+        when(userCouponRepository.findById(couponId)).thenReturn(Optional.ofNullable(userCoupon));
         when(productRepository.findById(productId)).thenReturn(Optional.of(product));
 
         // when
