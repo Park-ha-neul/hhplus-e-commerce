@@ -1,8 +1,7 @@
 package kr.hhplus.be.server.domain.product;
 
-import kr.hhplus.be.server.domain.user.UserPointEntity;
-import kr.hhplus.be.server.domain.user.UserPointEntityRepository;
-import kr.hhplus.be.server.domain.user.UserPointErrorCode;
+import kr.hhplus.be.server.domain.user.User;
+import kr.hhplus.be.server.domain.user.UserRepository;
 import kr.hhplus.be.server.interfaces.api.product.ProductRequest;
 import kr.hhplus.be.server.support.ForbiddenException;
 import lombok.RequiredArgsConstructor;
@@ -14,43 +13,42 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ProductService {
 
-    private final ProductEntityRepository productEntityRepository;
-    private final UserPointEntityRepository userPointEntityRepository;
+    private final ProductRepository productRepository;
+    private final UserRepository userRepository;
 
-    public ProductEntity createProduct(ProductRequest request, Long userId){
-        UserPointEntity userPointEntity = userPointEntityRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException(UserPointErrorCode.USER_NOT_FOUND.getMessage()));
+    public Product createProduct(ProductRequest request, Long userId){
+        User user = userRepository.findById(userId);
 
-        if(!userPointEntity.getUser().isAdmin()){
+        if(!user.isAdmin()){
             throw new ForbiddenException(ProductErrorCode.CREATE_PRODUCT_MUST_BE_ADMIN.getMessage());
         }
 
-        ProductEntity productEntity = ProductEntity.create(request);
-        return productEntityRepository.save(productEntity);
+        Product product = Product.create(request);
+        return productRepository.save(product);
     }
 
-    public ProductEntity getProductDetails(Long productId){
-        return productEntityRepository.findById(productId)
+    public Product getProductDetails(Long productId){
+        return productRepository.findById(productId)
                 .orElseThrow(() -> new IllegalArgumentException(ProductErrorCode.PRODUCT_NOT_FOUND.getMessage()));
     }
 
-    public List<ProductEntity> getProducts(ProductStatus status){
+    public List<Product> getProducts(Product.ProductStatus status){
         if (status != null){
-            return productEntityRepository.findAllByStatus(status);
+            return productRepository.findAllByStatus(status);
         } else {
-            return productEntityRepository.findAll();
+            return productRepository.findAll();
         }
     }
 
     public void increaseProductBalance(Long productId, Long quantity) {
-        ProductEntity productEntity = getProductDetails(productId);
-        productEntity.increaseBalance(productId, quantity);
-        productEntityRepository.save(productEntity);
+        Product product = getProductDetails(productId);
+        product.increaseBalance(productId, quantity);
+        productRepository.save(product);
     }
 
     public void decreaseProductBalance(Long productId, Long quantity) {
-        ProductEntity productEntity = getProductDetails(productId);
-        productEntity.decreaseBalance(productId, quantity);
-        productEntityRepository.save(productEntity);
+        Product product = getProductDetails(productId);
+        product.decreaseBalance(productId, quantity);
+        productRepository.save(product);
     }
 }

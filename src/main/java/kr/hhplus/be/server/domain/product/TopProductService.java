@@ -1,6 +1,5 @@
 package kr.hhplus.be.server.domain.product;
 
-import kr.hhplus.be.server.domain.common.PeriodType;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
@@ -10,11 +9,11 @@ import java.util.List;
 @Service
 public class TopProductService {
 
-    private TopProductEntityRepository topProductEntityRepository;
+    private TopProductRepository topProductRepository;
 
-    public List<TopProductEntity> getTopProductsByPeriod(PeriodType periodType) {
-        LocalDate calculateDate = TopProductEntity.calculateDate(periodType);
+    public List<TopProduct> getTopProductsByPeriod(TopProduct.PeriodType periodType) {
+        LocalDate calculateDate = TopProduct.calculateDate(periodType);
         PageRequest topN = PageRequest.of(0, 5);
-        return topProductEntityRepository.findByPeriodTypeAndCalculatedDateOrderByRankAsc(periodType, calculateDate, topN);
+        return topProductRepository.findByPeriodTypeAndCalculatedDateOrderByRankAsc(periodType, calculateDate, topN);
     }
 }

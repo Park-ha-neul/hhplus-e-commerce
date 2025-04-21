@@ -3,7 +3,6 @@ package kr.hhplus.be.server.interfaces.api.product;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import kr.hhplus.be.server.domain.common.PeriodType;
 import kr.hhplus.be.server.domain.product.*;
 import kr.hhplus.be.server.support.ApiMessage;
 import kr.hhplus.be.server.support.CustomApiResponse;
@@ -24,16 +23,16 @@ public class ProductController {
     @GetMapping("/")
     @Operation(summary = "상품 목록 조회", description = "상품 목록을 조회합니다.")
     public CustomApiResponse getProducts(
-            @RequestParam(required = false) ProductStatus status
+            @RequestParam(required = false) Product.ProductStatus status
     ){
-        List<ProductEntity> data = productService.getProducts(status);
+        List<Product> data = productService.getProducts(status);
         return CustomApiResponse.success(ApiMessage.VIEW_SUCCESS, data);
     }
 
     @GetMapping("/{product_id}")
     @Operation(summary = "상품 상세 조회", description = "상품 상세 내용을 조회합니다.")
     public CustomApiResponse getProduct(@PathVariable("productId") @Parameter(name = "productId", description = "상품 ID") Long productId){
-        ProductEntity data = productService.getProductDetails(productId);
+        Product data = productService.getProductDetails(productId);
         return CustomApiResponse.success(ApiMessage.VIEW_SUCCESS, data);
     }
 
@@ -44,7 +43,7 @@ public class ProductController {
             @RequestParam Long userId
     ){
         try{
-            ProductEntity result = productService.createProduct(request, userId);
+            Product result = productService.createProduct(request, userId);
             return CustomApiResponse.success(ApiMessage.CREATE_SUCCESS, result);
         }catch (IllegalArgumentException e ){
             return CustomApiResponse.notFound(ApiMessage.INVALID_USER);
@@ -58,9 +57,9 @@ public class ProductController {
     @GetMapping("/popular")
     @Operation(summary = "인기 상품 조회", description = "top5 상품을 기간별로 조회합니다.")
     public CustomApiResponse getPopularProducts(
-            @RequestParam PeriodType periodType
+            @RequestParam TopProduct.PeriodType periodType
     ) {
-        List<TopProductEntity> data = topProductService.getTopProductsByPeriod(periodType);
+        List<TopProduct> data = topProductService.getTopProductsByPeriod(periodType);
         return CustomApiResponse.success(ApiMessage.VIEW_SUCCESS, data);
     }
 }

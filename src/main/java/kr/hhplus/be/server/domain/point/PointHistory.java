@@ -2,39 +2,48 @@ package kr.hhplus.be.server.domain.point;
 
 import jakarta.persistence.*;
 import kr.hhplus.be.server.domain.common.BaseEntity;
-import kr.hhplus.be.server.domain.common.TransactionType;
-import kr.hhplus.be.server.domain.user.UserPointEntity;
+import lombok.Builder;
 import lombok.Getter;
 
 @Entity
 @Table(name = "point_history")
 @Getter
-public class PointHistoryEntity extends BaseEntity {
+public class PointHistory extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long historyId;
 
-    @ManyToOne
-    private UserPointEntity userPointEntity;
+    @Column(name = "user_id")
+    private Long userId;
 
+    @Column(name = "amount")
     private Long amount;
+
+    @Column(name = "balance_before")
     private Long balanceBefore;
+
+    @Column(name = "balance_after")
     private Long balanceAfter;
 
     @Enumerated(EnumType.STRING)
     private TransactionType type; // charge, use
 
-    public PointHistoryEntity(UserPointEntity userPointEntity, Long amount, Long balanceBefore, Long balanceAfter, TransactionType type){
-        this.userPointEntity = userPointEntity;
+    public enum TransactionType {
+        CHARGE, USE
+    }
+
+    @Builder
+    public PointHistory(Long userId, Long amount, Long balanceBefore, Long balanceAfter, TransactionType type){
+        this.userId = userId;
         this.amount = amount;
         this.balanceBefore = balanceBefore;
         this.balanceAfter = balanceAfter;
         this.type = type;
     }
 
-    public static PointHistoryEntity chargeHistory(UserPointEntity userPointEntity, Long amount, Long balanceBefore, Long balanceAfter){
-        return new PointHistoryEntity(
-                userPointEntity,
+    public static PointHistory chargeHistory(Long userId, Long amount, Long balanceBefore, Long balanceAfter){
+        return new PointHistory(
+                userId,
                 amount,
                 balanceBefore,
                 balanceAfter,
@@ -42,9 +51,9 @@ public class PointHistoryEntity extends BaseEntity {
         );
     }
 
-    public static PointHistoryEntity useHistory(UserPointEntity userPointEntity, Long amount, Long balanceBefore, Long balanceAfter){
-        return new PointHistoryEntity(
-                userPointEntity,
+    public static PointHistory useHistory(Long userId, Long amount, Long balanceBefore, Long balanceAfter){
+        return new PointHistory(
+                userId,
                 amount,
                 balanceBefore,
                 balanceAfter,

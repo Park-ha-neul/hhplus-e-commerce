@@ -10,13 +10,18 @@ import lombok.Getter;
 @Getter
 @Table(name = "product")
 @Builder
-public class ProductEntity extends BaseEntity {
+public class Product extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long productId;
 
+    @Column(name = "product_name")
     private String name;
+
+    @Column(name = "product_description")
     private String description;
+
+    @Column(name = "price")
     private Long price;
 
     @Embedded
@@ -26,7 +31,11 @@ public class ProductEntity extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private ProductStatus status;
 
-    private ProductEntity(Long productId, String name, String description, Long price, Balance balance, ProductStatus status){
+    public enum ProductStatus {
+        AVAILABLE, SOLD_OUT
+    }
+
+    public Product(Long productId, String name, String description, Long price, Balance balance, ProductStatus status){
         this.productId = productId;
         this.name = name;
         this.description = description;
@@ -35,7 +44,7 @@ public class ProductEntity extends BaseEntity {
         this.status = status;
     }
 
-    public static ProductEntity create(ProductRequest request){
+    public static Product create(ProductRequest request){
         if (request.getPrice() < 0){
             throw new IllegalArgumentException(ProductErrorCode.PRODUCT_PRICE_MUST_BE_POSITIVE.getMessage());
         }
@@ -44,7 +53,7 @@ public class ProductEntity extends BaseEntity {
             throw new IllegalArgumentException(ProductErrorCode.PRODUCT_STOCK_MUST_BE_POSITIVE.getMessage());
         }
 
-        return new ProductEntity(
+        return new Product(
                 null,
                 request.getName(),
                 request.getDescription(),

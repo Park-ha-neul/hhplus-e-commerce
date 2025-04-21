@@ -1,5 +1,6 @@
 package kr.hhplus.be.server.domain.product;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -7,6 +8,7 @@ import lombok.NoArgsConstructor;
 
 @Embeddable
 public class Balance {
+    @Column(name = "stock")
     private Long quantity;
 
     Balance(Long quantity){

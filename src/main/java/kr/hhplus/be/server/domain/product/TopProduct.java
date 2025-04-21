@@ -1,7 +1,6 @@
 package kr.hhplus.be.server.domain.product;
 
 import jakarta.persistence.*;
-import kr.hhplus.be.server.domain.common.PeriodType;
 import lombok.Getter;
 
 import java.time.DayOfWeek;
@@ -10,19 +9,29 @@ import java.time.LocalDate;
 @Entity
 @Getter
 @Table(name = "top_product")
-public class TopProductEntity {
+public class TopProduct {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long topProductId;
 
-    private ProductEntity productEntity;
+    @Column(name = "product_id")
+    private Long productId;
 
+    @Column(name = "rank")
     private int rank;
+
+    @Column(name = "total_count")
     private Long totalCount;
+
+    @Column(name = "calculate_date")
     private LocalDate calculateDate;
 
     @Enumerated(EnumType.STRING)
     private PeriodType periodType;
+
+    public enum PeriodType{
+        DAILY, WEEKLY, MONTHLY
+    }
 
     public static LocalDate calculateDate(PeriodType periodType){
         switch (periodType){
@@ -37,15 +46,12 @@ public class TopProductEntity {
         }
     }
 
-    private TopProductEntity(ProductEntity productEntity, PeriodType periodType, LocalDate calculateDate, Long totalCount) {
-        this.productEntity = productEntity;
-        this.periodType = periodType;
-        this.calculateDate = calculateDate;
+    public TopProduct(Long productId, int rank, Long totalCount, LocalDate calculateDate, PeriodType periodType) {
+        this.productId = productId;
+        this.rank = rank;
         this.totalCount = totalCount;
-    }
-
-    public static TopProductEntity create(ProductEntity productEntity, PeriodType periodType, LocalDate calculateDate, Long count) {
-        return new TopProductEntity(productEntity, periodType, calculateDate, count);
+        this.calculateDate = calculateDate;
+        this.periodType = periodType;
     }
 
     public void addCount(Long count) {

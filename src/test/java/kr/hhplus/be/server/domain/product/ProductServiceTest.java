@@ -1,18 +1,15 @@
 package kr.hhplus.be.server.domain.product;
 
 import kr.hhplus.be.server.domain.user.User;
-import kr.hhplus.be.server.domain.user.UserPoint;
-import kr.hhplus.be.server.domain.user.UserPointEntity;
-import kr.hhplus.be.server.domain.user.UserPointEntityRepository;
+import kr.hhplus.be.server.domain.user.UserPointRepository;
+import kr.hhplus.be.server.domain.user.UserRepository;
 import kr.hhplus.be.server.interfaces.api.product.ProductRequest;
 import kr.hhplus.be.server.support.ForbiddenException;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
-import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
@@ -24,19 +21,16 @@ import static org.mockito.Mockito.*;
 public class ProductServiceTest {
 
     @Mock
-    private ProductEntityRepository productEntityRepository;
+    private ProductRepository productRepository;
 
     @Mock
-    private UserPointEntityRepository userPointEntityRepository;
+    private UserRepository userRepository;
+
+    @Mock
+    private UserPointRepository userPointRepository;
 
     @InjectMocks
     private ProductService productService;
-
-    @BeforeEach
-    public void setUp() {
-        MockitoAnnotations.openMocks(this);
-        productService = new ProductService(productEntityRepository, userPointEntityRepository);
-    }
 
     @Test
     void 상품_생성_성공() {
@@ -45,95 +39,100 @@ public class ProductServiceTest {
         ProductRequest request = new ProductRequest("Product Name", "Description", 100L, new Balance(10L));
 
         // UserPointEntity를 mock
-        UserPointEntity userPointEntity = mock(UserPointEntity.class);
-        when(userPointEntity.getUser()).thenReturn(mock(User.class));
-        when(userPointEntity.getUser().isAdmin()).thenReturn(true);
-        when(userPointEntityRepository.findById(userId)).thenReturn(Optional.of(userPointEntity));
+        User user = new User("하늘", false);
+        when(user.getUserId()).thenReturn(user.getUserId());
+        when(user.isAdmin()).thenReturn(true);
 
         // ProductEntity의 정적 메서드 mock
-        try (MockedStatic<ProductEntity> mockedStatic = mockStatic(ProductEntity.class)) {
-            ProductEntity productEntity = mock(ProductEntity.class);
-            mockedStatic.when(() -> ProductEntity.create(request)).thenReturn(productEntity);
+        try (MockedStatic<Product> mockedStatic = mockStatic(Product.class)) {
+            Product product = mock(Product.class);
+            mockedStatic.when(() -> product.create(request)).thenReturn(product);
 
-            when(productEntityRepository.save(any(ProductEntity.class))).thenReturn(productEntity);
+            when(productRepository.save(any(Product.class))).thenReturn(product);
 
             // when
-            ProductEntity result = productService.createProduct(request, userId);
+            Product result = productService.createProduct(request, userId);
 
             // then
             assertNotNull(result);
-            verify(productEntityRepository).save(productEntity);
+            verify(productRepository).save(product);
         }
     }
 
     @Test
     void 상품_생성_실패_관리자만() {
-        // given
         Long userId = 1L;
-        ProductRequest request = new ProductRequest("Product Name", "Description", 100L, new Balance(10L));
-        UserPointEntity userPointEntity = mock(UserPointEntity.class);
-        when(userPointEntity.getUser()).thenReturn(mock(User.class));
-        when(userPointEntity.getUser().isAdmin()).thenReturn(false);
+        ProductRequest request = new ProductRequest("Product", "desc", 100L, new Balance(5L));
 
-        when(userPointEntityRepository.findById(userId)).thenReturn(Optional.of(userPointEntity));
+        User nonAdminUser = mock(User.class);
+        when(userRepository.findById(userId)).thenReturn(nonAdminUser);
+        when(nonAdminUser.isAdmin()).thenReturn(false);
 
         // when & then
-        assertThrows(ForbiddenException.class, () -> productService.createProduct(request, userId));
+        ForbiddenException exception = assertThrows(
+                ForbiddenException.class,
+                () -> productService.createProduct(request, userId)
+        );
+
+        assertEquals(ProductErrorCode.CREATE_PRODUCT_MUST_BE_ADMIN.getMessage(), exception.getMessage());
     }
 
     @Test
     void 상품_상세_조회_성공() {
-        // given
         Long productId = 1L;
-        ProductEntity productEntity = mock(ProductEntity.class);
-        when(productEntityRepository.findById(productId)).thenReturn(Optional.of(productEntity));
+        Product product = mock(Product.class);
+        when(productRepository.findById(productId)).thenReturn(Optional.of(product));
 
         // when
-        ProductEntity result = productService.getProductDetails(productId);
+        Product result = productService.getProductDetails(productId);
 
         // then
-        assertNotNull(result);
+        assertEquals(product, result);
     }
 
     @Test
     void 상품_상세_조회_실패() {
-        // given
-        Long productId = 1L;
-        when(productEntityRepository.findById(productId)).thenReturn(Optional.empty());
+        Long productId = 99L;
+        when(productRepository.findById(productId)).thenReturn(Optional.empty());
 
         // when & then
-        assertThrows(IllegalArgumentException.class, () -> productService.getProductDetails(productId));
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> productService.getProductDetails(productId)
+        );
+
+        assertEquals(ProductErrorCode.PRODUCT_NOT_FOUND.getMessage(), exception.getMessage());
     }
 
     @Test
     void 상품_재고_증가() {
-        // given
         Long productId = 1L;
         Long quantity = 5L;
-        ProductEntity productEntity = mock(ProductEntity.class);
-        when(productEntityRepository.findById(productId)).thenReturn(Optional.of(productEntity));
+
+        Product product = mock(Product.class);
+        when(productRepository.findById(productId)).thenReturn(Optional.of(product));
 
         // when
         productService.increaseProductBalance(productId, quantity);
 
         // then
-        verify(productEntity).increaseBalance(productId, quantity);
-        verify(productEntityRepository).save(productEntity);
+        verify(product).increaseBalance(productId, quantity);
+        verify(productRepository).save(product);
     }
 
     @Test
     void 상품_재고_감소() {
-        // given
         Long productId = 1L;
-        Long quantity = 3L;
-        ProductEntity productEntity = mock(ProductEntity.class);
-        when(productEntityRepository.findById(productId)).thenReturn(Optional.of(productEntity));
+        Long quantity = 2L;
+
+        Product product = mock(Product.class);
+        when(productRepository.findById(productId)).thenReturn(Optional.of(product));
 
         // when
         productService.decreaseProductBalance(productId, quantity);
 
         // then
-        verify(productEntity).decreaseBalance(productId, quantity);
-        verify(productEntityRepository).save(productEntity);
+        verify(product).decreaseBalance(productId, quantity);
+        verify(productRepository).save(product);
     }
 }

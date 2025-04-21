@@ -8,7 +8,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import static org.junit.Assert.*;
 
 @ExtendWith(MockitoExtension.class)
-public class ProductEntityTest {
+public class ProductTest {
 
     @Test
     void 상품_생성_성공() {
@@ -21,14 +21,14 @@ public class ProductEntityTest {
                 .build();
 
         // when
-        ProductEntity productEntity = ProductEntity.create(request);
+        Product product = Product.create(request);
 
         // then
-        assertNotNull(productEntity);
-        assertEquals("Test Product", productEntity.getName());
-        assertEquals(Long.valueOf(1000L), productEntity.getPrice());
-        assertEquals(Long.valueOf(100L), productEntity.getBalance().getQuantity());
-        assertEquals(ProductStatus.AVAILABLE, productEntity.getStatus());
+        assertNotNull(product);
+        assertEquals("Test Product", product.getName());
+        assertEquals(Long.valueOf(1000L), product.getPrice());
+        assertEquals(Long.valueOf(100L), product.getBalance().getQuantity());
+        assertEquals(Product.ProductStatus.AVAILABLE, product.getStatus());
     }
 
     @Test
@@ -43,7 +43,7 @@ public class ProductEntityTest {
 
         // when & then
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-            ProductEntity.create(request);
+            Product.create(request);
         });
         assertEquals(ProductErrorCode.PRODUCT_PRICE_MUST_BE_POSITIVE.getMessage(), exception.getMessage());
     }
@@ -60,7 +60,7 @@ public class ProductEntityTest {
 
         // when & then
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-            ProductEntity.create(request);
+            Product.create(request);
         });
         assertEquals(ProductErrorCode.PRODUCT_STOCK_MUST_BE_POSITIVE.getMessage(), exception.getMessage());
     }
@@ -75,14 +75,14 @@ public class ProductEntityTest {
                 .balance(new Balance(100L))
                 .build();
 
-        ProductEntity productEntity = ProductEntity.create(request);
+        Product product = Product.create(request);
 
         // when
-        productEntity.increaseBalance(productEntity.getProductId(), 50L);
+        product.increaseBalance(product.getProductId(), 50L);
 
         // then
-        assertEquals(Long.valueOf(150L), productEntity.getBalance().getQuantity());
-        assertEquals(ProductStatus.AVAILABLE, productEntity.getStatus()); // 재고가 0이 아니라면 상태는 AVAILABLE이어야 함
+        assertEquals(Long.valueOf(150L), product.getBalance().getQuantity());
+        assertEquals(Product.ProductStatus.AVAILABLE, product.getStatus()); // 재고가 0이 아니라면 상태는 AVAILABLE이어야 함
     }
 
     @Test
@@ -95,14 +95,14 @@ public class ProductEntityTest {
                 .balance(new Balance(100L))
                 .build();
 
-        ProductEntity productEntity = ProductEntity.create(request);
+        Product product = Product.create(request);
 
         // when
-        productEntity.decreaseBalance(productEntity.getProductId(), 50L);
+        product.decreaseBalance(product.getProductId(), 50L);
 
         // then
-        assertEquals(Long.valueOf(50L), productEntity.getBalance().getQuantity());
-        assertEquals(ProductStatus.AVAILABLE, productEntity.getStatus()); // 재고가 남아있다면 상태는 AVAILABLE이어야 함
+        assertEquals(Long.valueOf(50L), product.getBalance().getQuantity());
+        assertEquals(Product.ProductStatus.AVAILABLE, product.getStatus()); // 재고가 남아있다면 상태는 AVAILABLE이어야 함
     }
 
     @Test
@@ -115,13 +115,13 @@ public class ProductEntityTest {
                 .balance(new Balance(10L)) // 재고가 10
                 .build();
 
-        ProductEntity productEntity = ProductEntity.create(request);
+        Product product = Product.create(request);
 
         // when
-        productEntity.decreaseBalance(productEntity.getProductId(), 10L); // 재고를 모두 소진
+        product.decreaseBalance(product.getProductId(), 10L); // 재고를 모두 소진
 
         // then
-        assertEquals(Long.valueOf(0L), productEntity.getBalance().getQuantity());
-        assertEquals(ProductStatus.SOLD_OUT, productEntity.getStatus()); // 품절 상태로 변경되어야 함
+        assertEquals(Long.valueOf(0L), product.getBalance().getQuantity());
+        assertEquals(Product.ProductStatus.SOLD_OUT, product.getStatus()); // 품절 상태로 변경되어야 함
     }
 }
