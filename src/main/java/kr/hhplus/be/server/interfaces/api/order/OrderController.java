@@ -3,6 +3,7 @@ package kr.hhplus.be.server.interfaces.api.order;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import kr.hhplus.be.server.application.facade.OrderCommand;
 import kr.hhplus.be.server.domain.order.Order;
 import kr.hhplus.be.server.domain.order.OrderService;
 import kr.hhplus.be.server.support.ApiMessage;
@@ -18,13 +19,14 @@ import java.util.List;
 @Tag(name = "📌 주문 관리", description = "주문 관련 API 모음")
 public class OrderController {
 
+    private final OrderCommand orderCommand;
     private final OrderService orderService;
 
     @PostMapping("/")
     @Operation(summary = "주문 등록", description = "주문을 등록합니다.")
-    public CustomApiResponse create(@RequestBody OrderReqeust request){
+    public CustomApiResponse create(@RequestBody OrderRequest request){
         try{
-            Order result = orderService.create(request);
+            Order result = orderCommand.order(request);
             return CustomApiResponse.success(ApiMessage.CREATE_SUCCESS, result);
         } catch(IllegalArgumentException e){
             return CustomApiResponse.badRequest(e.getMessage());

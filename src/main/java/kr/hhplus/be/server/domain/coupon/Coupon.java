@@ -10,7 +10,6 @@ import java.time.LocalDateTime;
 
 @Entity
 @Getter
-@Builder
 @Table(name = "coupon")
 public class Coupon extends BaseEntity {
     @Id
@@ -52,11 +51,12 @@ public class Coupon extends BaseEntity {
         ACTIVE, INACTIVE
     }
 
-    public Coupon(String name, Long totalCount, Long issuedCount, DiscountType dsType, Long discountRate, Long discountAmount, CouponStatus status, LocalDateTime startDate, LocalDateTime endDate){
+    @Builder
+    public Coupon(String name, Long totalCount, Long issuedCount, DiscountType discountType, Long discountRate, Long discountAmount, CouponStatus status, LocalDateTime startDate, LocalDateTime endDate){
         this.name = name;
         this.totalCount = totalCount;
         this.issuedCount = issuedCount;
-        this.discountType = dsType;
+        this.discountType = discountType;
         this.discountRate = discountRate;
         this.discountAmount = discountAmount;
         this.status = status;

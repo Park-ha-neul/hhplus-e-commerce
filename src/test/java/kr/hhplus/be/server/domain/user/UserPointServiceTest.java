@@ -1,18 +1,14 @@
 package kr.hhplus.be.server.domain.user;
 
 import kr.hhplus.be.server.domain.point.PointHistory;
-import kr.hhplus.be.server.domain.point.PointHistoryTest;
 import kr.hhplus.be.server.domain.point.PointHistoryRepository;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
-import java.util.Optional;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;

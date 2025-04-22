@@ -1,5 +1,7 @@
 package kr.hhplus.be.server.domain.user;
 
+import jakarta.persistence.EntityNotFoundException;
+import kr.hhplus.be.server.domain.coupon.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -22,6 +24,9 @@ public class UserService {
 
     public UserWithPointResponse getUser(Long userId){
         User user = userRepository.findById(userId);
+        if(user == null){
+            throw new EntityNotFoundException(UserErrorCode.USER_NOT_FOUND.getMessage());
+        }
         UserPoint userPoint = userPointRepository.findByUserId(userId);
         return new UserWithPointResponse(user, userPoint);
     }

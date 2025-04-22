@@ -9,8 +9,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import java.util.Optional;
-
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
@@ -25,9 +23,6 @@ public class UserServiceTest {
 
     @Mock
     private UserPointRepository userPointRepository;
-
-    @Mock
-    private UserJpaRepository userJpaRepository;
 
     @Test
     void 사용자_유저_생성(){
@@ -44,10 +39,10 @@ public class UserServiceTest {
 
     @Test
     void 관리자_유저_생성(){
-        User user = new User("관리자", false);
+        User user = new User("관리자", true);
         when(userRepository.save(any(User.class))).thenReturn(user);
 
-        User result = userService.createUser("관리자", false);
+        User result = userService.createUser("관리자", true);
 
         assertTrue(result.isAdmin());
         assertEquals("관리자", result.getUserName());
@@ -76,14 +71,12 @@ public class UserServiceTest {
     @Test
     void 사용자_정보_조회_없는_사용자인_경우_EntityNotFoundException_반환(){
         Long userId = 999L;
-        when(userJpaRepository.findById(userId)).thenReturn(Optional.empty());
+        when(userRepository.findById(userId)).thenReturn(null);
 
-        EntityNotFoundException e = assertThrows(
-                EntityNotFoundException.class,
-                () -> userService.getUser(userId)
-        );
+        EntityNotFoundException e = assertThrows(EntityNotFoundException.class, () -> {
+            userService.getUser(userId);
+        });
 
         assertEquals(UserErrorCode.USER_NOT_FOUND.getMessage(), e.getMessage());
     }
-
 }

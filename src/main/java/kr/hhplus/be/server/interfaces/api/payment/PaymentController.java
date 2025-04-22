@@ -3,7 +3,7 @@ package kr.hhplus.be.server.interfaces.api.payment;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import kr.hhplus.be.server.application.payment.facade.PaymentFacade;
+import kr.hhplus.be.server.application.facade.ProcessPayment;
 import kr.hhplus.be.server.domain.payment.Payment;
 import kr.hhplus.be.server.domain.payment.PaymentService;
 import kr.hhplus.be.server.support.ApiMessage;
@@ -20,7 +20,7 @@ import java.util.List;
 public class PaymentController {
 
     private final PaymentService paymentService;
-    private final PaymentFacade paymentFacade;
+    private final ProcessPayment processPayment;
 
     @PostMapping("/")
     @Operation(summary = "결제 생성", description = "결제 생성합니다.")
@@ -38,7 +38,7 @@ public class PaymentController {
     @PostMapping("/{paymentId}")
     @Operation(summary = "결제 진행", description = "결제를 진행합니다.")
     public CustomApiResponse processPayment(@PathVariable("paymentId") @Parameter(name = "paymentId", description = "결제 ID") Long paymentId){
-        Payment data = paymentFacade.processPayment(paymentId);
+        Payment data = processPayment.processPayment(paymentId);
         return CustomApiResponse.success(ApiMessage.PAYMENT_SUCCESS);
     }
 

@@ -10,7 +10,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -32,6 +31,8 @@ public class PaymentServiceTest {
     @Test
     void 결제_생성_성공() {
         // given
+        Long userId = 1L;
+        Long couponId = 2L;
         Long orderId = 1L;
         Long totalPrice = 5000L;
 
@@ -40,13 +41,14 @@ public class PaymentServiceTest {
         List<OrderItem> items = List.of(item1, item2);
 
         Order order = Order.builder()
-                .orderId(orderId)
-                .items(new ArrayList<>())
+                .userId(userId)
+                .couponId(couponId)
                 .build();
         order.getItems().addAll(items);
 
         when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
-        when(paymentRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        Payment payment = new Payment(order.getOrderId(), 5000L);
+        when(paymentRepository.save(any(Payment.class))).thenReturn(payment);
 
         PaymentCreateRequest request = new PaymentCreateRequest(orderId);
 

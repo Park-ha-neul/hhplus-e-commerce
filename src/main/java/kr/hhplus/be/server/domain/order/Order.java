@@ -11,7 +11,6 @@ import java.util.List;
 @Entity
 @Getter
 @Table(name = "user_order")
-@Builder
 public class Order extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -31,9 +30,10 @@ public class Order extends BaseEntity {
     private OrderStatus status;
 
     public enum OrderStatus{
-        PENDING, SUCCESS, FAIL, CANCELD;
+        PENDING, SUCCESS, FAIL, CANCELED;
     }
 
+    @Builder
     public Order(Long userId, Long couponId){
         this.userId = userId;
         this.couponId = couponId;
@@ -49,7 +49,7 @@ public class Order extends BaseEntity {
         this.status = OrderStatus.FAIL;
     }
 
-    public void cancel(){this.status = OrderStatus.CANCELD;}
+    public void cancel(){this.status = OrderStatus.CANCELED;}
 
     public void addOrderItem(OrderItem orderItem) {
         this.items.add(orderItem);

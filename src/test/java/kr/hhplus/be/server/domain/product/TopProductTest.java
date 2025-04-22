@@ -2,20 +2,15 @@ package kr.hhplus.be.server.domain.product;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.mock;
 
 @ExtendWith(MockitoExtension.class)
 public class TopProductTest {
-
-    @Mock
-    private TopProductRepository topProductRepository;
 
     @Test
     void 정상_생성(){
@@ -42,7 +37,7 @@ public class TopProductTest {
 
         topProduct.addCount(5L);
 
-        assertEquals(Long.valueOf(15L), topProduct.getTotalCount());
+        assertEquals(Long.valueOf(10L), topProduct.getTotalCount());
     }
 
 

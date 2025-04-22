@@ -1,4 +1,4 @@
-package kr.hhplus.be.server.application.payment.facade;
+package kr.hhplus.be.server.application.facade;
 
 import jakarta.transaction.Transactional;
 import kr.hhplus.be.server.domain.coupon.Coupon;
@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class PaymentFacade {
+public class ProcessPayment {
 
     private final PaymentService paymentService;
     private final OrderService orderService;

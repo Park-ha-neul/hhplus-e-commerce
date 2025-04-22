@@ -4,10 +4,12 @@ import kr.hhplus.be.server.domain.coupon.UserCoupon;
 import kr.hhplus.be.server.domain.coupon.UserCouponRepository;
 import kr.hhplus.be.server.domain.product.Product;
 import kr.hhplus.be.server.domain.product.ProductRepository;
+import kr.hhplus.be.server.domain.user.User;
 import kr.hhplus.be.server.domain.user.UserPoint;
 import kr.hhplus.be.server.domain.user.UserPointRepository;
+import kr.hhplus.be.server.domain.user.UserRepository;
 import kr.hhplus.be.server.interfaces.api.order.OrderItemRequest;
-import kr.hhplus.be.server.interfaces.api.order.OrderReqeust;
+import kr.hhplus.be.server.interfaces.api.order.OrderRequest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -27,7 +29,7 @@ public class OrderServiceTest {
     private OrderService orderService;
 
     @Mock
-    private UserPointRepository userPointRepository;
+    private UserRepository userRepository;
 
     @Mock
     private UserCouponRepository userCouponRepository;
@@ -49,15 +51,16 @@ public class OrderServiceTest {
         long price = 1000L;
 
         OrderItemRequest itemRequest = new OrderItemRequest(productId, quantity);
-        OrderReqeust request = new OrderReqeust(userId, couponId, List.of(itemRequest));
+        OrderRequest request = new OrderRequest(userId, couponId, List.of(itemRequest));
 
-        UserPoint userPoint = new UserPoint(userId, point);
-        UserCoupon userCoupon = UserCoupon.builder().userCouponId(couponId).build();
+        User user = User.builder().userName("하늘").adminYn(true).build();
+        UserCoupon userCoupon = UserCoupon.builder().userId(userId).couponId(couponId).build();
         Product product = Product.builder().productId(productId).price(price).build();
 
-        when(userPointRepository.findByUserId(userId)).thenReturn(userPoint);
-        when(userCouponRepository.findById(couponId)).thenReturn(Optional.ofNullable(userCoupon));
+        when(userRepository.findById(userId)).thenReturn(user);
+        when(userCouponRepository.findById(couponId)).thenReturn(Optional.of(userCoupon));
         when(productRepository.findById(productId)).thenReturn(Optional.of(product));
+        when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> invocation.getArgument(0)); // save stub
 
         // when
         Order order = orderService.create(request);
@@ -118,6 +121,7 @@ public class OrderServiceTest {
     void 주문_취소() {
         // given
         Long orderId = 1L;
+
         Order order = mock(Order.class);
         when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
 
@@ -127,6 +131,5 @@ public class OrderServiceTest {
         // then
         verify(order).cancel();
         verify(orderRepository).save(order);
-        assertEquals(Order.OrderStatus.CANCELD, order.getStatus());
     }
 }

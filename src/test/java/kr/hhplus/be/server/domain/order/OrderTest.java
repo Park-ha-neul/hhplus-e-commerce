@@ -46,7 +46,7 @@ public class OrderTest {
         order.cancel();
 
         // then
-        assertEquals(Order.OrderStatus.CANCELD, order.getStatus());
+        assertEquals(Order.OrderStatus.CANCELED, order.getStatus());
     }
 
     @Test

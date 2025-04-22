@@ -8,7 +8,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
@@ -32,27 +31,19 @@ public class ProductServiceTest {
     void 상품_생성_성공() {
         // given
         Long userId = 1L;
+        Long productId = 2L;
         ProductRequest request = new ProductRequest("Product Name", "Description", 100L, 10L);
 
-        // UserPointEntity를 mock
-        User user = new User("하늘", false);
-        when(user.getUserId()).thenReturn(user.getUserId());
+        User user = mock(User.class);
         when(user.isAdmin()).thenReturn(true);
+        when(userRepository.findById(userId)).thenReturn(user);
+        Product savedProduct = new Product(productId, "상품 1", "상품 설명", 2000L, 30L, Product.ProductStatus.AVAILABLE);
+        when(productRepository.save(any(Product.class))).thenReturn(savedProduct);
 
-        // ProductEntity의 정적 메서드 mock
-        try (MockedStatic<Product> mockedStatic = mockStatic(Product.class)) {
-            Product product = mock(Product.class);
-            mockedStatic.when(() -> product.create(request)).thenReturn(product);
+        Product result = productService.createProduct(request, userId);
 
-            when(productRepository.save(any(Product.class))).thenReturn(product);
-
-            // when
-            Product result = productService.createProduct(request, userId);
-
-            // then
-            assertNotNull(result);
-            verify(productRepository).save(product);
-        }
+        assertNotNull(result);
+        verify(productRepository).save(any(Product.class));
     }
 
     @Test

@@ -8,7 +8,6 @@ import lombok.Getter;
 @Entity
 @Getter
 @Table(name = "user_coupon")
-@Builder
 public class UserCoupon extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -28,6 +27,7 @@ public class UserCoupon extends BaseEntity {
         ISSUED, USED, EXPIRED
     }
 
+    @Builder
     public UserCoupon(Long userId, Long couponId){
         this.userId = userId;
         this.couponId = couponId;

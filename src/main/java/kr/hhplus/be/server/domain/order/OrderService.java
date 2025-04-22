@@ -7,7 +7,7 @@ import kr.hhplus.be.server.domain.product.ProductErrorCode;
 import kr.hhplus.be.server.domain.user.User;
 import kr.hhplus.be.server.domain.user.UserRepository;
 import kr.hhplus.be.server.interfaces.api.order.OrderItemRequest;
-import kr.hhplus.be.server.interfaces.api.order.OrderReqeust;
+import kr.hhplus.be.server.interfaces.api.order.OrderRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -23,7 +23,7 @@ public class OrderService {
     private UserCouponRepository userCouponRepository;
     private ProductRepository productRepository;
 
-    public Order create(OrderReqeust request){
+    public Order create(OrderRequest request){
         User user = userRepository.findById(request.getUserId());
         Optional<UserCoupon> userCoupon = userCouponRepository.findById(request.getUserCouponId());
 
@@ -59,5 +59,6 @@ public class OrderService {
     public void cancel(Long orderId){
         Order order = getOrder(orderId);
         order.cancel();
+        orderRepository.save(order);
     }
 }

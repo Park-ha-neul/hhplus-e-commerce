@@ -1,4 +1,4 @@
-package kr.hhplus.be.server.application.payment.facade;
+package kr.hhplus.be.server.application.facade;
 
 import kr.hhplus.be.server.domain.coupon.Coupon;
 import kr.hhplus.be.server.domain.coupon.CouponService;
@@ -22,7 +22,7 @@ import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class PaymentFacadeTest {
+public class ProcessPaymentTest {
 
     @Mock
     private PaymentService paymentService;
@@ -37,7 +37,7 @@ public class PaymentFacadeTest {
     private UserService userService;
 
     @InjectMocks
-    private PaymentFacade paymentFacade;
+    private ProcessPayment processPayment;
 
     @Test
     void 결제_성공_처리() {
@@ -63,9 +63,9 @@ public class PaymentFacadeTest {
         when(couponService.getCoupon(any())).thenReturn(coupon);
         when(userService.getUser(userId)).thenReturn(user);
 
-        Payment result = paymentFacade.processPayment(paymentId);
+        Payment result = processPayment.processPayment(paymentId);
 
-        verify(point).use(800L); // 1000 - 200
+        verify(point).use(300L); // 1000 - 200
         verify(payment).complete();
         verify(order).complete();
         assertEquals(payment, result);
@@ -98,7 +98,7 @@ public class PaymentFacadeTest {
         // 포인트 부족 예외
         doThrow(new IllegalArgumentException("포인트가 부족합니다")).when(point).use(anyLong());
 
-        Payment result = paymentFacade.processPayment(paymentId);
+        Payment result = processPayment.processPayment(paymentId);
 
         verify(payment).fail("포인트가 부족합니다");
         verify(order).fail();

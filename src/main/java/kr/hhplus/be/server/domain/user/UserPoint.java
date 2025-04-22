@@ -1,6 +1,7 @@
 package kr.hhplus.be.server.domain.user;
 
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Getter;
 
 @Entity
