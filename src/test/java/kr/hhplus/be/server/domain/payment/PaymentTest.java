@@ -18,7 +18,7 @@ public class PaymentTest {
 
         // then
         assertNotNull(payment);
-        assertEquals(Payment.PaymentStatus.PENDING, payment.getType());
+        assertEquals(Payment.PaymentStatus.PENDING, payment.getStatus());
         assertNull(payment.getFailureReason());
     }
 
@@ -34,7 +34,7 @@ public class PaymentTest {
         payment.complete();
 
         // then
-        assertEquals(Payment.PaymentStatus.COMPLETED, payment.getType());
+        assertEquals(Payment.PaymentStatus.COMPLETED, payment.getStatus());
         assertTrue(payment.isCompleted());
     }
 
@@ -51,7 +51,7 @@ public class PaymentTest {
         payment.fail(reason);
 
         // then
-        assertEquals(Payment.PaymentStatus.FAIL, payment.getType());
+        assertEquals(Payment.PaymentStatus.FAIL, payment.getStatus());
         assertEquals(reason, payment.getFailureReason());
     }
 }

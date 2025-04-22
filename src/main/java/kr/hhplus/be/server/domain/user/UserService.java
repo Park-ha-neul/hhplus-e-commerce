@@ -1,7 +1,6 @@
 package kr.hhplus.be.server.domain.user;
 
 import jakarta.persistence.EntityNotFoundException;
-import kr.hhplus.be.server.domain.coupon.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

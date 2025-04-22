@@ -18,8 +18,9 @@ public class OrderCommand {
 
     @Transactional
     public Order order(OrderRequest request){
-        Order order = orderService.create(request);
+        Order order = new Order();
         try{
+            order = orderService.create(request);
             PaymentCreateRequest paymentCreateRequest = new PaymentCreateRequest(order.getOrderId());
             paymentService.create(paymentCreateRequest);
             order.complete();

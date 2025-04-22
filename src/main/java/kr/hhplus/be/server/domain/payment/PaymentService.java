@@ -16,8 +16,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class PaymentService {
 
-    private PaymentRepository paymentRepository;
-    private OrderRepository orderRepository;
+    private final PaymentRepository paymentRepository;
+    private final OrderRepository orderRepository;
 
     public Payment getPayment(Long paymentId){
         return paymentRepository.findById(paymentId)

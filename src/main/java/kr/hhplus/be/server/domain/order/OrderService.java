@@ -18,10 +18,10 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class OrderService {
 
-    private OrderRepository orderRepository;
-    private UserRepository userRepository;
-    private UserCouponRepository userCouponRepository;
-    private ProductRepository productRepository;
+    private final OrderRepository orderRepository;
+    private final UserRepository userRepository;
+    private final UserCouponRepository userCouponRepository;
+    private final ProductRepository productRepository;
 
     public Order create(OrderRequest request){
         User user = userRepository.findById(request.getUserId());
@@ -32,6 +32,11 @@ public class OrderService {
         for (OrderItemRequest orderItemRequest : request.getOrderItems()) {
             Product product = productRepository.findById(orderItemRequest.getProductId())
                     .orElseThrow(() -> new IllegalArgumentException(ProductErrorCode.PRODUCT_NOT_FOUND.getMessage()));
+
+            if(product.getQuantity() < orderItemRequest.getQuantity()){
+                throw new IllegalArgumentException(ProductErrorCode.NOT_ENOUGH_STOCK.getMessage());
+            }
+            product.decreaseBalance(orderItemRequest.getQuantity());
             OrderItem orderItem = new OrderItem(order, orderItemRequest.getProductId(), orderItemRequest.getQuantity(), product.getPrice());
             order.addOrderItem(orderItem);
         }

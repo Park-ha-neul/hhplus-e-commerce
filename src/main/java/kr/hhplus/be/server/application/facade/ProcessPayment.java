@@ -3,8 +3,8 @@ package kr.hhplus.be.server.application.facade;
 import jakarta.transaction.Transactional;
 import kr.hhplus.be.server.domain.coupon.Coupon;
 import kr.hhplus.be.server.domain.coupon.CouponService;
+import kr.hhplus.be.server.domain.coupon.UserCouponService;
 import kr.hhplus.be.server.domain.order.Order;
-import kr.hhplus.be.server.domain.order.OrderItem;
 import kr.hhplus.be.server.domain.order.OrderService;
 import kr.hhplus.be.server.domain.payment.Payment;
 import kr.hhplus.be.server.domain.payment.PaymentService;
@@ -20,6 +20,8 @@ public class ProcessPayment {
     private final OrderService orderService;
     private final CouponService couponService;
     private final UserService userService;
+    private final UserPointService userPointService;
+    private final UserCouponService userCouponService;
 
     @Transactional
     public Payment processPayment(Long paymentId){
@@ -28,23 +30,17 @@ public class ProcessPayment {
         Order order = orderService.getOrder(payment.getOrderId());
 
         try{
-            Long totalAmount = order.getItems().stream()
-                    .mapToLong(OrderItem::getTotalPrice)
-                    .sum();
-
-            Coupon userCoupon = couponService.getCoupon(order.getCouponId());
+            Long totalAmount = payment.getTotalAmount();
 
             long discount = 0L;
-            if (userCoupon != null){
-                couponService.use(order.getCouponId());
-                discount = userCoupon.calculateDiscount(totalAmount);
+            if (order.getCouponId() != null){
+                Coupon coupon = couponService.getCoupon(order.getCouponId());
+                userCouponService.use(order.getCouponId());
+                discount = coupon.calculateDiscount(totalAmount);
             }
             long finalAmount = totalAmount - discount;
 
-            UserWithPointResponse user = userService.getUser(order.getUserId());
-
-            // 포인트 부족하면 예외 발생
-            user.getUserPoint().use(finalAmount);
+            userPointService.use(order.getUserId(), finalAmount);
             payment.complete();
             order.complete();
         }catch (Exception e){

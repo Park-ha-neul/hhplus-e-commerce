@@ -29,6 +29,9 @@ public class Order extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private OrderStatus status;
 
+    public Order() {
+    }
+
     public enum OrderStatus{
         PENDING, SUCCESS, FAIL, CANCELED;
     }

@@ -3,8 +3,8 @@ package kr.hhplus.be.server.interfaces.api.user;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import kr.hhplus.be.server.domain.coupon.CouponService;
 import kr.hhplus.be.server.domain.coupon.UserCoupon;
+import kr.hhplus.be.server.domain.coupon.UserCouponService;
 import kr.hhplus.be.server.domain.order.Order;
 import kr.hhplus.be.server.domain.order.OrderService;
 import kr.hhplus.be.server.domain.payment.Payment;
@@ -26,7 +26,7 @@ public class UserController {
 
     private final UserService userService;
     private final UserPointService userPointService;
-    private final CouponService couponService;
+    private final UserCouponService userCouponService;
     private final OrderService orderService;
     private final PaymentService paymentService;
 
@@ -59,7 +59,7 @@ public class UserController {
     @Operation(summary = "사용자 쿠폰 발급 목록 조회", description = "사용자가 발급받은 쿠폰 목록을 조회합니다.")
     public CustomApiResponse getUserCoupon(@PathVariable("userId") @Parameter(name = "userId", description = "사용자의 ID") Long userId) {
         try{
-            List<UserCoupon> userCouponList = couponService.getUserCoupons(userId);
+            List<UserCoupon> userCouponList = userCouponService.getUserCoupons(userId);
             return CustomApiResponse.success(ApiMessage.VIEW_SUCCESS, userCouponList);
         } catch(IllegalArgumentException e){
             return CustomApiResponse.badRequest(ApiMessage.INVALID_USER);
@@ -72,7 +72,7 @@ public class UserController {
             @PathVariable Long userId,
             @RequestBody IssueUserCouponRequest request
     ){
-        UserCoupon result = couponService.issue(userId, request.getCouponId());
+        UserCoupon result = userCouponService.issue(userId, request.getCouponId());
         return CustomApiResponse.success(ApiMessage.ISSUED_SUCCESS, result);
     }
 

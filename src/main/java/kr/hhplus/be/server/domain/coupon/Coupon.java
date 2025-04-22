@@ -103,7 +103,7 @@ public class Coupon extends BaseEntity {
 
     public long calculateDiscount(long originalAmount) {
         if (this.discountType == DiscountType.RATE) {
-            return originalAmount * this.discountRate / 100;
+            return Math.round(originalAmount * (this.discountRate / 100.0));
         } else if (this.discountType == DiscountType.AMOUNT) {
             return this.discountAmount;
         } else {

@@ -29,9 +29,6 @@ public class CouponServiceTest {
     private CouponRepository couponRepository;
 
     @Mock
-    private UserCouponRepository userCouponRepository;
-
-    @Mock
     private UserRepository userRepository;
 
     private User mockUser;
@@ -117,38 +114,5 @@ public class CouponServiceTest {
 
         // Act & Assert
         assertThrows(ForbiddenException.class, () -> couponService.create(request, 1L));
-    }
-
-    @Test
-    @Transactional
-    public void 쿠폰_발급_성공() {
-        // Arrange
-        Long userId = 1L;
-        Long couponId = 1L;
-        when(userRepository.findById(userId)).thenReturn(mockUser);
-        when(couponRepository.findById(couponId)).thenReturn(Optional.of(mockCoupon));
-        when(userCouponRepository.save(any(UserCoupon.class))).thenReturn(new UserCoupon(userId, couponId));
-
-        // Act
-        UserCoupon userCoupon = couponService.issue(userId, couponId);
-
-        // Assert
-        assertNotNull(userCoupon);
-        assertEquals(userId, userCoupon.getUserId());
-        assertEquals(couponId, userCoupon.getCouponId());
-    }
-
-    @Test
-    public void 쿠폰_사용_성공() {
-        // Arrange
-        Long userCouponId = 1L;
-        UserCoupon mockUserCoupon = new UserCoupon(1L, 1L);
-        when(userCouponRepository.findById(userCouponId)).thenReturn(Optional.of(mockUserCoupon));
-
-        couponService.use(userCouponId);
-
-        // Assert
-        assertEquals(UserCoupon.UserCouponStatus.USED, mockUserCoupon.getStatus());
-        verify(userCouponRepository, times(1)).save(mockUserCoupon);
     }
 }

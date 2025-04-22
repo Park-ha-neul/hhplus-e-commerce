@@ -59,7 +59,7 @@ public class PaymentServiceTest {
         assertNotNull(result);
         assertEquals(order.getOrderId(), result.getOrderId());
         assertEquals(totalPrice, result.getTotalAmount());
-        assertEquals(Payment.PaymentStatus.PENDING, result.getType());
+        assertEquals(Payment.PaymentStatus.PENDING, result.getStatus());
         verify(paymentRepository).save(any(Payment.class));
     }
 
@@ -100,7 +100,7 @@ public class PaymentServiceTest {
         paymentService.updateStatusComplete(paymentId);
 
         // then
-        assertEquals(Payment.PaymentStatus.COMPLETED, payment.getType());
+        assertEquals(Payment.PaymentStatus.COMPLETED, payment.getStatus());
         verify(paymentRepository).save(payment);
     }
 
@@ -118,7 +118,7 @@ public class PaymentServiceTest {
         paymentService.updateStatusFail(paymentId, reason);
 
         // then
-        assertEquals(Payment.PaymentStatus.FAIL, payment.getType());
+        assertEquals(Payment.PaymentStatus.FAIL, payment.getStatus());
         assertEquals(reason, payment.getFailureReason());
         verify(paymentRepository).save(payment);
     }
@@ -142,14 +142,15 @@ public class PaymentServiceTest {
     void 유저별_결제_조회() {
         // given
         Long userId = 123L;
-        List<Payment> list = List.of(mock(Payment.class));
-        when(paymentRepository.findByUserId(userId)).thenReturn(list);
+        Long orderId = 1L;
+        Payment payment = mock(Payment.class);
+        when(paymentRepository.findByOrderId(orderId)).thenReturn(payment);
 
         // when
         List<Payment> result = paymentService.getPaymentByUserId(userId);
 
         // then
         assertEquals(1, result.size());
-        assertEquals(list, result);
+        assertEquals(payment, result.get(0));
     }
 }
