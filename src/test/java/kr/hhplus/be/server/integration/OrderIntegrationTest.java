@@ -1,4 +1,4 @@
-package kr.hhplus.be.server.application.integration;
+package kr.hhplus.be.server.integration;
 
 import jakarta.transaction.Transactional;
 import kr.hhplus.be.server.application.facade.OrderCommand;
