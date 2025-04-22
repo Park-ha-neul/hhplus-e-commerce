@@ -17,7 +17,7 @@ public class TopProduct {
     @Column(name = "product_id")
     private Long productId;
 
-    @Column(name = "rank")
+    @Column(name = "ranking")
     private int rank;
 
     @Column(name = "total_count")

@@ -4,13 +4,13 @@ import kr.hhplus.be.server.domain.product.TopProduct;
 import kr.hhplus.be.server.domain.product.TopProductRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
-@Component
+@Repository
 @RequiredArgsConstructor
 public class TopProductRepositoryImpl implements TopProductRepository {
 
@@ -27,7 +27,7 @@ public class TopProductRepositoryImpl implements TopProductRepository {
     }
 
     @Override
-    public List<TopProduct> findByPeriodTypeAndCalculatedDateOrderByRankAsc(TopProduct.PeriodType periodType, LocalDate calculatedDate, PageRequest pageRequest) {
-        return topProductJpaRepository.findByPeriodTypeAndCalculatedDateOrderByRankAsc(periodType, calculatedDate, pageRequest);
+    public List<TopProduct> findByPeriodTypeAndCalculateDateOrderByRankAsc(TopProduct.PeriodType periodType, LocalDate calculatedDate, PageRequest pageRequest) {
+        return topProductJpaRepository.findByPeriodTypeAndCalculateDateOrderByRankAsc(periodType, calculatedDate, pageRequest);
     }
 }

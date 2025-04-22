@@ -3,9 +3,9 @@ package kr.hhplus.be.server.infrastructure.user;
 import kr.hhplus.be.server.domain.user.UserPoint;
 import kr.hhplus.be.server.domain.user.UserPointRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Repository;
 
-@Component
+@Repository
 @RequiredArgsConstructor
 public class UserPointRepositoryImpl implements UserPointRepository {
     private final UserPointJpaRepository userPointJpaRepository;

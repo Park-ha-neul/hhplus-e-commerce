@@ -10,7 +10,7 @@ import java.util.Optional;
 public interface TopProductRepository{
     TopProduct save (TopProduct topProduct);
     Optional<TopProduct> findByProductId(Long productId);
-    List<TopProduct> findByPeriodTypeAndCalculatedDateOrderByRankAsc(
+    List<TopProduct> findByPeriodTypeAndCalculateDateOrderByRankAsc(
             TopProduct.PeriodType periodType,
             LocalDate calculatedDate,
             PageRequest pageRequest

@@ -17,7 +17,6 @@ public class OrderItem extends BaseEntity {
     @JoinColumn(name = "order_id")
     private Order order;
 
-    @ManyToOne
     @Column(name = "product_id")
     private Long productId;
 

@@ -5,9 +5,9 @@ import kr.hhplus.be.server.domain.user.User;
 import kr.hhplus.be.server.domain.user.UserErrorCode;
 import kr.hhplus.be.server.domain.user.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Repository;
 
-@Component
+@Repository
 @RequiredArgsConstructor
 public class UserRepositoryImpl implements UserRepository {
 

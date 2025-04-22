@@ -102,7 +102,7 @@ erDiagram
 %%- 사용처: 상위 상품 추천 API
     TOP_PRODUCT {
         integer top_product_id PK "상위 제품 id"
-        integer rank "상품 순위"
+        integer ranking "상품 순위"
         integer product_id FK "상품 id"
         integer total_count "집계 기간 동안 해당 상품이 결제된 횟수(또는 수량)"
         timestamp calculated_date "계산된 시점(예: 매일 자정에 배치 처리된 날짜/시간)"

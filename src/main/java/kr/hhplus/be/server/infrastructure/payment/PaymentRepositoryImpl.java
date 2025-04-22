@@ -3,12 +3,12 @@ package kr.hhplus.be.server.infrastructure.payment;
 import kr.hhplus.be.server.domain.payment.Payment;
 import kr.hhplus.be.server.domain.payment.PaymentRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
 
-@Component
+@Repository
 @RequiredArgsConstructor
 public class PaymentRepositoryImpl implements PaymentRepository {
 
@@ -25,8 +25,8 @@ public class PaymentRepositoryImpl implements PaymentRepository {
     }
 
     @Override
-    public List<Payment> findByUserId(Long userId) {
-        return paymentJpaRepository.findByUserId(userId);
+    public Payment findByOrderId(Long orderId) {
+        return paymentJpaRepository.findByOrderId(orderId);
     }
 
     @Override

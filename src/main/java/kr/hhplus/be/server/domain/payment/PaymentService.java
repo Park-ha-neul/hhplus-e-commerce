@@ -9,6 +9,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -23,13 +25,19 @@ public class PaymentService {
     }
 
     public List<Payment> getPayments(Payment.PaymentStatus status){
+        if(status == null){
+            List<Payment> result = paymentRepository.findAllPayments();
+        }
         List<Payment> result = paymentRepository.findAllByStatus(status);
         return result;
     }
 
     public List<Payment> getPaymentByUserId(Long userId){
-        List<Payment> result = paymentRepository.findByUserId(userId);
-        return result;
+        List<Order> orders = orderRepository.findByUserId(userId);
+        return orders.stream()
+                .map(order -> paymentRepository.findByOrderId(order.getOrderId()))
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
     }
 
     public Payment create(PaymentCreateRequest request){

@@ -3,12 +3,12 @@ package kr.hhplus.be.server.infrastructure.coupon;
 import kr.hhplus.be.server.domain.coupon.Coupon;
 import kr.hhplus.be.server.domain.coupon.CouponRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
 
-@Component
+@Repository
 @RequiredArgsConstructor
 public class CouponRepositoryImpl implements CouponRepository {
     private final CouponJpaRepository couponJpaRepository;
@@ -30,6 +30,6 @@ public class CouponRepositoryImpl implements CouponRepository {
 
     @Override
     public List<Coupon> findAllCoupons() {
-        return couponJpaRepository.findAllCoupons();
+        return couponJpaRepository.findAll();
     }
 }

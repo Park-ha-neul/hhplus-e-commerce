@@ -14,6 +14,6 @@ public class TopProductService {
     public List<TopProduct> getTopProductsByPeriod(TopProduct.PeriodType periodType) {
         LocalDate calculateDate = TopProduct.calculateDate(periodType);
         PageRequest topN = PageRequest.of(0, 5);
-        return topProductRepository.findByPeriodTypeAndCalculatedDateOrderByRankAsc(periodType, calculateDate, topN);
+        return topProductRepository.findByPeriodTypeAndCalculateDateOrderByRankAsc(periodType, calculateDate, topN);
     }
 }

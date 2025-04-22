@@ -7,5 +7,5 @@ import java.util.List;
 
 public interface CouponJpaRepository extends JpaRepository<Coupon, Long> {
     List<Coupon> findAllByStatus(Coupon.CouponStatus status);
-    List<Coupon> findAllCoupons();
+    List<Coupon> findAll();
 }

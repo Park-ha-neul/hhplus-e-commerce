@@ -39,7 +39,7 @@ public class TopProductServiceTest {
             List<TopProduct> topProducts = List.of(topProduct1, topProduct2);
 
             // repository에서 상위 상품을 조회하도록 mock
-            when(topProductRepository.findByPeriodTypeAndCalculatedDateOrderByRankAsc(periodType, calculatedDate, PageRequest.of(0, 5)))
+            when(topProductRepository.findByPeriodTypeAndCalculateDateOrderByRankAsc(periodType, calculatedDate, PageRequest.of(0, 5)))
                     .thenReturn(topProducts);
 
             // when
@@ -48,7 +48,7 @@ public class TopProductServiceTest {
             // then
             assertNotNull(result);
             assertEquals(2, result.size()); // 2개의 상품이 반환됨
-            verify(topProductRepository).findByPeriodTypeAndCalculatedDateOrderByRankAsc(periodType, calculatedDate, PageRequest.of(0, 5));
+            verify(topProductRepository).findByPeriodTypeAndCalculateDateOrderByRankAsc(periodType, calculatedDate, PageRequest.of(0, 5));
         }
     }
 }

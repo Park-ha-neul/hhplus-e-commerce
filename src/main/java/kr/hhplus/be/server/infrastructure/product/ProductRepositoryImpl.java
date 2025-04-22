@@ -3,12 +3,12 @@ package kr.hhplus.be.server.infrastructure.product;
 import kr.hhplus.be.server.domain.product.Product;
 import kr.hhplus.be.server.domain.product.ProductRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
 
-@Component
+@Repository
 @RequiredArgsConstructor
 public class ProductRepositoryImpl implements ProductRepository {
 
@@ -31,6 +31,6 @@ public class ProductRepositoryImpl implements ProductRepository {
 
     @Override
     public List<Product> findAll() {
-        return productJpaRepository.findAllProducts();
+        return productJpaRepository.findAll();
     }
 }

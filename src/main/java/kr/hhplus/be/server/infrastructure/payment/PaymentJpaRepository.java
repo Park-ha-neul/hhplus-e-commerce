@@ -6,7 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface PaymentJpaRepository extends JpaRepository<Payment, Long> {
-    List<Payment> findByUserId(Long userId);
+    Payment findByOrderId(Long orderId);
     List<Payment> findAllByStatus(Payment.PaymentStatus status);
-    List<Payment> findAllPayments();
+    List<Payment> findAll();
 }

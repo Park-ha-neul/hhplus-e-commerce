@@ -52,7 +52,7 @@ public class PaymentController {
     }
 
     @GetMapping("/{paymentId}")
-    @Operation(summary = "결제 목록 조회", description = "결제 상태에 따른 조회가 가능합니다.")
+    @Operation(summary = "결제 상세 조회", description = "결제 상태에 따른 조회가 가능합니다.")
     public CustomApiResponse getPayment(
             @PathVariable("paymentId") @Parameter(name = "paymentId", description = "결제 id") Long paymentId
     ){

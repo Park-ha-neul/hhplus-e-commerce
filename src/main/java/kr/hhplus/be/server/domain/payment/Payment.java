@@ -23,7 +23,7 @@ public class Payment extends BaseEntity {
 
     @Column(name = "status")
     @Enumerated(EnumType.STRING)
-    private PaymentStatus type;
+    private PaymentStatus status;
 
     public enum PaymentStatus {
         PENDING, COMPLETED, FAIL
@@ -32,19 +32,19 @@ public class Payment extends BaseEntity {
     public Payment(Long orderId, Long totalAmount){
         this.orderId = orderId;
         this.totalAmount = totalAmount;
-        this.type = PaymentStatus.PENDING;
+        this.status = PaymentStatus.PENDING;
     }
 
     public void complete(){
-        this.type = PaymentStatus.COMPLETED;
+        this.status = PaymentStatus.COMPLETED;
     }
 
     public void fail(String reason){
-        this.type = PaymentStatus.FAIL;
+        this.status = PaymentStatus.FAIL;
         this.failureReason = reason;
     }
 
     public boolean isCompleted(){
-        return this.type == PaymentStatus.COMPLETED;
+        return this.status == PaymentStatus.COMPLETED;
     }
 }
