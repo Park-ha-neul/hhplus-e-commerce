@@ -1,5 +1,6 @@
 package kr.hhplus.be.server.domain.user;
 
+import jakarta.transaction.Transactional;
 import kr.hhplus.be.server.domain.point.PointHistory;
 import kr.hhplus.be.server.domain.point.PointHistoryRepository;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +15,7 @@ public class UserPointService {
     private final UserPointRepository userPointRepository;
     private final PointHistoryRepository pointHistoryRepository;
 
+    @Transactional
     public void charge(Long userId, Long amount) {
         UserPoint userPoint = userPointRepository.findByUserId(userId);
         Long balanceBefore = userPoint.getPoint();
@@ -24,6 +26,7 @@ public class UserPointService {
         userPointRepository.save(userPoint);
     }
 
+    @Transactional
     public void use(Long userId, Long amount) {
         UserPoint userPoint = userPointRepository.findByUserId(userId);
         Long balanceBefore = userPoint.getPoint();
@@ -34,6 +37,7 @@ public class UserPointService {
         userPointRepository.save(userPoint);
     }
 
+    @Transactional
     public List<PointHistory> getUserPointHistory(Long userId){
         return pointHistoryRepository.findByUserId(userId);
     }

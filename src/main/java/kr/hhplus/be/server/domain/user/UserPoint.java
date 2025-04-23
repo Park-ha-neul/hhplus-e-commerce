@@ -18,8 +18,14 @@ public class UserPoint{
     @Column(name = "point")
     private Long point;
 
+    @Version
+    private Long version;
+
     private static final Long MAX_CHARGE_PER_ONCE = 100_000L;
     private static final Long MAX_TOTAL_POINT = 1_000_000L;
+
+    protected UserPoint() {
+    }
 
     public UserPoint(Long userId, Long point){
         this.userId = userId;
