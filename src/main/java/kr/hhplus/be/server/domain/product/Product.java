@@ -9,7 +9,6 @@ import lombok.Getter;
 @Entity
 @Getter
 @Table(name = "product")
-@Builder
 public class Product extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -35,6 +34,10 @@ public class Product extends BaseEntity {
         AVAILABLE, SOLD_OUT
     }
 
+    protected Product(){
+    }
+
+    @Builder
     public Product(Long productId, String name, String description, Long price, Long quantity, ProductStatus status){
         this.productId = productId;
         this.name = name;

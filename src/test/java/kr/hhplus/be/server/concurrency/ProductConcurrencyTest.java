@@ -1,6 +1,5 @@
 package kr.hhplus.be.server.concurrency;
 
-import jakarta.transaction.Transactional;
 import kr.hhplus.be.server.domain.product.Product;
 import kr.hhplus.be.server.domain.product.ProductRepository;
 import kr.hhplus.be.server.domain.product.ProductService;
@@ -17,7 +16,6 @@ import java.util.concurrent.Executors;
 import static org.junit.Assert.assertEquals;
 
 @SpringBootTest
-@Transactional
 public class ProductConcurrencyTest {
 
     @Autowired
@@ -39,13 +37,18 @@ public class ProductConcurrencyTest {
     @Test
     void 동시에_재고_차감_요청() throws Exception {
         int threadCount = 10;
+        Long amount = 1L;
         ExecutorService executorService = Executors.newFixedThreadPool(10);
         CountDownLatch latch = new CountDownLatch(threadCount);
+
+        long start = System.currentTimeMillis();
 
         for (int i = 0; i < threadCount; i++) {
             executorService.submit(() -> {
                 try {
-                    productService.decreaseProductBalance(productId, 1L);
+                    productService.decreaseProductBalance(productId, amount);
+                } catch(Exception e){
+                    System.out.println("예외 발생 : " + e.getMessage());
                 } finally {
                     latch.countDown();
                 }
@@ -53,6 +56,8 @@ public class ProductConcurrencyTest {
         }
 
         latch.await();
+        long end = System.currentTimeMillis();
+        System.out.println("수행 시간: " + (end - start) + "ms");
 
         Product product = productRepository.findById(productId).orElseThrow();
         assertEquals(Long.valueOf(0L), product.getQuantity());

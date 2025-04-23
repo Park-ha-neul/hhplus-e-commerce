@@ -1,5 +1,6 @@
 package kr.hhplus.be.server.domain.product;
 
+import jakarta.transaction.Transactional;
 import kr.hhplus.be.server.domain.user.User;
 import kr.hhplus.be.server.domain.user.UserRepository;
 import kr.hhplus.be.server.interfaces.api.product.ProductRequest;
@@ -46,8 +47,11 @@ public class ProductService {
         productRepository.save(product);
     }
 
+    @Transactional
     public void decreaseProductBalance(Long productId, Long amount) {
-        Product product = getProductDetails(productId);
+        Product product = productRepository.findByIdForUpdate(productId)
+                .orElseThrow(() -> new IllegalArgumentException(ProductErrorCode.PRODUCT_NOT_FOUND.getMessage()));
+
         product.decreaseBalance(amount);
         productRepository.save(product);
     }
