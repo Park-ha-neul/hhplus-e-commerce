@@ -1,6 +1,8 @@
 package kr.hhplus.be.server.domain.coupon;
 
+import jakarta.transaction.Transactional;
 import kr.hhplus.be.server.domain.user.User;
+import kr.hhplus.be.server.domain.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -9,27 +11,53 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class UserCouponService {
-    private UserCouponRepository userCouponRepository;
 
-    public UserCoupon getUserCouponById(Long userCouponId){
+    private final UserCouponRepository userCouponRepository;
+    private final UserRepository userRepository;
+    private final CouponRepository couponRepository;
+
+    @Transactional
+    public UserCoupon issue(Long userId, Long couponId){
+        User user = userRepository.findById(userId);
+
+        Coupon coupon = couponRepository.findById(couponId)
+                .orElseThrow(() -> new IllegalArgumentException(ErrorCode.COUPON_NOT_FOUND.getMessage()));
+
+        if(coupon.getStatus() != Coupon.CouponStatus.ACTIVE){
+            throw new IllegalArgumentException(ErrorCode.INACTIVE_COUPON.getMessage());
+        }
+
+        UserCoupon userCoupon = UserCoupon.create(userId, couponId);
+        userCouponRepository.save(userCoupon);
+        coupon.increaseIssuedCount();
+
+        return userCoupon;
+    }
+
+    public UserCoupon getUserCoupon(Long userCouponId){
         return userCouponRepository.findById(userCouponId)
                 .orElseThrow(() -> new IllegalArgumentException(ErrorCode.USER_COUPON_NOT_FOUND.getMessage()));
     }
 
-    public List<UserCoupon> getUserCoupon(Long userId) {
-        return userCouponRepository.findByUserAndCoupon(userId);
+    public List<UserCoupon> getUserCoupons(Long userId, UserCoupon.UserCouponStatus status){
+        userRepository.findById(userId);
+        if(status == null){
+            return userCouponRepository.findByUserId(userId);
+        } else{
+            return userCouponRepository.findByUserIdAndStatus(userId, status);
+        }
     }
 
-    public void createUserCoupon(User user, Coupon coupon){
-        UserCoupon userCoupon = UserCoupon.issueTo(user, coupon);
-        userCouponRepository.save(userCoupon);
-    };
+    public void use(Long userCouponId){
+        UserCoupon userCoupon = userCouponRepository.findById(userCouponId)
+                .orElseThrow(() -> new IllegalArgumentException(ErrorCode.USER_COUPON_NOT_FOUND.getMessage()));
 
-    public void useCoupon(Long userCouponId){
-        UserCoupon userCoupon = getUserCouponById(userCouponId);
+        if (userCoupon.getStatus() == UserCoupon.UserCouponStatus.USED) {
+            throw new IllegalArgumentException(ErrorCode.ALREADY_USED_COUPON.getMessage());
+        }
+
         userCoupon.use();
+
         userCouponRepository.save(userCoupon);
     }
-
-
 }

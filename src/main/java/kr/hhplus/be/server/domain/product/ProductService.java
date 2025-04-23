@@ -1,40 +1,54 @@
 package kr.hhplus.be.server.domain.product;
 
+import kr.hhplus.be.server.domain.user.User;
+import kr.hhplus.be.server.domain.user.UserRepository;
+import kr.hhplus.be.server.interfaces.api.product.ProductRequest;
+import kr.hhplus.be.server.support.ForbiddenException;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
+@RequiredArgsConstructor
 public class ProductService {
 
-    private final ProductRepository repository;
+    private final ProductRepository productRepository;
+    private final UserRepository userRepository;
 
-    public ProductService(ProductRepository productRepository) {
-        this.repository = productRepository;
-    }
+    public Product createProduct(ProductRequest request, Long userId){
+        User user = userRepository.findById(userId);
 
-    public Product createProduct(String name, String description, Long price, Balance balance, ProductStatus status) {
-        Product product = Product.create(name, description, price, balance, status);
-        return repository.save(product);
+        if(!user.isAdmin()){
+            throw new ForbiddenException(ProductErrorCode.CREATE_PRODUCT_MUST_BE_ADMIN.getMessage());
+        }
+
+        Product product = Product.create(request);
+        return productRepository.save(product);
     }
 
     public Product getProductDetails(Long productId){
-        return repository.findById(productId)
-                .orElseThrow(() -> new IllegalArgumentException("상품이 존재하지 않습니다."));
+        return productRepository.findById(productId)
+                .orElseThrow(() -> new IllegalArgumentException(ProductErrorCode.PRODUCT_NOT_FOUND.getMessage()));
     }
 
-    public Balance getQuntity(Long productId){
-        Product product = getProductDetails(productId);
-        return product.getBalance();
+    public List<Product> getProducts(Product.ProductStatus status){
+        if (status != null){
+            return productRepository.findAllByStatus(status);
+        } else {
+            return productRepository.findAll();
+        }
     }
 
-    public void increaseProductBalance(Long productId, Long quantity) {
+    public void increaseProductBalance(Long productId, Long amount) {
         Product product = getProductDetails(productId);
-        product.increaseBalance(productId, quantity);
-        repository.save(product);
+        product.increaseBalance(amount);
+        productRepository.save(product);
     }
 
-    public void decreaseProductBalance(Long productId, Long quantity) {
+    public void decreaseProductBalance(Long productId, Long amount) {
         Product product = getProductDetails(productId);
-        product.decreaseBalance(productId, quantity);
-        repository.save(product);
+        product.decreaseBalance(amount);
+        productRepository.save(product);
     }
 }

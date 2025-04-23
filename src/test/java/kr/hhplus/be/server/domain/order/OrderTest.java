@@ -1,44 +1,69 @@
 package kr.hhplus.be.server.domain.order;
 
-import kr.hhplus.be.server.domain.coupon.UserCoupon;
-import kr.hhplus.be.server.domain.user.UserPoint;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.mock;
+import static org.junit.Assert.*;
 
 @ExtendWith(MockitoExtension.class)
 public class OrderTest {
 
     @Test
-    void 주문_등록_성공(){
-        UserPoint point = mock(UserPoint.class);
-        UserCoupon coupon = mock(UserCoupon.class);
+    void 주문_성공_상태_변경(){
+        Long userId = 1L;
+        Long couponId = 2L;
+        Order order = new Order(userId, couponId);
 
-        Order result = Order.create(point, coupon);
-
-        assertEquals(0, result.getOrderItems().size());
-    }
-
-    @Test
-    void 주문_완료(){
-        UserPoint userPoint = mock(UserPoint.class);
-        UserCoupon userCoupon = mock(UserCoupon.class);
-        Order order = Order.create(userPoint, userCoupon);
+        //when
         order.complete();
 
-        assertEquals(OrderType.SUCCESS, order.getType());
+        // then
+        assertEquals(Order.OrderStatus.SUCCESS, order.getStatus());
     }
 
     @Test
-    void 주문_실패(){
-        UserPoint userPoint = mock(UserPoint.class);
-        UserCoupon userCoupon = mock(UserCoupon.class);
-        Order order = Order.create(userPoint, userCoupon);
-        order.cancle();
+    void 주문_실패_상태_변경(){
+        Long userId = 1L;
+        Long couponId = 2L;
+        Order order = new Order(userId, couponId);
 
-        assertEquals(OrderType.FAIL, order.getType());
+        //when
+        order.fail();
+
+        // then
+        assertEquals(Order.OrderStatus.FAIL, order.getStatus());
+
+    }
+
+    @Test
+    void 주문_취소_상태_변경(){
+        Long userId = 1L;
+        Long couponId = 2L;
+        Order order = new Order(userId, couponId);
+
+        //when
+        order.cancel();
+
+        // then
+        assertEquals(Order.OrderStatus.CANCELED, order.getStatus());
+    }
+
+    @Test
+    void 주문에_아이템_추가(){
+        Long userId = 1L;
+        Long couponId = 2L;
+        Order order = new Order(userId, couponId);
+        Long productId = 1L;
+        Long quantity = 10L;
+        Long price = 2000L;
+        OrderItem orderItem = new OrderItem(order, productId, quantity, price);
+
+        // when
+        order.addOrderItem(orderItem);
+
+        // then
+        assertEquals(1, order.getItems().size()); // 아이템이 제대로 추가되었는지 확인
+        assertTrue(order.getItems().contains(orderItem));
     }
 }

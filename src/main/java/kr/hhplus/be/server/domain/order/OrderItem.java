@@ -1,15 +1,14 @@
 package kr.hhplus.be.server.domain.order;
 
 import jakarta.persistence.*;
-import kr.hhplus.be.server.domain.product.Product;
-import lombok.AllArgsConstructor;
+import kr.hhplus.be.server.domain.common.BaseEntity;
+import lombok.Builder;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Entity
 @Getter
-public class OrderItem {
+@Table(name = "order_item")
+public class OrderItem extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long orderItemId;
@@ -18,22 +17,21 @@ public class OrderItem {
     @JoinColumn(name = "order_id")
     private Order order;
 
-    @ManyToOne
-    @JoinColumn(name = "product_id")
-    private Product product;
+    @Column(name = "product_id")
+    private Long productId;
 
+    @Column(name = "quantity")
     private Long quantity;
+
+    @Column(name = "unit_price")
     private Long unitPrice;
 
-    public OrderItem(Order order, Product product, Long quantity, Long price) {
+    @Builder
+    public OrderItem(Order order, Long productId, Long quantity, Long price) {
         this.order = order;
-        this.product = product;
+        this.productId = productId;
         this.quantity = quantity;
         this.unitPrice = price;
-    }
-
-    public static OrderItem create(Order order, Product product, Long quantity, Long price) {
-        return new OrderItem(order, product, quantity, price);
     }
 
     public Long getTotalPrice() {

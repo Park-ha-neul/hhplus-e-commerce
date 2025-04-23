@@ -1,15 +1,20 @@
 package kr.hhplus.be.server.domain.coupon;
 
+import jakarta.transaction.Transactional;
 import kr.hhplus.be.server.domain.user.User;
+import kr.hhplus.be.server.domain.user.UserRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.List;
 import java.util.Optional;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -21,44 +26,54 @@ public class UserCouponServiceTest {
     @Mock
     private UserCouponRepository userCouponRepository;
 
-    @Test
-    void 사용자_쿠폰_발급_성공(){
-        User user = User.create(1L, false);
-        Coupon coupon = mock(Coupon.class);
-        UserCoupon userCoupon = UserCoupon.issueTo(user, coupon);
+    @Mock
+    private UserRepository userRepository;
 
-        when(userCouponRepository.save(any(UserCoupon.class))).thenReturn(userCoupon);
+    @Mock
+    private CouponRepository couponRepository;
 
-        userCouponService.createUserCoupon(user, coupon);
+    private User mockUser;
+    private Coupon mockCoupon;
 
-        verify(userCouponRepository).save(any(UserCoupon.class));
+    @BeforeEach
+    public void setUp() {
+        // Mocking User
+        mockUser = new User("하늘", true);
+
+        // Mocking Coupon
+        mockCoupon = new Coupon("Test Coupon", 100L, 0L, Coupon.DiscountType.RATE, 10L, 0L, Coupon.CouponStatus.ACTIVE, null, null);
     }
 
     @Test
-    void 사용자_쿠폰_조회(){
-        User user = User.create(1L, false);
-        Long userId = user.getUserId();
-        Coupon coupon = mock(Coupon.class);
-        UserCoupon userCoupon = UserCoupon.issueTo(user, coupon);
-        List<UserCoupon> couponList = List.of(userCoupon);
+    @Transactional
+    public void 쿠폰_발급_성공() {
+        // Arrange
+        Long userId = 1L;
+        Long couponId = 1L;
+        when(userRepository.findById(userId)).thenReturn(mockUser);
+        when(couponRepository.findById(couponId)).thenReturn(Optional.of(mockCoupon));
+        when(userCouponRepository.save(any(UserCoupon.class))).thenReturn(UserCoupon.create(userId, couponId));
 
-        when(userCouponRepository.findByUserAndCoupon(any(Long.class))).thenReturn(couponList);
-        userCouponService.getUserCoupon(userId);
+        // Act
+        UserCoupon userCoupon = userCouponService.issue(userId, couponId);
 
-        verify(userCouponRepository).findByUserAndCoupon(any(Long.class));
+        // Assert
+        assertNotNull(userCoupon);
+        assertEquals(userId, userCoupon.getUserId());
+        assertEquals(couponId, userCoupon.getCouponId());
     }
 
     @Test
-    void 사용자_쿠폰_사용(){
-        User user = User.create(1L, false);
-        Coupon coupon = mock(Coupon.class);
-        UserCoupon userCoupon = UserCoupon.issueTo(user, coupon);
-
+    public void 쿠폰_사용_성공() {
+        // Arrange
         Long userCouponId = 1L;
-        when(userCouponRepository.findById(userCouponId)).thenReturn(Optional.of(userCoupon));
+        UserCoupon mockUserCoupon = UserCoupon.create(1L, 1L);
+        when(userCouponRepository.findById(userCouponId)).thenReturn(Optional.of(mockUserCoupon));
 
-        userCouponService.useCoupon(userCouponId);
+        userCouponService.use(userCouponId);
 
-        verify(userCouponRepository).save(userCoupon);
+        // Assert
+        assertEquals(UserCoupon.UserCouponStatus.USED, mockUserCoupon.getStatus());
+        verify(userCouponRepository, times(1)).save(mockUserCoupon);
     }
 }

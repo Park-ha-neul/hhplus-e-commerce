@@ -1,9 +1,11 @@
 package kr.hhplus.be.server.domain.product;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-
 import java.util.List;
+import java.util.Optional;
 
-public interface ProductRepository extends JpaRepository<Product, Long> {
-    List<Product> findByStatus(ProductStatus status);
+public interface ProductRepository{
+    Product save (Product product);
+    Optional<Product> findById(Long productId);
+    List<Product> findAllByStatus(Product.ProductStatus status);
+    List<Product> findAll();
 }

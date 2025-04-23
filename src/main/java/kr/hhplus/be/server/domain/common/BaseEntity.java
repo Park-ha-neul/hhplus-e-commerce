@@ -1,5 +1,6 @@
 package kr.hhplus.be.server.domain.common;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.MappedSuperclass;
 import lombok.Getter;
@@ -14,8 +15,10 @@ import java.time.LocalDateTime;
 @Getter
 public class BaseEntity {
     @CreatedDate
+    @Column(name = "create_date")
     private LocalDateTime createdDate;
 
     @LastModifiedDate
+    @Column(name = "update_date")
     private LocalDateTime updatedDate;
 }

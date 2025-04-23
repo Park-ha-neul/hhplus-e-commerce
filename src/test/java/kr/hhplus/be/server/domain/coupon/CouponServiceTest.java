@@ -1,15 +1,22 @@
 package kr.hhplus.be.server.domain.coupon;
 
+import jakarta.transaction.Transactional;
+import kr.hhplus.be.server.domain.user.User;
+import kr.hhplus.be.server.domain.user.UserRepository;
+import kr.hhplus.be.server.interfaces.api.coupon.CouponCreateRequest;
+import kr.hhplus.be.server.support.ForbiddenException;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
 
-import static org.junit.Assert.assertNotNull;
-import static org.mockito.Mockito.mock;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -21,24 +28,91 @@ public class CouponServiceTest {
     @Mock
     private CouponRepository couponRepository;
 
+    @Mock
+    private UserRepository userRepository;
+
+    private User mockUser;
+    private Coupon mockCoupon;
+
+    @BeforeEach
+    public void setUp() {
+        // Mocking User
+        mockUser = new User("하늘", true);
+
+        // Mocking Coupon
+        mockCoupon = new Coupon("Test Coupon", 100L, 0L, Coupon.DiscountType.RATE, 10L, 0L, Coupon.CouponStatus.ACTIVE, null, null);
+    }
+
     @Test
-    void 쿠폰_등록(){
-        CouponCreateRequest request = mock(CouponCreateRequest.class);
+    public void 쿠폰_상태로_조회_성공() {
+        // Arrange
+        Coupon.CouponStatus status = Coupon.CouponStatus.ACTIVE;
+        when(couponRepository.findAllByStatus(status)).thenReturn(List.of(mockCoupon));
 
-        when(request.getDiscountType()).thenReturn(DiscountType.AMOUNT);
-        when(request.getDiscountAmount()).thenReturn(1000L);
-        when(request.getName()).thenReturn("테스트쿠폰");
-        when(request.getTotalCount()).thenReturn(100L);
-        when(request.getStartDate()).thenReturn(LocalDate.now().atStartOfDay());
-        when(request.getEndDate()).thenReturn(LocalDate.now().plusDays(7).atStartOfDay());
+        // Act
+        List<Coupon> coupons = couponService.getCoupons(status);
 
-        Coupon coupon = Coupon.create(request);
+        // Assert
+        assertNotNull(coupons);
+        assertEquals(1, coupons.size());
+        assertEquals(status, coupons.get(0).getStatus());
+    }
 
-        when(couponRepository.save(any(Coupon.class))).thenReturn(coupon);
+    @Test
+    public void 쿠폰_아이디로_조회_성공() {
+        // Arrange
+        Long couponId = 1L;
+        Coupon mockCoupon1 = mock(Coupon.class);
+        when(mockCoupon1.getCouponId()).thenReturn(1L);
+        when(couponRepository.findById(couponId)).thenReturn(Optional.of(mockCoupon1));
 
-        Coupon result = couponService.create(request);
+        // Act
+        Coupon coupon = couponService.getCoupon(couponId);
 
-        assertNotNull(result);
-        verify(couponRepository).save(any(Coupon.class));
+        // Assert
+        assertNotNull(coupon);
+        assertEquals(Long.valueOf(1L), coupon.getCouponId());
+    }
+
+    @Test
+    public void 쿠폰_생성_성공() {
+        CouponCreateRequest request = CouponCreateRequest.builder()
+                .name("할인쿠폰")
+                .totalCount(100L)
+                .discountType(Coupon.DiscountType.RATE)
+                .discountRate(10L)
+                .discountAmount(null)
+                .startDate(LocalDateTime.now())
+                .endDate(LocalDateTime.now().plusDays(7))
+                .build();
+
+        when(userRepository.findById(1L)).thenReturn(mockUser);
+        when(couponRepository.save(any(Coupon.class))).thenReturn(mockCoupon);
+
+        // Act
+        Coupon createdCoupon = couponService.create(request, 1L);
+
+        // Assert
+        assertNotNull(createdCoupon);
+        verify(couponRepository, times(1)).save(any(Coupon.class));
+    }
+
+    @Test
+    public void 쿠폰_생성_권한_없는_사용자() {
+        // Arrange
+        User mockUser = new User("하늘", false);
+        when(userRepository.findById(anyLong())).thenReturn(mockUser);
+        CouponCreateRequest request = CouponCreateRequest.builder()
+                .name("할인쿠폰")
+                .totalCount(100L)
+                .discountType(Coupon.DiscountType.RATE)
+                .discountRate(10L)
+                .discountAmount(null)
+                .startDate(LocalDateTime.now())
+                .endDate(LocalDateTime.now().plusDays(7))
+                .build();
+
+        // Act & Assert
+        assertThrows(ForbiddenException.class, () -> couponService.create(request, 1L));
     }
 }

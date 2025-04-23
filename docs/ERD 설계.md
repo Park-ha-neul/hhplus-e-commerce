@@ -1,10 +1,18 @@
 ### ERD 설계
 ```mermaid
 erDiagram
-  USER_POINT {
-    integer user_id PK "사용자 id"
+    USER {
+        integer user_id PK "사용자 id"
+        String name "사용자 이름"
+        boolean admin_yn "관리자 여부"
+        timestamp create_date "등록일"
+        timestamp update_date "수정일"
+    }
+    
+  POINT {
+    integer point_id PK "포인트 id"
+    integer user_id FK "사용자 id"
     integer point "보유 포인트"
-    boolean admin_yn "관리자 여부"
     timestamp create_date "등록일"
     timestamp update_date "수정일"
   }
@@ -18,7 +26,8 @@ erDiagram
     varchar transaction_type "거래 유형 (예: 적립, 사용 등)"
     timestamp create_date "이력 생성일"
   }
-  POINT_HISTORY }|--|| USER_POINT : "belongs to"
+  POINT }|--|| USER : "belongs to"
+  POINT_HISTORY }|--|| USER : "belongs to"
 
   PRODUCT {
     integer product_id PK "상품 id"
@@ -38,7 +47,7 @@ erDiagram
     varchar status "주문 상태 (대기, 성공, 실패)"
     timestamp create_date "주문 생성일"
   }
-  USER_ORDER }|--|| USER_POINT : "belongs to"
+  USER_ORDER }|--|| USER : "belongs to"
   USER_ORDER }|--|| USER_COUPON : "belongs to"
 
   ORDER_ITEMS {
@@ -85,7 +94,7 @@ erDiagram
     timestamp create_date "쿠폰 발급일"
     timestamp update_date "쿠폰 수정일"
   }
-  USER_COUPON }|--|| USER_POINT : "belongs to"
+  USER_COUPON }|--|| USER : "belongs to"
   USER_COUPON }|--|| COUPON : "refers to"
   
 %%  📊 인기 상품 통계 테이블 (배치 처리로 매일 생성)
@@ -93,7 +102,7 @@ erDiagram
 %%- 사용처: 상위 상품 추천 API
     TOP_PRODUCT {
         integer top_product_id PK "상위 제품 id"
-        integer rank "상품 순위"
+        integer ranking "상품 순위"
         integer product_id FK "상품 id"
         integer total_count "집계 기간 동안 해당 상품이 결제된 횟수(또는 수량)"
         timestamp calculated_date "계산된 시점(예: 매일 자정에 배치 처리된 날짜/시간)"

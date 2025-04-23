@@ -2,8 +2,7 @@ package kr.hhplus.be.server.domain.order;
 
 import jakarta.persistence.*;
 import kr.hhplus.be.server.domain.common.BaseEntity;
-import kr.hhplus.be.server.domain.coupon.UserCoupon;
-import kr.hhplus.be.server.domain.user.UserPoint;
+import lombok.Builder;
 import lombok.Getter;
 
 import java.util.ArrayList;
@@ -11,38 +10,51 @@ import java.util.List;
 
 @Entity
 @Getter
+@Table(name = "user_order")
 public class Order extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long orderId;
 
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
-    private List<OrderItem> orderItems = new ArrayList<>();
+    @Column(name = "user_id")
+    private Long userId;
 
-    @Embedded
-    private UserPoint userPoint;
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<OrderItem> items;
 
-    @OneToOne
-    private UserCoupon userCoupon;
+    @Column(name = "user_coupon_id")
+    private Long couponId;
 
+    @Column(name = "status")
     @Enumerated(EnumType.STRING)
-    private OrderType type; // pending, success, fail
+    private OrderStatus status;
 
-    private Order(UserPoint userPoint, UserCoupon userCoupon, OrderType type) {
-        this.userPoint = userPoint;
-        this.userCoupon = userCoupon;
-        this.type = type;
+    public Order() {
     }
 
-    public static Order create(UserPoint point, UserCoupon coupon) {
-        return new Order(point, coupon, OrderType.PENDING);
+    public enum OrderStatus{
+        PENDING, SUCCESS, FAIL, CANCELED;
+    }
+
+    @Builder
+    public Order(Long userId, Long couponId){
+        this.userId = userId;
+        this.couponId = couponId;
+        this.status = OrderStatus.PENDING;
+        this.items = new ArrayList<>();
     }
 
     public void complete() {
-        this.type = OrderType.SUCCESS;
+        this.status = OrderStatus.SUCCESS;
     }
 
-    public void cancle() {
-        this.type = OrderType.FAIL;
+    public void fail() {
+        this.status = OrderStatus.FAIL;
+    }
+
+    public void cancel(){this.status = OrderStatus.CANCELED;}
+
+    public void addOrderItem(OrderItem orderItem) {
+        this.items.add(orderItem);
     }
 }

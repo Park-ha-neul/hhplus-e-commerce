@@ -1,36 +1,40 @@
 package kr.hhplus.be.server.domain.user;
 
+import kr.hhplus.be.server.domain.point.PointHistory;
+import kr.hhplus.be.server.domain.point.PointHistoryRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
+@RequiredArgsConstructor
 public class UserPointService {
 
-    private final UserPointEntityRepository repository;
-
-    public UserPointService(UserPointEntityRepository repository){
-        this.repository = repository;
-    }
-
-    public UserPoint getUserPoint(Long userId) {
-        UserPointEntity entity = repository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 사용자의 포인트 정보가 없습니다."));
-
-        return entity.getPoint();
-    }
+    private final UserPointRepository userPointRepository;
+    private final PointHistoryRepository pointHistoryRepository;
 
     public void charge(Long userId, Long amount) {
-        UserPointEntity entity = repository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("사용자 포인트 정보 없음"));
-
-        entity.getPoint().charge(amount);
-        repository.save(entity);
+        UserPoint userPoint = userPointRepository.findByUserId(userId);
+        Long balanceBefore = userPoint.getPoint();
+        userPoint.charge(amount);
+        Long balanceAfter = userPoint.getPoint();
+        PointHistory pointHistory = PointHistory.chargeHistory(userId, amount, balanceBefore, balanceAfter);
+        pointHistoryRepository.save(pointHistory);
+        userPointRepository.save(userPoint);
     }
 
     public void use(Long userId, Long amount) {
-        UserPointEntity entity = repository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("사용자 포인트 정보 없음"));
+        UserPoint userPoint = userPointRepository.findByUserId(userId);
+        Long balanceBefore = userPoint.getPoint();
+        userPoint.use(amount);
+        Long balanceAfter = userPoint.getPoint();
+        PointHistory pointHistory = PointHistory.useHistory(userId, amount, balanceBefore, balanceAfter);
+        pointHistoryRepository.save(pointHistory);
+        userPointRepository.save(userPoint);
+    }
 
-        entity.getPoint().use(amount);
-        repository.save(entity);
+    public List<PointHistory> getUserPointHistory(Long userId){
+        return pointHistoryRepository.findByUserId(userId);
     }
 }

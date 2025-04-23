@@ -2,71 +2,94 @@ package kr.hhplus.be.server.domain.product;
 
 import jakarta.persistence.*;
 import kr.hhplus.be.server.domain.common.BaseEntity;
+import kr.hhplus.be.server.interfaces.api.product.ProductRequest;
+import lombok.Builder;
 import lombok.Getter;
 
 @Entity
 @Getter
+@Table(name = "product")
+@Builder
 public class Product extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long productId;
 
+    @Column(name = "product_name")
     private String name;
+
+    @Column(name = "product_description")
     private String description;
+
+    @Column(name = "price")
     private Long price;
 
-    @Embedded
-    @Getter
-    private Balance balance;
+    @Column(name = "stock")
+    private Long quantity;
 
+    @Column(name = "status")
     @Enumerated(EnumType.STRING)
     private ProductStatus status;
 
-    private Product(Long productId, String name, String description, Long price, Balance balance, ProductStatus status){
+    public enum ProductStatus {
+        AVAILABLE, SOLD_OUT
+    }
+
+    public Product(Long productId, String name, String description, Long price, Long quantity, ProductStatus status){
         this.productId = productId;
         this.name = name;
         this.description = description;
         this.price = price;
-        this.balance = balance;
+        this.quantity = quantity;
         this.status = status;
     }
 
-    public static Product create(String name, String description, Long price, Balance balance, ProductStatus status){
-        if (price < 0){
-            throw new IllegalArgumentException("상품 가격은 0보다 커야 합니다.");
+    public static Product create(ProductRequest request){
+        if (request.getPrice() < 0){
+            throw new IllegalArgumentException(ProductErrorCode.PRODUCT_PRICE_MUST_BE_POSITIVE.getMessage());
         }
 
-        if (balance == null || balance.getQuantity() == null || balance.getQuantity() < 0){
-            throw new IllegalArgumentException("재고는 0 이상이어야 합니다.");
-        }
-
-        if (balance.isSoldOut() && status == ProductStatus.AVAILABLE) {
-            throw new IllegalArgumentException("재고가 없는 상품은 판매 상태일 수 없습니다.");
+        if (request.getQuantity() == null || request.getQuantity() == null || request.getQuantity() < 0){
+            throw new IllegalArgumentException(ProductErrorCode.PRODUCT_STOCK_MUST_BE_POSITIVE.getMessage());
         }
 
         return new Product(
                 null,
-                name,
-                description,
-                price,
-                balance,
-                status
+                request.getName(),
+                request.getDescription(),
+                request.getPrice(),
+                request.getQuantity(),
+                ProductStatus.AVAILABLE
         );
     }
 
-    public void increaseBalance(Long productId, Long amount){
-        balance.increase(amount);
+    public void increaseBalance(Long amount){
+        if(amount == null || amount <= 0){
+            throw new IllegalArgumentException(ProductErrorCode.INCREASE_MUST_BE_POSITIVE.getMessage());
+        }
+        this.quantity += amount;
 
-        if (!this.balance.isSoldOut()) {
+
+        if (!this.isSoldOut()) {
             this.status = ProductStatus.AVAILABLE;
         }
     }
 
-    public void decreaseBalance(Long productId, Long amount){
-        balance.decrease(amount);
-
-        if (this.balance.isSoldOut()) {
-            this.status = ProductStatus.AVAILABLE;
+    public void decreaseBalance(Long amount){
+        if(amount == null || amount <= 0){
+            throw new IllegalArgumentException(ProductErrorCode.DECREASE_MUST_BE_POSITIVE.getMessage());
         }
+        if(amount > quantity){
+            throw new IllegalArgumentException(ProductErrorCode.NOT_ENOUGH_STOCK.getMessage());
+        }
+        this.quantity -= amount;
+
+        if (this.isSoldOut()) {
+            this.status = ProductStatus.SOLD_OUT;
+        }
+    }
+
+    public boolean isSoldOut(){
+        return this.quantity == 0L;
     }
 }

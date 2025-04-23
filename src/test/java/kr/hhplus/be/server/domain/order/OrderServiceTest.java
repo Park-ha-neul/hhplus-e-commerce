@@ -1,19 +1,25 @@
 package kr.hhplus.be.server.domain.order;
 
 import kr.hhplus.be.server.domain.coupon.UserCoupon;
+import kr.hhplus.be.server.domain.coupon.UserCouponRepository;
+import kr.hhplus.be.server.domain.product.Product;
+import kr.hhplus.be.server.domain.product.ProductRepository;
+import kr.hhplus.be.server.domain.user.User;
 import kr.hhplus.be.server.domain.user.UserPoint;
+import kr.hhplus.be.server.domain.user.UserPointRepository;
+import kr.hhplus.be.server.domain.user.UserRepository;
+import kr.hhplus.be.server.interfaces.api.order.OrderItemRequest;
+import kr.hhplus.be.server.interfaces.api.order.OrderRequest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -23,101 +29,107 @@ public class OrderServiceTest {
     private OrderService orderService;
 
     @Mock
+    private UserRepository userRepository;
+
+    @Mock
+    private UserCouponRepository userCouponRepository;
+
+    @Mock
+    private ProductRepository productRepository;
+
+    @Mock
     private OrderRepository orderRepository;
 
     @Test
-    void 주문_등록(){
-        UserPoint point = mock(UserPoint.class);
-        UserCoupon coupon = mock(UserCoupon.class);
+    void 주문_생성_성공() {
+        // given
+        Long userId = 1L;
+        Long point = 100L;
+        Long couponId = 2L;
+        Long productId = 10L;
+        Long quantity = 3L;
+        long price = 1000L;
 
-        Order expectedOrder = Order.create(point, coupon);
+        OrderItemRequest itemRequest = new OrderItemRequest(productId, quantity);
+        OrderRequest request = new OrderRequest(userId, couponId, List.of(itemRequest));
 
-        when(orderRepository.save(any(Order.class))).thenReturn(expectedOrder);
+        User user = User.builder().userName("하늘").adminYn(true).build();
+        UserCoupon userCoupon = UserCoupon.builder().userId(userId).couponId(couponId).build();
+        Product product = Product.builder().productId(productId).price(price).build();
 
-        Order result = orderService.create(point, coupon);
+        when(userRepository.findById(userId)).thenReturn(user);
+        when(userCouponRepository.findById(couponId)).thenReturn(Optional.of(userCoupon));
+        when(productRepository.findById(productId)).thenReturn(Optional.of(product));
+        when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> invocation.getArgument(0)); // save stub
 
-        assertEquals(OrderType.PENDING, result.getType());
+        // when
+        Order order = orderService.create(request);
+
+        // then
+        assertNotNull(order);
+        assertEquals(Order.OrderStatus.SUCCESS, order.getStatus());
+        assertEquals(1, order.getItems().size());
         verify(orderRepository).save(any(Order.class));
     }
 
     @Test
-    void 주문_조회_성공(){
-        UserPoint point = mock(UserPoint.class);
-        UserCoupon coupon = mock(UserCoupon.class);
+    void 상태별_주문_조회() {
+        // given
+        Order order = mock(Order.class);
+        when(orderRepository.findByStatus(Order.OrderStatus.SUCCESS))
+                .thenReturn(List.of(order));
 
-        Order expectedOrder = Order.create(point, coupon);
+        // when
+        List<Order> result = orderService.getOrders(Order.OrderStatus.SUCCESS);
 
-        when(orderRepository.findById(expectedOrder.getOrderId())).thenReturn(Optional.of(expectedOrder));
-
-        Order result = orderService.getOrder(expectedOrder.getOrderId());
-
-        assertEquals(OrderType.PENDING, result.getType());
-        verify(orderRepository).findById(expectedOrder.getOrderId());
+        // then
+        assertEquals(1, result.size());
+        verify(orderRepository).findByStatus(Order.OrderStatus.SUCCESS);
     }
 
     @Test
-    void 주문_조회시_없는경우_예외처리(){
-        Long orderId = 2L;
-        when(orderRepository.findById(orderId)).thenReturn(Optional.empty());
+    void 주문_단건_조회() {
+        // given
+        Long orderId = 1L;
+        Order order = mock(Order.class);
+        when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
 
-        IllegalArgumentException e = assertThrows(IllegalArgumentException.class, () -> {
-            orderService.getOrder(orderId);
-        });
+        // when
+        Order result = orderService.getOrder(orderId);
 
-        assertEquals(ErrorCode.ORDER_NOT_FOUND.getMessage(), e.getMessage());
+        // then
+        assertEquals(order, result);
         verify(orderRepository).findById(orderId);
     }
 
     @Test
-    void 사용자_주문조회(){
+    void 사용자별_주문_목록_조회() {
+        // given
         Long userId = 1L;
-        List<Order> orders = List.of(mock(Order.class), mock(Order.class)); // 또는 실제 Order 객체
+        Order order = mock(Order.class);
+        when(orderRepository.findByUserId(userId)).thenReturn(List.of(order));
 
-        when(orderRepository.findByUserId(userId)).thenReturn(orders);
+        // when
+        List<Order> result = orderService.getUserOrders(userId, null);
 
-        List<Order> result = orderService.getOrderByUserId(userId);
-
-        assertEquals(2, result.size());
+        // then
+        assertEquals(1, result.size());
         verify(orderRepository).findByUserId(userId);
     }
 
     @Test
-    void 사용자_주문조회시_주문이_없는경우(){
-        Long userId = 1L;
-        when(orderRepository.findByUserId(userId)).thenReturn(Collections.emptyList());
+    void 주문_취소() {
+        // given
+        Long orderId = 1L;
 
-        IllegalArgumentException e = assertThrows(IllegalArgumentException.class, () -> {
-            orderService.getOrderByUserId(userId);
-        });
+        Order order = mock(Order.class);
+        when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
 
-        assertEquals(ErrorCode.ORDER_NOT_FOUND.getMessage(), e.getMessage());
-    }
+        // when
+        orderService.cancel(orderId);
 
-    @Test
-    void 주문_완료(){
-        UserPoint point = mock(UserPoint.class);
-        UserCoupon coupon = mock(UserCoupon.class);
-
-        Order expectedOrder = Order.create(point, coupon);
-
-        when(orderRepository.findById(expectedOrder.getOrderId())).thenReturn(Optional.of(expectedOrder));
-        orderService.completeOrder(expectedOrder.getOrderId());
-
-        assertEquals(OrderType.SUCCESS, expectedOrder.getType());
-        verify(orderRepository).save(any(Order.class));
-    }
-
-    @Test
-    void 주문_취소(){
-        UserPoint point = mock(UserPoint.class);
-        UserCoupon coupon = mock(UserCoupon.class);
-
-        Order expectedOrder = Order.create(point, coupon);
-
-        when(orderRepository.findById(expectedOrder.getOrderId())).thenReturn(Optional.of(expectedOrder));
-        orderService.cancleOrder(expectedOrder.getOrderId());
-
-        assertEquals(OrderType.FAIL, expectedOrder.getType());
-        verify(orderRepository).save(any(Order.class));
+        // then
+        verify(order).cancel();
+        verify(orderRepository).save(order);
     }
 }

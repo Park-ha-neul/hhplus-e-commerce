@@ -1,12 +1,13 @@
 package kr.hhplus.be.server.domain.coupon;
 
-import kr.hhplus.be.server.domain.user.User;
-import kr.hhplus.be.server.domain.user.UserPoint;
-import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
 
-public interface UserCouponRepository extends JpaRepository<UserCoupon, Long> {
-    List<UserCoupon> findByUserAndCoupon(Long userId);
+public interface UserCouponRepository{
+    UserCoupon save(UserCoupon userCoupon);
+    Optional<UserCoupon> findById(Long userCouponId);
+    List<UserCoupon> findByUserId(Long userId);
+    List<UserCoupon> findByUserIdAndStatus(Long userId, UserCoupon.UserCouponStatus status);
 }

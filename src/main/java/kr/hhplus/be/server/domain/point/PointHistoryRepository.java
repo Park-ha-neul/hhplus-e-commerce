@@ -1,9 +1,10 @@
 package kr.hhplus.be.server.domain.point;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-
 import java.util.List;
+import java.util.Optional;
 
-public interface PointHistoryRepository extends JpaRepository<PointHistoryEntity, Long> {
-    List<PointHistoryEntity> findAllByUserIdOrderByCreatedAtDesc(Long userId);
+public interface PointHistoryRepository{
+    PointHistory save(PointHistory pointHistory);
+    Optional<PointHistory> findById(Long pointId);
+    List<PointHistory> findByUserId(Long userId);
 }

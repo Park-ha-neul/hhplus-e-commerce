@@ -2,44 +2,56 @@ package kr.hhplus.be.server.domain.coupon;
 
 import jakarta.persistence.*;
 import kr.hhplus.be.server.domain.common.BaseEntity;
-import kr.hhplus.be.server.domain.user.User;
-import kr.hhplus.be.server.domain.user.UserPoint;
-import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Entity
 @Getter
+@Table(name = "user_coupon", indexes = {
+        @Index(name = "idx_username", columnList = "username"),
+        @Index(name = "idx_status", columnList = "status")
+})
 public class UserCoupon extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long userCouponId;
 
-    @Embedded
-    private User user;
+    @Column(name = "user_id")
+    private Long userId;
 
-    @ManyToOne
-    private Coupon coupon;
+    @Column(name = "coupon_id")
+    private Long couponId;
 
+    @Column(name = "status")
     @Enumerated(EnumType.STRING)
-    private CouponStatus status;
+    private UserCouponStatus status;
 
-    private UserCoupon(User user, Coupon coupon, CouponStatus status){
-        this.user = user;
-        this.coupon = coupon;
+    public enum UserCouponStatus {
+        ISSUED, USED, EXPIRED
+    }
+
+    @Builder
+    public UserCoupon(Long userId, Long couponId, UserCouponStatus status){
+        this.userId = userId;
+        this.couponId = couponId;
         this.status = status;
     }
 
-    public static UserCoupon issueTo(User user, Coupon coupon) {
-        coupon.increaseIssuedCount();
-        return new UserCoupon(user, coupon, CouponStatus.ISSUED);
+    protected UserCoupon() {
+    }
+
+    public static UserCoupon create(Long userId, Long couponId){
+        return new UserCoupon(
+                userId,
+                couponId,
+                UserCouponStatus.ISSUED
+        );
     }
 
     public void use() {
-        if (this.status == CouponStatus.USED) {
+        if (this.status == UserCouponStatus.USED) {
             throw new IllegalArgumentException(ErrorCode.ALREADY_USED_COUPON.getMessage());
         }
-        this.status = CouponStatus.USED;
+        this.status = UserCouponStatus.USED;
     }
 }

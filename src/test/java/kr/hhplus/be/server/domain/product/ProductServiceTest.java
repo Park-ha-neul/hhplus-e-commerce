@@ -1,5 +1,9 @@
 package kr.hhplus.be.server.domain.product;
 
+import kr.hhplus.be.server.domain.user.User;
+import kr.hhplus.be.server.domain.user.UserRepository;
+import kr.hhplus.be.server.interfaces.api.product.ProductRequest;
+import kr.hhplus.be.server.support.ForbiddenException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -8,94 +12,114 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class ProductServiceTest {
 
     @Mock
-    private ProductRepository repository;
+    private ProductRepository productRepository;
+
+    @Mock
+    private UserRepository userRepository;
 
     @InjectMocks
     private ProductService productService;
 
     @Test
-    void 상품_등록_성공(){
-        Balance balance = Balance.create(200L);
-        Product mockProduct = Product.create("A 상품", "설명", 2000L, balance, ProductStatus.AVAILABLE);
-
-        when(repository.save(any(Product.class))).thenReturn(mockProduct);
-
-        Product result = productService.createProduct("A 상품", "설명", 2000L, balance, ProductStatus.AVAILABLE);
-
-        assertEquals(Long.valueOf(200L), result.getBalance().getQuantity());
-        verify(repository).save(any(Product.class));
-    }
-
-    @Test
-    void 상품_상세_조회(){
-        Balance balance = Balance.create(20L);
-        Product mockProduct = Product.create("A 상품", "설명", 2000L, balance, ProductStatus.AVAILABLE);
-
-        when(repository.findById(mockProduct.getProductId())).thenReturn(Optional.of(mockProduct));
-
-        Product result = productService.getProductDetails(mockProduct.getProductId());
-
-        assertEquals("A 상품", result.getName());
-    }
-
-    @Test
-    void 상품_상세_조회시_상품이_없는경우_예외처리(){
+    void 상품_생성_성공() {
+        // given
+        Long userId = 1L;
         Long productId = 2L;
+        ProductRequest request = new ProductRequest("Product Name", "Description", 100L, 10L);
 
-        when(repository.findById(productId)).thenReturn(Optional.empty());
+        User user = mock(User.class);
+        when(user.isAdmin()).thenReturn(true);
+        when(userRepository.findById(userId)).thenReturn(user);
+        Product savedProduct = new Product(productId, "상품 1", "상품 설명", 2000L, 30L, Product.ProductStatus.AVAILABLE);
+        when(productRepository.save(any(Product.class))).thenReturn(savedProduct);
+
+        Product result = productService.createProduct(request, userId);
+
+        assertNotNull(result);
+        verify(productRepository).save(any(Product.class));
+    }
+
+    @Test
+    void 상품_생성_실패_관리자만() {
+        Long userId = 1L;
+        ProductRequest request = new ProductRequest("Product", "desc", 100L, 5L);
+
+        User nonAdminUser = mock(User.class);
+        when(userRepository.findById(userId)).thenReturn(nonAdminUser);
+        when(nonAdminUser.isAdmin()).thenReturn(false);
 
         // when & then
-        IllegalArgumentException e = assertThrows(IllegalArgumentException.class, () -> {
-            productService.getProductDetails(productId);
-        });
+        ForbiddenException exception = assertThrows(
+                ForbiddenException.class,
+                () -> productService.createProduct(request, userId)
+        );
 
-        assertEquals("상품이 존재하지 않습니다.", e.getMessage());
-        verify(repository, times(1)).findById(productId);
+        assertEquals(ProductErrorCode.CREATE_PRODUCT_MUST_BE_ADMIN.getMessage(), exception.getMessage());
     }
 
     @Test
-    void 재고_확인(){
-        Balance balance = Balance.create(200L);
-        Product mockProduct = Product.create("A 상품", "설명", 2000L, balance, ProductStatus.AVAILABLE);
-        Long productId = mockProduct.getProductId();
-        when(repository.findById(productId)).thenReturn(Optional.of(mockProduct));
+    void 상품_상세_조회_성공() {
+        Long productId = 1L;
+        Product product = mock(Product.class);
+        when(productRepository.findById(productId)).thenReturn(Optional.of(product));
 
-        Balance result = productService.getQuntity(productId);
+        // when
+        Product result = productService.getProductDetails(productId);
 
-        assertEquals(Long.valueOf(200L), result.getQuantity());
+        // then
+        assertEquals(product, result);
     }
 
     @Test
-    void 상품_증가_성공(){
-        Balance balance = Balance.create(200L);
-        Product mockProduct = Product.create("A 상품", "설명", 2000L, balance, ProductStatus.AVAILABLE);
-        Long productId = mockProduct.getProductId();
+    void 상품_상세_조회_실패() {
+        Long productId = 99L;
+        when(productRepository.findById(productId)).thenReturn(Optional.empty());
 
-        when(repository.findById(productId)).thenReturn(Optional.of(mockProduct));
+        // when & then
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> productService.getProductDetails(productId)
+        );
 
-        productService.increaseProductBalance(productId, 200L);
-
-        assertEquals(Long.valueOf(400L), mockProduct.getBalance().getQuantity());
+        assertEquals(ProductErrorCode.PRODUCT_NOT_FOUND.getMessage(), exception.getMessage());
     }
 
     @Test
-    void 상품_감소_성공(){
-        Balance balance = Balance.create(400L);
-        Product mockProduct = Product.create("A 상품", "설명", 2000L, balance, ProductStatus.AVAILABLE);
-        Long productId = mockProduct.getProductId();
+    void 상품_재고_증가() {
+        Long productId = 1L;
+        Long quantity = 5L;
 
-        when(repository.findById(productId)).thenReturn(Optional.of(mockProduct));
+        Product product = mock(Product.class);
+        when(productRepository.findById(productId)).thenReturn(Optional.of(product));
 
-        productService.decreaseProductBalance(productId, 200L);
+        // when
+        productService.increaseProductBalance(productId, quantity);
 
-        assertEquals(Long.valueOf(200L), mockProduct.getBalance().getQuantity());
+        // then
+        verify(product).increaseBalance(quantity);
+        verify(productRepository).save(product);
+    }
+
+    @Test
+    void 상품_재고_감소() {
+        Long productId = 1L;
+        Long quantity = 2L;
+
+        Product product = mock(Product.class);
+        when(productRepository.findById(productId)).thenReturn(Optional.of(product));
+
+        // when
+        productService.decreaseProductBalance(productId, quantity);
+
+        // then
+        verify(product).decreaseBalance(quantity);
+        verify(productRepository).save(product);
     }
 }

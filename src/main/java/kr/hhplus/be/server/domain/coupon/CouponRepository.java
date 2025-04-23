@@ -1,6 +1,11 @@
 package kr.hhplus.be.server.domain.coupon;
 
-import org.springframework.data.jpa.repository.JpaRepository;
+import java.util.List;
+import java.util.Optional;
 
-public interface CouponRepository extends JpaRepository<Coupon, Long> {
+public interface CouponRepository {
+    Coupon save(Coupon coupon);
+    Optional<Coupon> findById(Long couponId);
+    List<Coupon> findAllByStatus(Coupon.CouponStatus status);
+    List<Coupon> findAllCoupons();
 }

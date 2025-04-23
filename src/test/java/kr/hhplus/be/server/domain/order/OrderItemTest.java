@@ -1,28 +1,27 @@
 package kr.hhplus.be.server.domain.order;
 
-import kr.hhplus.be.server.domain.product.Product;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.mock;
 
 @ExtendWith(MockitoExtension.class)
 public class OrderItemTest {
 
     @Test
-    void 상품_상세내용_저장(){
-        Order dummyOrder = mock(Order.class);
-        Product dummyProduct = mock(Product.class);
-        Long unitPrice = 5000L;
-        Long quantity = 3L;
+    void 총_주문_상품_가격_조회(){
+        Long userId = 1L;
+        Long couponId = 2L;
+        Order order = new Order(userId, couponId);
 
-        // when
-        OrderItem orderItem = OrderItem.create(dummyOrder, dummyProduct, quantity, unitPrice);
-        Long totalPrice = orderItem.getTotalPrice();
+        Long productId = 1L;
+        Long quantity = 10L;
+        Long price = 2000L;
+        OrderItem orderItem = new OrderItem(order, productId, quantity, price);
 
-        // then
-        assertEquals(Long.valueOf(15000L), totalPrice);
+        Long result = orderItem.getTotalPrice();
+
+        assertEquals(Long.valueOf(quantity * price), result);
     }
 }

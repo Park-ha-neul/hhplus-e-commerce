@@ -1,75 +1,127 @@
 package kr.hhplus.be.server.domain.product;
 
+import kr.hhplus.be.server.interfaces.api.product.ProductRequest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.*;
 
 @ExtendWith(MockitoExtension.class)
 public class ProductTest {
 
     @Test
-    public void 상품_등록_성공(){
-        Balance balance = Balance.create(100L);
-        Product product = Product.create("A 상품", "좋은 상품", 1000L, balance, ProductStatus.AVAILABLE);
+    void 상품_생성_성공() {
+        // given
+        ProductRequest request = ProductRequest.builder()
+                .name("Test Product")
+                .description("Test Description")
+                .price(1000L)
+                .quantity(100L)
+                .build();
 
-        assertEquals("A 상품", product.getName());
+        // when
+        Product product = Product.create(request);
+
+        // then
+        assertNotNull(product);
+        assertEquals("Test Product", product.getName());
+        assertEquals(Long.valueOf(1000L), product.getPrice());
+        assertEquals(Long.valueOf(100L), product.getQuantity());
+        assertEquals(Product.ProductStatus.AVAILABLE, product.getStatus());
     }
 
     @Test
-    public void 상품_등록시_가격음수인경우_예외처리(){
-        Balance balance = Balance.create(100L);
+    void 상품_가격이_음수일_때_예외_발생() {
+        // given
+        ProductRequest request = ProductRequest.builder()
+                .name("Test Product")
+                .description("Test Description")
+                .price(-100L) // 잘못된 가격
+                .quantity(100L)
+                .build();
 
-        IllegalArgumentException e = assertThrows(IllegalArgumentException.class, () -> {
-            Product.create("A 상품", "좋은 상품", -100L, balance, ProductStatus.AVAILABLE);
+        // when & then
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            Product.create(request);
         });
-
-        assertEquals("상품 가격은 0보다 커야 합니다.", e.getMessage());
+        assertEquals(ProductErrorCode.PRODUCT_PRICE_MUST_BE_POSITIVE.getMessage(), exception.getMessage());
     }
 
     @Test
-    public void 상품_등록시_재고가_0이하인경우_예외처리(){
-        Balance balance = Balance.create(-100L);
+    void 상품_재고가_음수일_때_예외_발생() {
+        // given
+        ProductRequest request = ProductRequest.builder()
+                .name("Test Product")
+                .description("Test Description")
+                .price(1000L)
+                .quantity(-10L)
+                .build();
 
-        IllegalArgumentException e = assertThrows(IllegalArgumentException.class, () -> {
-            Product.create("A 상품", "좋은 상품", 100L, balance, ProductStatus.AVAILABLE);
+        // when & then
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            Product.create(request);
         });
-
-        assertEquals("재고는 0 이상이어야 합니다.", e.getMessage());
+        assertEquals(ProductErrorCode.PRODUCT_STOCK_MUST_BE_POSITIVE.getMessage(), exception.getMessage());
     }
 
     @Test
-    public void 상품_등록시_재고와_상태_일관성_예외처리(){
-        Balance balance = Balance.create(0L);
+    void 재고_증가_성공() {
+        // given
+        ProductRequest request = ProductRequest.builder()
+                .name("Test Product")
+                .description("Test Description")
+                .price(1000L)
+                .quantity(100L)
+                .build();
 
-        IllegalArgumentException e = assertThrows(IllegalArgumentException.class, () -> {
-            Product.create("A 상품", "좋은 상품", 100L, balance, ProductStatus.AVAILABLE);
-        });
+        Product product = Product.create(request);
 
-        assertEquals("재고가 없는 상품은 판매 상태일 수 없습니다.", e.getMessage());
+        // when
+        product.increaseBalance(50L);
 
+        // then
+        assertEquals(Long.valueOf(150L), product.getQuantity());
+        assertEquals(Product.ProductStatus.AVAILABLE, product.getStatus()); // 재고가 0이 아니라면 상태는 AVAILABLE이어야 함
     }
 
     @Test
-    public void 재고_증가_성공(){
-        Balance balance = Balance.create(100L);
-        Product product = Product.create("A 상품", "좋은 상품", 2000L, balance, ProductStatus.AVAILABLE);
+    void 재고_감소_성공() {
+        // given
+        ProductRequest request = ProductRequest.builder()
+                .name("Test Product")
+                .description("Test Description")
+                .price(1000L)
+                .quantity(100L)
+                .build();
 
-        product.increaseBalance(product.getProductId(), 100L);
+        Product product = Product.create(request);
 
-        assertEquals(Long.valueOf(200L), product.getBalance().getQuantity());
+        // when
+        product.decreaseBalance(50L);
+
+        // then
+        assertEquals(Long.valueOf(50L), product.getQuantity());
+        assertEquals(Product.ProductStatus.AVAILABLE, product.getStatus()); // 재고가 남아있다면 상태는 AVAILABLE이어야 함
     }
 
     @Test
-    public void 재고_감소_성공(){
-        Balance balance = Balance.create(200L);
-        Product product = Product.create("A 상품", "좋은 상품", 2000L, balance, ProductStatus.AVAILABLE);
+    void 재고_감소_후_품절_상태로_변경() {
+        // given
+        ProductRequest request = ProductRequest.builder()
+                .name("Test Product")
+                .description("Test Description")
+                .price(1000L)
+                .quantity(10L)
+                .build();
 
-        product.decreaseBalance(product.getProductId(), 100L);
+        Product product = Product.create(request);
 
-        assertEquals(Long.valueOf(100L), product.getBalance().getQuantity());
+        // when
+        product.decreaseBalance(10L); // 재고를 모두 소진
 
+        // then
+        assertEquals(Long.valueOf(0L), product.getQuantity());
+        assertEquals(Product.ProductStatus.SOLD_OUT, product.getStatus()); // 품절 상태로 변경되어야 함
     }
 }
