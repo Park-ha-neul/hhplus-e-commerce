@@ -9,7 +9,7 @@ import java.time.LocalDate;
 @Entity
 @Getter
 @Table(name = "top_product", indexes = {
-        @Index(name = "idx_period_calculate_rank", columnList = "period_type, calculate_date, rank")
+        @Index(name = "idx_period_calculate_rank", columnList = "period_type, calculate_date, ranking")
 })
 public class TopProduct {
     @Id

@@ -8,7 +8,7 @@ import lombok.Getter;
 @Entity
 @Getter
 @Table(name = "user_coupon", indexes = {
-        @Index(name = "idx_username", columnList = "username"),
+        @Index(name = "idx_userid", columnList = "userId"),
         @Index(name = "idx_status", columnList = "status")
 })
 public class UserCoupon extends BaseEntity {
