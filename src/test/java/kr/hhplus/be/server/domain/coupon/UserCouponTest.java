@@ -13,7 +13,7 @@ public class UserCouponTest {
         Long userId = 1L;
         Long couponId = 2L;
 
-        UserCoupon result = new UserCoupon(userId, couponId);
+        UserCoupon result = UserCoupon.create(userId, couponId);
 
         assertEquals(UserCoupon.UserCouponStatus.ISSUED, result.getStatus());
     }
@@ -23,7 +23,7 @@ public class UserCouponTest {
         Long userId = 1L;
         Long couponId = 2L;
 
-        UserCoupon userCoupon = new UserCoupon(userId, couponId);
+        UserCoupon userCoupon = UserCoupon.create(userId, couponId);
         userCoupon.use();
 
         assertEquals(UserCoupon.UserCouponStatus.USED, userCoupon.getStatus());
@@ -34,7 +34,7 @@ public class UserCouponTest {
         Long userId = 1L;
         Long couponId = 2L;
 
-        UserCoupon userCoupon = new UserCoupon(userId, couponId);
+        UserCoupon userCoupon = UserCoupon.create(userId, couponId);
         userCoupon.use();
 
         IllegalArgumentException e = assertThrows(IllegalArgumentException.class, () -> {

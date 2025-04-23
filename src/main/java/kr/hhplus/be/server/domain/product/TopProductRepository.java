@@ -1,7 +1,6 @@
 package kr.hhplus.be.server.domain.product;
 
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -12,7 +11,7 @@ public interface TopProductRepository{
     Optional<TopProduct> findByProductId(Long productId);
     List<TopProduct> findByPeriodTypeAndCalculateDateOrderByRankAsc(
             TopProduct.PeriodType periodType,
-            LocalDate calculatedDate,
+            LocalDate calculateDate,
             PageRequest pageRequest
     );
 }

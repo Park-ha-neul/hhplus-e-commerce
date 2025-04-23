@@ -147,7 +147,7 @@ public class PaymentServiceTest {
         when(paymentRepository.findByOrderId(orderId)).thenReturn(payment);
 
         // when
-        List<Payment> result = paymentService.getPaymentByUserId(userId);
+        List<Payment> result = paymentService.getUserPayments(userId, null);
 
         // then
         assertEquals(1, result.size());

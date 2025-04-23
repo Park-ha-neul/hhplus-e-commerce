@@ -82,7 +82,7 @@ public class OrderIntegrationTest {
         Coupon coupon = new Coupon("10% 할인", 10L, 0L, Coupon.DiscountType.RATE, 10L, null, Coupon.CouponStatus.ACTIVE, LocalDateTime.now().plusDays(1), LocalDateTime.now().plusDays(3));
         couponRepository.save(coupon);
 
-        UserCoupon userCoupon = new UserCoupon(userId, coupon.getCouponId());
+        UserCoupon userCoupon = UserCoupon.create(userId, coupon.getCouponId());
         userCouponRepository.save(userCoupon);
         userCouponId = userCoupon.getUserCouponId();
 

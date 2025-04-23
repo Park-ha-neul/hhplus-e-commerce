@@ -27,7 +27,7 @@ public class UserCouponService {
             throw new IllegalArgumentException(ErrorCode.INACTIVE_COUPON.getMessage());
         }
 
-        UserCoupon userCoupon = new UserCoupon(userId, couponId);
+        UserCoupon userCoupon = UserCoupon.create(userId, couponId);
         userCouponRepository.save(userCoupon);
         coupon.increaseIssuedCount();
 
@@ -39,9 +39,13 @@ public class UserCouponService {
                 .orElseThrow(() -> new IllegalArgumentException(ErrorCode.USER_COUPON_NOT_FOUND.getMessage()));
     }
 
-    public List<UserCoupon> getUserCoupons(Long userId){
-        User user = userRepository.findById(userId);
-        return userCouponRepository.findByUserId(userId);
+    public List<UserCoupon> getUserCoupons(Long userId, UserCoupon.UserCouponStatus status){
+        userRepository.findById(userId);
+        if(status == null){
+            return userCouponRepository.findByUserId(userId);
+        } else{
+            return userCouponRepository.findByUserIdAndStatus(userId, status);
+        }
     }
 
     public void use(Long userCouponId){

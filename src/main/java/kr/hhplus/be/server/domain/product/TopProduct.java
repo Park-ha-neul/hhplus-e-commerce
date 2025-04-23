@@ -8,7 +8,9 @@ import java.time.LocalDate;
 
 @Entity
 @Getter
-@Table(name = "top_product")
+@Table(name = "top_product", indexes = {
+        @Index(name = "idx_period_calculate_rank", columnList = "period_type, calculate_date, rank")
+})
 public class TopProduct {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -27,10 +29,23 @@ public class TopProduct {
     private LocalDate calculateDate;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "period_type")
     private PeriodType periodType;
 
     public enum PeriodType{
         DAILY, WEEKLY, MONTHLY
+    }
+
+    public TopProduct(){
+
+    }
+
+    public TopProduct(Long productId, int rank, Long totalCount, LocalDate calculateDate, PeriodType periodType) {
+        this.productId = productId;
+        this.rank = rank;
+        this.totalCount = totalCount;
+        this.calculateDate = calculateDate;
+        this.periodType = periodType;
     }
 
     public static LocalDate calculateDate(PeriodType periodType){
@@ -44,14 +59,6 @@ public class TopProduct {
             default:
                 throw new IllegalArgumentException(ProductErrorCode.TOP_PRODUCT_PERIOD_NOT_FOUND.getMessage());
         }
-    }
-
-    public TopProduct(Long productId, int rank, Long totalCount, LocalDate calculateDate, PeriodType periodType) {
-        this.productId = productId;
-        this.rank = rank;
-        this.totalCount = totalCount;
-        this.calculateDate = calculateDate;
-        this.periodType = periodType;
     }
 
     public void addCount(Long count) {

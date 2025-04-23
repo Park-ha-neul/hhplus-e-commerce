@@ -7,7 +7,10 @@ import lombok.Getter;
 
 @Entity
 @Getter
-@Table(name = "user_coupon")
+@Table(name = "user_coupon", indexes = {
+        @Index(name = "idx_username", columnList = "username"),
+        @Index(name = "idx_status", columnList = "status")
+})
 public class UserCoupon extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -28,10 +31,21 @@ public class UserCoupon extends BaseEntity {
     }
 
     @Builder
-    public UserCoupon(Long userId, Long couponId){
+    public UserCoupon(Long userId, Long couponId, UserCouponStatus status){
         this.userId = userId;
         this.couponId = couponId;
-        this.status = UserCouponStatus.ISSUED;
+        this.status = status;
+    }
+
+    protected UserCoupon() {
+    }
+
+    public static UserCoupon create(Long userId, Long couponId){
+        return new UserCoupon(
+                userId,
+                couponId,
+                UserCouponStatus.ISSUED
+        );
     }
 
     public void use() {

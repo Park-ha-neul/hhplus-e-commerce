@@ -57,9 +57,12 @@ public class UserController {
 
     @GetMapping("/{userId}/coupons")
     @Operation(summary = "사용자 쿠폰 발급 목록 조회", description = "사용자가 발급받은 쿠폰 목록을 조회합니다.")
-    public CustomApiResponse getUserCoupon(@PathVariable("userId") @Parameter(name = "userId", description = "사용자의 ID") Long userId) {
+    public CustomApiResponse getUserCoupon(
+            @PathVariable("userId") @Parameter(name = "userId", description = "사용자의 ID") Long userId,
+            @RequestParam(required = false)UserCoupon.UserCouponStatus status
+            ) {
         try{
-            List<UserCoupon> userCouponList = userCouponService.getUserCoupons(userId);
+            List<UserCoupon> userCouponList = userCouponService.getUserCoupons(userId, status);
             return CustomApiResponse.success(ApiMessage.VIEW_SUCCESS, userCouponList);
         } catch(IllegalArgumentException e){
             return CustomApiResponse.badRequest(ApiMessage.INVALID_USER);
@@ -78,15 +81,21 @@ public class UserController {
 
     @GetMapping("/{userId}/orders")
     @Operation(summary = "사용자 주문 내역 조회", description = "사용자 주문 내역을 조회합니다.")
-    public CustomApiResponse getUserOrder(@PathVariable("userId") @Parameter(name = "userId", description = "사용자의 ID") Long userId){
-        List<Order> orderList = orderService.getOrderByUserId(userId);
+    public CustomApiResponse getUserOrder(
+            @PathVariable("userId") @Parameter(name = "userId", description = "사용자의 ID") Long userId,
+            @RequestParam(required = false)Order.OrderStatus status
+    ){
+        List<Order> orderList = orderService.getUserOrders(userId, status);
         return CustomApiResponse.success(ApiMessage.VIEW_SUCCESS, orderList);
     }
 
     @GetMapping("/{userId}/payments")
     @Operation(summary = "사용자 결제 내역 조회", description = "사용자 결제 내역을 조회합니다.")
-    public CustomApiResponse getUserPayment(@PathVariable("userId") @Parameter(name = "userId", description = "사용자의 ID") Long userId){
-        List<Payment> paymentList = paymentService.getPaymentByUserId(userId);
+    public CustomApiResponse getUserPayment(
+            @PathVariable("userId") @Parameter(name = "userId", description = "사용자의 ID") Long userId,
+            @RequestParam(required = false)Payment.PaymentStatus status
+            ){
+        List<Payment> paymentList = paymentService.getUserPayments(userId, status);
         return CustomApiResponse.success(ApiMessage.VIEW_SUCCESS, paymentList);
     }
 }

@@ -27,4 +27,9 @@ public class UserCouponRepositoryImpl implements UserCouponRepository {
     public List<UserCoupon> findByUserId(Long userId) {
         return userCouponJpaRepository.findByUserId(userId);
     }
+
+    @Override
+    public List<UserCoupon> findByUserIdAndStatus(Long userId, UserCoupon.UserCouponStatus status) {
+        return userCouponJpaRepository.findByUserIdAndStatus(userId, status);
+    }
 }

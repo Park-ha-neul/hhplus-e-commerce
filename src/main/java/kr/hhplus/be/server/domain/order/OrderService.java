@@ -47,8 +47,11 @@ public class OrderService {
     }
 
     public List<Order> getOrders(Order.OrderStatus status){
-        List<Order> orders = orderRepository.findByStatus(status);
-        return orders;
+        if(status == null){
+            return orderRepository.findAll();
+        } else{
+            return orderRepository.findByStatus(status);
+        }
     }
 
     public Order getOrder(Long orderId){
@@ -56,9 +59,12 @@ public class OrderService {
                 .orElseThrow(() -> new IllegalArgumentException(OrderErrorCode.ORDER_NOT_FOUND.getMessage()));
     }
 
-    public List<Order> getOrderByUserId(Long userId) {
-        List<Order> result = orderRepository.findByUserId(userId);
-        return result;
+    public List<Order> getUserOrders(Long userId, Order.OrderStatus status) {
+        if(status == null){
+            return orderRepository.findByUserId(userId);
+        } else{
+            return orderRepository.findByUserIdAndStatus(userId, status);
+        }
     }
 
     public void cancel(Long orderId){

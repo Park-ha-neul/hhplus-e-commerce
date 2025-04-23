@@ -52,7 +52,7 @@ public class UserCouponServiceTest {
         Long couponId = 1L;
         when(userRepository.findById(userId)).thenReturn(mockUser);
         when(couponRepository.findById(couponId)).thenReturn(Optional.of(mockCoupon));
-        when(userCouponRepository.save(any(UserCoupon.class))).thenReturn(new UserCoupon(userId, couponId));
+        when(userCouponRepository.save(any(UserCoupon.class))).thenReturn(UserCoupon.create(userId, couponId));
 
         // Act
         UserCoupon userCoupon = userCouponService.issue(userId, couponId);
@@ -67,7 +67,7 @@ public class UserCouponServiceTest {
     public void 쿠폰_사용_성공() {
         // Arrange
         Long userCouponId = 1L;
-        UserCoupon mockUserCoupon = new UserCoupon(1L, 1L);
+        UserCoupon mockUserCoupon = UserCoupon.create(1L, 1L);
         when(userCouponRepository.findById(userCouponId)).thenReturn(Optional.of(mockUserCoupon));
 
         userCouponService.use(userCouponId);

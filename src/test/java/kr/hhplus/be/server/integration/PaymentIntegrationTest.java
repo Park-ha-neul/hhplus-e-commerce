@@ -91,7 +91,7 @@ public class PaymentIntegrationTest {
         couponRepository.save(coupon);
         couponId = coupon.getCouponId();
 
-        UserCoupon userCoupon = new UserCoupon(userId, couponId);
+        UserCoupon userCoupon = UserCoupon.create(userId, couponId);
         userCouponRepository.save(userCoupon);
         userCouponId = userCoupon.getUserCouponId();
 

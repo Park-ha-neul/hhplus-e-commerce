@@ -30,6 +30,11 @@ public class PaymentRepositoryImpl implements PaymentRepository {
     }
 
     @Override
+    public Payment findByOrderIdAndStatus(Long orderId, Payment.PaymentStatus status) {
+        return paymentJpaRepository.findByOrderIdAndStatus(orderId, status);
+    }
+
+    @Override
     public List<Payment> findAllByStatus(Payment.PaymentStatus status) {
         return paymentJpaRepository.findAllByStatus(status);
     }

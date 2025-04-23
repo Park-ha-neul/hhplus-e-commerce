@@ -26,18 +26,27 @@ public class PaymentService {
 
     public List<Payment> getPayments(Payment.PaymentStatus status){
         if(status == null){
-            List<Payment> result = paymentRepository.findAllPayments();
+            return paymentRepository.findAllPayments();
+        } else{
+            return paymentRepository.findAllByStatus(status);
         }
-        List<Payment> result = paymentRepository.findAllByStatus(status);
-        return result;
     }
 
-    public List<Payment> getPaymentByUserId(Long userId){
-        List<Order> orders = orderRepository.findByUserId(userId);
-        return orders.stream()
-                .map(order -> paymentRepository.findByOrderId(order.getOrderId()))
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
+    public List<Payment> getUserPayments(Long userId, Payment.PaymentStatus status){
+        if(status == null){
+            List<Order> orders = orderRepository.findByUserId(userId);
+            return orders.stream()
+                    .map(order -> paymentRepository.findByOrderId(order.getOrderId()))
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toList());
+        }else{
+            List<Order> orders = orderRepository.findByUserIdAndStatus(userId, null);
+            return orders.stream()
+                    .map(order -> paymentRepository.findByOrderId(order.getOrderId()))
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toList());
+        }
+
     }
 
     public Payment create(PaymentCreateRequest request){

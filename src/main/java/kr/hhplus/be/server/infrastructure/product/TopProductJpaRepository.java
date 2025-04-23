@@ -12,7 +12,7 @@ public interface TopProductJpaRepository extends JpaRepository<TopProduct, Long>
     Optional<TopProduct> findByProductId(Long productId);
     List<TopProduct> findByPeriodTypeAndCalculateDateOrderByRankAsc(
             TopProduct.PeriodType periodType,
-            LocalDate calculatedDate,
+            LocalDate calculateDate,
             PageRequest pageRequest
     );
 }

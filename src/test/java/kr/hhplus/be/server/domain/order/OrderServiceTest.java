@@ -110,7 +110,7 @@ public class OrderServiceTest {
         when(orderRepository.findByUserId(userId)).thenReturn(List.of(order));
 
         // when
-        List<Order> result = orderService.getOrderByUserId(userId);
+        List<Order> result = orderService.getUserOrders(userId, null);
 
         // then
         assertEquals(1, result.size());
