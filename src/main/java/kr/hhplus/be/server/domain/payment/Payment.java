@@ -29,6 +29,9 @@ public class Payment extends BaseEntity {
         PENDING, COMPLETED, FAIL
     }
 
+    public Payment(){
+    }
+
     public Payment(Long orderId, Long totalAmount){
         this.orderId = orderId;
         this.totalAmount = totalAmount;
