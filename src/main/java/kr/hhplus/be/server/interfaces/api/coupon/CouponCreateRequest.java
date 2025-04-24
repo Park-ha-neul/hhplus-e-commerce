@@ -1,13 +1,14 @@
 package kr.hhplus.be.server.interfaces.api.coupon;
 
 import kr.hhplus.be.server.domain.coupon.Coupon;
-import lombok.Builder;
-import lombok.Data;
+import kr.hhplus.be.server.domain.coupon.CouponCommand;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
-@Data
-@Builder
+@Getter
+@AllArgsConstructor
+@NoArgsConstructor
 public class CouponCreateRequest {
     private String name;
     private Long totalCount;
@@ -17,4 +18,15 @@ public class CouponCreateRequest {
     private LocalDateTime startDate;
     private LocalDateTime endDate;
 
+    public CouponCommand toCommand(){
+        return new CouponCommand(
+                this.getName(),
+                this.getTotalCount(),
+                this.getDiscountType(),
+                this.getDiscountRate(),
+                this.getDiscountAmount(),
+                this.getStartDate(),
+                this.getEndDate()
+        );
+    }
 }

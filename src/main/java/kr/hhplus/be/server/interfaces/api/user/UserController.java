@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import kr.hhplus.be.server.domain.coupon.UserCoupon;
+import kr.hhplus.be.server.domain.coupon.UserCouponResult;
 import kr.hhplus.be.server.domain.coupon.UserCouponService;
 import kr.hhplus.be.server.domain.order.Order;
 import kr.hhplus.be.server.domain.order.OrderService;
@@ -11,6 +12,7 @@ import kr.hhplus.be.server.domain.payment.Payment;
 import kr.hhplus.be.server.domain.payment.PaymentService;
 import kr.hhplus.be.server.domain.point.PointHistoryResult;
 import kr.hhplus.be.server.domain.user.*;
+import kr.hhplus.be.server.interfaces.api.coupon.CouponResponse;
 import kr.hhplus.be.server.support.ApiMessage;
 import kr.hhplus.be.server.support.CustomApiResponse;
 import lombok.RequiredArgsConstructor;
@@ -65,8 +67,9 @@ public class UserController {
             @RequestParam(required = false)UserCoupon.UserCouponStatus status
             ) {
         try{
-            List<UserCoupon> userCouponList = userCouponService.getUserCoupons(userId, status);
-            return CustomApiResponse.success(ApiMessage.VIEW_SUCCESS, userCouponList);
+            List<UserCouponResult> userCouponResultList = userCouponService.getUserCoupons(userId, status);
+            List<UserCouponResponse> response = UserCouponResponse.from(userCouponResultList);
+            return CustomApiResponse.success(ApiMessage.VIEW_SUCCESS, response);
         } catch(IllegalArgumentException e){
             return CustomApiResponse.badRequest(ApiMessage.INVALID_USER);
         }
@@ -78,8 +81,9 @@ public class UserController {
             @PathVariable Long userId,
             @RequestBody IssueUserCouponRequest request
     ){
-        UserCoupon result = userCouponService.issue(userId, request.getCouponId());
-        return CustomApiResponse.success(ApiMessage.ISSUED_SUCCESS, result);
+        UserCouponResult userCouponResult = userCouponService.issue(userId, request.getCouponId());
+        UserCouponResponse response = UserCouponResponse.from(userCouponResult);
+        return CustomApiResponse.success(ApiMessage.ISSUED_SUCCESS, response);
     }
 
     @GetMapping("/{userId}/orders")

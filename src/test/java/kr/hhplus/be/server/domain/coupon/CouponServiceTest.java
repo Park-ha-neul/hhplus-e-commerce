@@ -1,9 +1,7 @@
 package kr.hhplus.be.server.domain.coupon;
 
-import jakarta.transaction.Transactional;
 import kr.hhplus.be.server.domain.user.User;
 import kr.hhplus.be.server.domain.user.UserRepository;
-import kr.hhplus.be.server.interfaces.api.coupon.CouponCreateRequest;
 import kr.hhplus.be.server.support.ForbiddenException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -50,12 +48,12 @@ public class CouponServiceTest {
         when(couponRepository.findAllByStatus(status)).thenReturn(List.of(mockCoupon));
 
         // Act
-        List<Coupon> coupons = couponService.getCoupons(status);
+        List<CouponResult> couponResults = couponService.getCoupons(status);
 
         // Assert
-        assertNotNull(coupons);
-        assertEquals(1, coupons.size());
-        assertEquals(status, coupons.get(0).getStatus());
+        assertNotNull(couponResults);
+        assertEquals(1, couponResults.size());
+        assertEquals(status, couponResults.get(0).getStatus());
     }
 
     @Test
@@ -67,33 +65,33 @@ public class CouponServiceTest {
         when(couponRepository.findById(couponId)).thenReturn(Optional.of(mockCoupon1));
 
         // Act
-        Coupon coupon = couponService.getCoupon(couponId);
+        CouponResult couponResult = couponService.getCoupon(couponId);
 
         // Assert
-        assertNotNull(coupon);
-        assertEquals(Long.valueOf(1L), coupon.getCouponId());
+        assertNotNull(couponResult);
+        assertEquals(Long.valueOf(1L), couponResult.getId());
     }
 
     @Test
     public void 쿠폰_생성_성공() {
-        CouponCreateRequest request = CouponCreateRequest.builder()
-                .name("할인쿠폰")
-                .totalCount(100L)
-                .discountType(Coupon.DiscountType.RATE)
-                .discountRate(10L)
-                .discountAmount(null)
-                .startDate(LocalDateTime.now())
-                .endDate(LocalDateTime.now().plusDays(7))
-                .build();
+        CouponCommand command = new CouponCommand(
+                "할인쿠폰",
+                100L,
+                Coupon.DiscountType.RATE,
+                10L,
+                null,
+                LocalDateTime.now(),
+                LocalDateTime.now().plusDays(7)
+        );
 
         when(userRepository.findById(1L)).thenReturn(mockUser);
         when(couponRepository.save(any(Coupon.class))).thenReturn(mockCoupon);
 
         // Act
-        Coupon createdCoupon = couponService.create(request, 1L);
+        CouponResult couponResult = couponService.create(command, 1L);
 
         // Assert
-        assertNotNull(createdCoupon);
+        assertNotNull(couponResult);
         verify(couponRepository, times(1)).save(any(Coupon.class));
     }
 
@@ -102,17 +100,17 @@ public class CouponServiceTest {
         // Arrange
         User mockUser = new User("하늘", false);
         when(userRepository.findById(anyLong())).thenReturn(mockUser);
-        CouponCreateRequest request = CouponCreateRequest.builder()
-                .name("할인쿠폰")
-                .totalCount(100L)
-                .discountType(Coupon.DiscountType.RATE)
-                .discountRate(10L)
-                .discountAmount(null)
-                .startDate(LocalDateTime.now())
-                .endDate(LocalDateTime.now().plusDays(7))
-                .build();
+        CouponCommand command = new CouponCommand(
+                "할인쿠폰",
+                100L,
+                Coupon.DiscountType.RATE,
+                10L,
+                null,
+                LocalDateTime.now(),
+                LocalDateTime.now().plusDays(7)
+        );
 
         // Act & Assert
-        assertThrows(ForbiddenException.class, () -> couponService.create(request, 1L));
+        assertThrows(ForbiddenException.class, () -> couponService.create(command, 1L));
     }
 }

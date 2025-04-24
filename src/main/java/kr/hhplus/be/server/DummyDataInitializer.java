@@ -2,6 +2,7 @@ package kr.hhplus.be.server;
 
 import kr.hhplus.be.server.domain.coupon.UserCoupon;
 import kr.hhplus.be.server.domain.order.Order;
+import kr.hhplus.be.server.domain.point.PointHistory;
 import kr.hhplus.be.server.domain.product.Product;
 import kr.hhplus.be.server.domain.product.TopProduct;
 import kr.hhplus.be.server.domain.user.UserPoint;
@@ -35,6 +36,8 @@ public class DummyDataInitializer implements CommandLineRunner {
         Random random = new Random();
         LocalDate today = LocalDate.now();
 
+        PointHistory.TransactionType[] transactionTypes = PointHistory.TransactionType.values();
+
         // user insert
         for (int i = 0; i < 1000; i++) {
             User user = new User("user_" + i, i % 2 == 0);
@@ -45,6 +48,13 @@ public class DummyDataInitializer implements CommandLineRunner {
         for (int i = 0; i<1000; i++){
             UserPoint userPoint = new UserPoint(Long.valueOf(i), 2000L);
             session.insert(userPoint);
+        }
+
+        // history insert
+        for (int i = 0; i<1000; i++){
+            PointHistory.TransactionType transactionType = transactionTypes[i % transactionTypes.length];
+            PointHistory pointHistory = new PointHistory(1L, 100L, 2000L, 1900L, transactionType);
+            session.insert(pointHistory);
         }
 
         // product

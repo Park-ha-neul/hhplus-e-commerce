@@ -64,13 +64,13 @@ public class Coupon extends BaseEntity {
         this.endDate = endDate;
     }
 
-    public static Coupon create(CouponCreateRequest request){
-        if (request.getDiscountType() == DiscountType.RATE) {
-            if (request.getDiscountRate() == null) {
+    public static Coupon create(CouponCommand command){
+        if (command.getDiscountType() == DiscountType.RATE) {
+            if (command.getDiscountRate() == null) {
                 throw new IllegalArgumentException(ErrorCode.DISCOUNT_RATE_NOT_FOUND.getMessage());
             }
-        } else if (request.getDiscountType() == DiscountType.AMOUNT) {
-            if (request.getDiscountAmount() == null) {
+        } else if (command.getDiscountType() == DiscountType.AMOUNT) {
+            if (command.getDiscountAmount() == null) {
                 throw new IllegalArgumentException(ErrorCode.DISCOUNT_AMOUNT_NOT_FOUND.getMessage());
             }
         } else {
@@ -78,15 +78,15 @@ public class Coupon extends BaseEntity {
         }
 
         return new Coupon(
-                request.getName(),
-                request.getTotalCount(),
+                command.getName(),
+                command.getTotalCount(),
                 0L,
-                request.getDiscountType(),
-                request.getDiscountRate(),
-                request.getDiscountAmount(),
+                command.getDiscountType(),
+                command.getDiscountRate(),
+                command.getDiscountAmount(),
                 CouponStatus.ACTIVE,
-                request.getStartDate(),
-                request.getEndDate()
+                command.getStartDate(),
+                command.getEndDate()
         );
     }
 

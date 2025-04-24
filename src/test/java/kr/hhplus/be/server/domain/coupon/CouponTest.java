@@ -1,6 +1,5 @@
 package kr.hhplus.be.server.domain.coupon;
 
-import kr.hhplus.be.server.interfaces.api.coupon.CouponCreateRequest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -14,18 +13,10 @@ public class CouponTest {
     @Test
     void 할인타입_RATE_쿠폰_생성_성공() {
         // given
-        CouponCreateRequest request = CouponCreateRequest.builder()
-                .name("할인쿠폰")
-                .totalCount(100L)
-                .discountType(Coupon.DiscountType.RATE)
-                .discountRate(10L)
-                .discountAmount(null)
-                .startDate(LocalDateTime.now())
-                .endDate(LocalDateTime.now().plusDays(7))
-                .build();
+        CouponCommand command = new CouponCommand("할인쿠폰", 1000L, Coupon.DiscountType.RATE, 10L, null, LocalDateTime.now(),LocalDateTime.now().plusDays(7));
 
         // when
-        Coupon coupon = Coupon.create(request);
+        Coupon coupon = Coupon.create(command);
 
         // then
         assertEquals("할인쿠폰", coupon.getName());
@@ -37,40 +28,24 @@ public class CouponTest {
     @Test
     void 할인타입_AMOUNT_쿠폰_생성_성공() {
         // given
-        CouponCreateRequest request = CouponCreateRequest.builder()
-                .name("정액쿠폰")
-                .totalCount(50L)
-                .discountType(Coupon.DiscountType.AMOUNT)
-                .discountRate(null)
-                .discountAmount(3000L)
-                .startDate(LocalDateTime.now())
-                .endDate(LocalDateTime.now().plusDays(5))
-                .build();
+        CouponCommand command = new CouponCommand("할인쿠폰", 1000L, Coupon.DiscountType.AMOUNT, null, 10L, LocalDateTime.now(),LocalDateTime.now().plusDays(7));
 
         // when
-        Coupon coupon = Coupon.create(request);
+        Coupon coupon = Coupon.create(command);
 
         // then
         assertEquals(Coupon.DiscountType.AMOUNT, coupon.getDiscountType());
-        assertEquals(Long.valueOf(3000L), coupon.getDiscountAmount());
+        assertEquals(Long.valueOf(10L), coupon.getDiscountAmount());
     }
 
     @Test
     void 할인타입_RATE인데_할인율_null이면_예외() {
         // given
-        CouponCreateRequest request = CouponCreateRequest.builder()
-                .name("예외쿠폰")
-                .totalCount(10L)
-                .discountType(Coupon.DiscountType.RATE)
-                .discountRate(null)
-                .discountAmount(null)
-                .startDate(LocalDateTime.now())
-                .endDate(LocalDateTime.now().plusDays(1))
-                .build();
+        CouponCommand command = new CouponCommand("할인쿠폰", 1000L, Coupon.DiscountType.RATE, null, null, LocalDateTime.now(),LocalDateTime.now().plusDays(7));
 
         // expect
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-            Coupon.create(request);
+            Coupon.create(command);
         });
 
         assertEquals(ErrorCode.DISCOUNT_RATE_NOT_FOUND.getMessage(), exception.getMessage());

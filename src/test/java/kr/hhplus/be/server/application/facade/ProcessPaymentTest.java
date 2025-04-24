@@ -1,6 +1,7 @@
 package kr.hhplus.be.server.application.facade;
 
 import kr.hhplus.be.server.domain.coupon.Coupon;
+import kr.hhplus.be.server.domain.coupon.CouponResult;
 import kr.hhplus.be.server.domain.coupon.CouponService;
 import kr.hhplus.be.server.domain.order.Order;
 import kr.hhplus.be.server.domain.order.OrderItem;
@@ -8,6 +9,7 @@ import kr.hhplus.be.server.domain.order.OrderService;
 import kr.hhplus.be.server.domain.payment.Payment;
 import kr.hhplus.be.server.domain.payment.PaymentService;
 import kr.hhplus.be.server.domain.user.UserPoint;
+import kr.hhplus.be.server.domain.user.UserResult;
 import kr.hhplus.be.server.domain.user.UserService;
 import kr.hhplus.be.server.domain.user.UserWithPointResponse;
 import org.junit.jupiter.api.Test;
@@ -48,7 +50,7 @@ public class ProcessPaymentTest {
         Payment payment = mock(Payment.class);
         Order order = mock(Order.class);
         Coupon coupon = mock(Coupon.class);
-        UserWithPointResponse user = mock(UserWithPointResponse.class);
+        CouponResult couponResult = mock(CouponResult.class);
         UserPoint point = mock(UserPoint.class);
 
         List<OrderItem> items = List.of(new OrderItem(order, 1L, 1L, 500L));  // 총 1000원
@@ -56,12 +58,10 @@ public class ProcessPaymentTest {
         when(order.getUserId()).thenReturn(userId);
         when(order.getItems()).thenReturn(items);
         when(coupon.calculateDiscount(anyLong())).thenReturn(200L);
-        when(user.getUserPoint()).thenReturn(point);
 
         when(paymentService.getPayment(paymentId)).thenReturn(payment);
         when(orderService.getOrder(orderId)).thenReturn(order);
-        when(couponService.getCoupon(any())).thenReturn(coupon);
-        when(userService.getUser(userId)).thenReturn(user);
+        when(couponService.getCoupon(any())).thenReturn(couponResult);
 
         Payment result = processPayment.processPayment(paymentId);
 
@@ -80,7 +80,7 @@ public class ProcessPaymentTest {
         Payment payment = mock(Payment.class);
         Order order = mock(Order.class);
         Coupon coupon = mock(Coupon.class);
-        UserWithPointResponse user = mock(UserWithPointResponse.class);
+        CouponResult couponResult = mock(CouponResult.class);
         UserPoint point = mock(UserPoint.class);
 
         List<OrderItem> items = List.of(new OrderItem(order, 1L, 1L, 500L)); // 총 1000원
@@ -88,12 +88,10 @@ public class ProcessPaymentTest {
         when(order.getUserId()).thenReturn(userId);
         when(order.getItems()).thenReturn(items);
         when(coupon.calculateDiscount(anyLong())).thenReturn(0L);
-        when(user.getUserPoint()).thenReturn(point);
 
         when(paymentService.getPayment(paymentId)).thenReturn(payment);
         when(orderService.getOrder(orderId)).thenReturn(order);
-        when(couponService.getCoupon(any())).thenReturn(coupon);
-        when(userService.getUser(userId)).thenReturn(user);
+        when(couponService.getCoupon(any())).thenReturn(couponResult);
 
         // 포인트 부족 예외
         doThrow(new IllegalArgumentException("포인트가 부족합니다")).when(point).use(anyLong());
