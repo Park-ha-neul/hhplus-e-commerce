@@ -35,9 +35,9 @@ public class PaymentController {
         }
     }
 
-    @PostMapping("/{paymentId}")
+    @PostMapping("/{payment_id}")
     @Operation(summary = "결제 진행", description = "결제를 진행합니다.")
-    public CustomApiResponse processPayment(@PathVariable("paymentId") @Parameter(name = "paymentId", description = "결제 ID") Long paymentId){
+    public CustomApiResponse processPayment(@PathVariable("payment_id") @Parameter(name = "paymentId", description = "결제 ID") Long paymentId){
         Payment data = processPayment.processPayment(paymentId);
         return CustomApiResponse.success(ApiMessage.PAYMENT_SUCCESS);
     }
@@ -45,16 +45,16 @@ public class PaymentController {
     @GetMapping("/")
     @Operation(summary = "결제 목록 조회", description = "결제 상태에 따른 조회가 가능합니다.")
     public CustomApiResponse getPayments(
-            @RequestParam(required = false)Payment.PaymentStatus status
+            @RequestParam(value = "status", required = false)Payment.PaymentStatus status
     ){
         List<Payment> data = paymentService.getPayments(status);
         return CustomApiResponse.success(ApiMessage.VIEW_SUCCESS, data);
     }
 
-    @GetMapping("/{paymentId}")
+    @GetMapping("/{payment_id}")
     @Operation(summary = "결제 상세 조회", description = "결제 상태에 따른 조회가 가능합니다.")
     public CustomApiResponse getPayment(
-            @PathVariable("paymentId") @Parameter(name = "paymentId", description = "결제 id") Long paymentId
+            @PathVariable("payment_id") @Parameter(name = "paymentId", description = "결제 id") Long paymentId
     ){
         Payment data = paymentService.getPayment(paymentId);
         return CustomApiResponse.success(ApiMessage.VIEW_SUCCESS, data);
