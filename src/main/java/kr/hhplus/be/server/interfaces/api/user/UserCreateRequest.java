@@ -8,4 +8,9 @@ import lombok.NoArgsConstructor;
 public class UserCreateRequest {
     private String userName;
     private boolean isAdmin;
+
+    public UserCreateRequest(String userName, boolean isAdmin) {
+        this.userName = userName;
+        this.isAdmin = isAdmin;
+    }
 }

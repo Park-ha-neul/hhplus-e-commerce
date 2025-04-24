@@ -7,14 +7,16 @@ import kr.hhplus.be.server.domain.coupon.UserCoupon;
 import kr.hhplus.be.server.domain.coupon.UserCouponResult;
 import kr.hhplus.be.server.domain.coupon.UserCouponService;
 import kr.hhplus.be.server.domain.order.Order;
+import kr.hhplus.be.server.domain.order.OrderResult;
 import kr.hhplus.be.server.domain.order.OrderService;
 import kr.hhplus.be.server.domain.payment.Payment;
 import kr.hhplus.be.server.domain.payment.PaymentService;
 import kr.hhplus.be.server.domain.point.PointHistoryResult;
 import kr.hhplus.be.server.domain.user.*;
-import kr.hhplus.be.server.interfaces.api.coupon.CouponResponse;
+import kr.hhplus.be.server.interfaces.api.order.OrderResponse;
 import kr.hhplus.be.server.support.ApiMessage;
 import kr.hhplus.be.server.support.CustomApiResponse;
+import kr.hhplus.be.server.support.ResponseCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -35,17 +37,26 @@ public class UserController {
     @GetMapping("/{userId}")
     @Operation(summary = "사용자 조회", description = "사용자 정보를 조회합니다.")
     public CustomApiResponse getUser(@PathVariable("userId") @Parameter(name = "userId", description = "사용자의 ID") Long userId){
-        UserResult userResult = userService.getUser(userId);
-        UserResponse response = UserResponse.from(userResult);
-        return CustomApiResponse.success(ApiMessage.VIEW_SUCCESS, response);
+        try{
+            UserResult userResult = userService.getUser(userId);
+            UserResponse response = UserResponse.from(userResult);
+            return CustomApiResponse.success(ApiMessage.VIEW_SUCCESS, response);
+        } catch (Exception e){
+            return CustomApiResponse.notFound(ApiMessage.INVALID_USER);
+        }
     }
 
     @PostMapping("/")
     @Operation(summary = "사용자 등록", description = "처음 생성되는 사용자의 포인트는 0으로 초기화 됩니다.")
     public CustomApiResponse registPoint(@RequestBody UserCreateRequest request){
-        UserResult userResult = userService.createUser(request.getUserName(), request.isAdmin());
-        UserResponse response = UserResponse.from(userResult);
-        return CustomApiResponse.success(ApiMessage.CREATE_SUCCESS, response);
+        try{
+            UserResult userResult = userService.createUser(request.getUserName(), request.isAdmin());
+            UserResponse response = UserResponse.from(userResult);
+            return CustomApiResponse.create(ApiMessage.CREATE_SUCCESS, response);
+        } catch (Exception e){
+            System.out.println("e check : " + e);
+            return CustomApiResponse.duplicateError(ApiMessage.CREATE_USER_ERROR);
+        }
     }
 
     @GetMapping("/{userId}/histories")
@@ -64,33 +75,33 @@ public class UserController {
     @Operation(summary = "사용자 쿠폰 발급 목록 조회", description = "사용자가 발급받은 쿠폰 목록을 조회합니다.")
     public CustomApiResponse getUserCoupon(
             @PathVariable("userId") @Parameter(name = "userId", description = "사용자의 ID") Long userId,
-            @RequestParam(required = false)UserCoupon.UserCouponStatus status
+            @RequestParam(value = "status", required = false)UserCoupon.UserCouponStatus status
             ) {
-        try{
-            List<UserCouponResult> userCouponResultList = userCouponService.getUserCoupons(userId, status);
-            List<UserCouponResponse> response = UserCouponResponse.from(userCouponResultList);
-            return CustomApiResponse.success(ApiMessage.VIEW_SUCCESS, response);
-        } catch(IllegalArgumentException e){
-            return CustomApiResponse.badRequest(ApiMessage.INVALID_USER);
-        }
+        List<UserCouponResult> userCouponResultList = userCouponService.getUserCoupons(userId, status);
+        List<UserCouponResponse> response = UserCouponResponse.from(userCouponResultList);
+        return CustomApiResponse.success(ApiMessage.VIEW_SUCCESS, response);
     }
 
     @PostMapping("/{userId}/coupons")
     @Operation(summary = "사용자 쿠폰 발급", description = "쿠폰 발급")
     public CustomApiResponse issueUserCoupon(
-            @PathVariable Long userId,
+            @PathVariable("userId") @Parameter(name = "userId", description = "사용자의 ID")Long userId,
             @RequestBody IssueUserCouponRequest request
     ){
-        UserCouponResult userCouponResult = userCouponService.issue(userId, request.getCouponId());
-        UserCouponResponse response = UserCouponResponse.from(userCouponResult);
-        return CustomApiResponse.success(ApiMessage.ISSUED_SUCCESS, response);
+        try{
+            UserCouponResult userCouponResult = userCouponService.issue(userId, request.getCouponId());
+            UserCouponResponse response = UserCouponResponse.from(userCouponResult);
+            return CustomApiResponse.create(ApiMessage.ISSUED_SUCCESS, response);
+        } catch(Exception e){
+            return CustomApiResponse.badRequest(ApiMessage.INVALID_COUPON);
+        }
     }
 
     @GetMapping("/{userId}/orders")
     @Operation(summary = "사용자 주문 내역 조회", description = "사용자 주문 내역을 조회합니다.")
     public CustomApiResponse getUserOrder(
             @PathVariable("userId") @Parameter(name = "userId", description = "사용자의 ID") Long userId,
-            @RequestParam(required = false)Order.OrderStatus status
+            @RequestParam(value = "status", required = false)Order.OrderStatus status
     ){
         List<Order> orderList = orderService.getUserOrders(userId, status);
         return CustomApiResponse.success(ApiMessage.VIEW_SUCCESS, orderList);
@@ -100,7 +111,7 @@ public class UserController {
     @Operation(summary = "사용자 결제 내역 조회", description = "사용자 결제 내역을 조회합니다.")
     public CustomApiResponse getUserPayment(
             @PathVariable("userId") @Parameter(name = "userId", description = "사용자의 ID") Long userId,
-            @RequestParam(required = false)Payment.PaymentStatus status
+            @RequestParam(value = "status", required = false)Payment.PaymentStatus status
             ){
         List<Payment> paymentList = paymentService.getUserPayments(userId, status);
         return CustomApiResponse.success(ApiMessage.VIEW_SUCCESS, paymentList);

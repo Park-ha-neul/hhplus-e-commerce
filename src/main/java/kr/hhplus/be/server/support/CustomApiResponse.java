@@ -27,6 +27,14 @@ public class CustomApiResponse<T>{
         return new CustomApiResponse<>(ResponseCode.SUCCESS, message);
     }
 
+    public static <T> CustomApiResponse<T> create(String message, T data){
+        return new CustomApiResponse<>(ResponseCode.CREATE_SUCCESS, message, data);
+    }
+
+    public static CustomApiResponse<Void> create(String message) {
+        return new CustomApiResponse<>(ResponseCode.CREATE_SUCCESS, message);
+    }
+
     public static CustomApiResponse<Void> badRequest(String message) {
         return new CustomApiResponse<>(ResponseCode.BAD_REQUEST, message);
     }
@@ -39,7 +47,12 @@ public class CustomApiResponse<T>{
         return new CustomApiResponse<>(ResponseCode.NOT_FOUND, message);
     }
 
+    public static CustomApiResponse<Void> duplicateError(String message) {
+        return new CustomApiResponse<>(ResponseCode.DUPLICATE_ERROR, message);
+    }
+
     public static CustomApiResponse<Void> internalError(String message) {
         return new CustomApiResponse<>(ResponseCode.SERVER_ERROR, message);
     }
+
 }
