@@ -17,13 +17,13 @@ import java.util.List;
 @RequestMapping("/products")
 @Tag(name = "📌 상품 관리", description = "상품 관련 API 모음")
 public class ProductController {
-    private ProductService productService;
-    private TopProductService topProductService;
+    private final ProductService productService;
+    private final TopProductService topProductService;
 
     @GetMapping("/")
     @Operation(summary = "상품 목록 조회", description = "상품 목록을 조회합니다.")
     public CustomApiResponse getProducts(
-            @RequestParam(required = false) Product.ProductStatus status
+            @RequestParam(value = "status", required = false) Product.ProductStatus status
     ){
         List<Product> data = productService.getProducts(status);
         return CustomApiResponse.success(ApiMessage.VIEW_SUCCESS, data);
@@ -31,7 +31,7 @@ public class ProductController {
 
     @GetMapping("/{product_id}")
     @Operation(summary = "상품 상세 조회", description = "상품 상세 내용을 조회합니다.")
-    public CustomApiResponse getProduct(@PathVariable("productId") @Parameter(name = "productId", description = "상품 ID") Long productId){
+    public CustomApiResponse getProduct(@PathVariable("product_id") @Parameter(name = "productId", description = "상품 ID") Long productId){
         Product data = productService.getProductDetails(productId);
         return CustomApiResponse.success(ApiMessage.VIEW_SUCCESS, data);
     }
@@ -40,7 +40,7 @@ public class ProductController {
     @Operation(summary = "상품 등록", description = "상품을 등록합니다.")
     public CustomApiResponse createProduct(
             @RequestBody ProductRequest request,
-            @RequestParam Long userId
+            @RequestParam(value = "userId", required = false) Long userId
     ){
         try{
             Product result = productService.createProduct(request, userId);
@@ -57,7 +57,7 @@ public class ProductController {
     @GetMapping("/popular")
     @Operation(summary = "인기 상품 조회", description = "top5 상품을 기간별로 조회합니다.")
     public CustomApiResponse getPopularProducts(
-            @RequestParam TopProduct.PeriodType periodType
+            @RequestParam(value = "periodType") TopProduct.PeriodType periodType
     ) {
         List<TopProduct> data = topProductService.getTopProductsByPeriod(periodType);
         return CustomApiResponse.success(ApiMessage.VIEW_SUCCESS, data);
