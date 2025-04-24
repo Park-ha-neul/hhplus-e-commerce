@@ -7,16 +7,13 @@ import kr.hhplus.be.server.domain.coupon.UserCoupon;
 import kr.hhplus.be.server.domain.coupon.UserCouponResult;
 import kr.hhplus.be.server.domain.coupon.UserCouponService;
 import kr.hhplus.be.server.domain.order.Order;
-import kr.hhplus.be.server.domain.order.OrderResult;
 import kr.hhplus.be.server.domain.order.OrderService;
 import kr.hhplus.be.server.domain.payment.Payment;
 import kr.hhplus.be.server.domain.payment.PaymentService;
 import kr.hhplus.be.server.domain.point.PointHistoryResult;
 import kr.hhplus.be.server.domain.user.*;
-import kr.hhplus.be.server.interfaces.api.order.OrderResponse;
 import kr.hhplus.be.server.support.ApiMessage;
 import kr.hhplus.be.server.support.CustomApiResponse;
-import kr.hhplus.be.server.support.ResponseCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
