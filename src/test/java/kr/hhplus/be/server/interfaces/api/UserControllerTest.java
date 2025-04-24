@@ -1,4 +1,4 @@
-package kr.hhplus.be.server.interfaces.api.user;
+package kr.hhplus.be.server.interfaces.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import kr.hhplus.be.server.domain.coupon.ErrorCode;
@@ -13,13 +13,16 @@ import kr.hhplus.be.server.domain.user.UserErrorCode;
 import kr.hhplus.be.server.domain.user.UserPointService;
 import kr.hhplus.be.server.domain.user.UserResult;
 import kr.hhplus.be.server.domain.user.UserService;
+import kr.hhplus.be.server.interfaces.api.user.IssueUserCouponRequest;
+import kr.hhplus.be.server.interfaces.api.user.UserCouponResponse;
+import kr.hhplus.be.server.interfaces.api.user.UserCreateRequest;
+import kr.hhplus.be.server.interfaces.api.user.UserPointResponse;
 import kr.hhplus.be.server.support.ApiMessage;
 import kr.hhplus.be.server.support.ResponseCode;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
