@@ -1,10 +1,12 @@
 package kr.hhplus.be.server.interfaces.api.user;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import lombok.NoArgsConstructor;
 
 @Getter
-@RequiredArgsConstructor
+@NoArgsConstructor
+@AllArgsConstructor
 public class IssueUserCouponRequest {
     private Long couponId;
 }

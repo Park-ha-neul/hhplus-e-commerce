@@ -35,12 +35,6 @@ public class UserCouponService {
         return UserCouponResult.of(userCoupon);
     }
 
-//    public UserCouponResult getUserCoupon(Long userCouponId){
-//        UserCoupon userCoupon = userCouponRepository.findById(userCouponId)
-//                .orElseThrow(() -> new IllegalArgumentException(ErrorCode.USER_COUPON_NOT_FOUND.getMessage()));
-//        return UserCouponResult.of(userCoupon);
-//    }
-
     public List<UserCouponResult> getUserCoupons(Long userId, UserCoupon.UserCouponStatus status){
         if(status == null){
             List<UserCoupon> userCoupons = userCouponRepository.findByUserId(userId);
