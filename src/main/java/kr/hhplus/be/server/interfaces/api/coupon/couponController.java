@@ -26,7 +26,7 @@ public class couponController {
     @GetMapping("/")
     @Operation(summary = "쿠폰 목록 조회", description = "쿠폰 목록을 조회합니다.")
     public CustomApiResponse getCoupons(
-            @RequestParam(required = false) Coupon.CouponStatus status
+            @RequestParam(value = "status", required = false) Coupon.CouponStatus status
     ){
         List<CouponResult> couponResultList = couponService.getCoupons(status);
         List<CouponResponse> couponResponses = CouponResponse.from(couponResultList);
@@ -36,7 +36,7 @@ public class couponController {
 
     @GetMapping("/{coupon_id}")
     @Operation(summary = "쿠폰 상세 조회", description = "쿠폰 상세 내용을 조회합니다.")
-    public CustomApiResponse getProduct(@PathVariable("couponId") @Parameter(name = "couponId", description = "쿠폰 ID") Long couponId){
+    public CustomApiResponse getProduct(@PathVariable("coupon_id") @Parameter(name = "couponId", description = "쿠폰 ID") Long couponId){
         CouponResponse response = CouponResponse.from(couponService.getCoupon(couponId));
         return CustomApiResponse.success(ApiMessage.VIEW_SUCCESS, response);
     }
@@ -45,7 +45,7 @@ public class couponController {
     @Operation(summary = "쿠폰 등록", description = "쿠폰을 등록합니다.")
     public CustomApiResponse createCoupon(
             @RequestBody CouponCreateRequest request,
-            @RequestParam Long userId
+            @RequestParam(value = "userId", required = false) Long userId
     ){
         try{
             CouponCommand command = request.toCommand();
