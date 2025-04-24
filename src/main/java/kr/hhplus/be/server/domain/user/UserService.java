@@ -27,6 +27,10 @@ public class UserService {
         }
     }
 
+    public User getUserEntity(Long userId){
+        return userRepository.findById(userId);
+    }
+
     public UserResult getUser(Long userId){
         User user = userRepository.findById(userId);
         if(user == null){
