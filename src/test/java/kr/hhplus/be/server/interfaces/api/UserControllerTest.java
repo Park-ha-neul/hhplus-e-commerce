@@ -5,7 +5,9 @@ import kr.hhplus.be.server.domain.coupon.ErrorCode;
 import kr.hhplus.be.server.domain.coupon.UserCoupon;
 import kr.hhplus.be.server.domain.coupon.UserCouponResult;
 import kr.hhplus.be.server.domain.coupon.UserCouponService;
+import kr.hhplus.be.server.domain.order.Order;
 import kr.hhplus.be.server.domain.order.OrderService;
+import kr.hhplus.be.server.domain.payment.Payment;
 import kr.hhplus.be.server.domain.payment.PaymentService;
 import kr.hhplus.be.server.domain.point.PointHistory;
 import kr.hhplus.be.server.domain.point.PointHistoryResult;
@@ -211,16 +213,37 @@ public class UserControllerTest {
 
     @Test
     void 사용자_주문_내역_조회_성공() throws Exception{
+        // given
+        Long userId = 1L;
+        Order.OrderStatus status = Order.OrderStatus.SUCCESS;
+        List<Order> orderList = List.of(new Order());
 
+        given(orderService.getUserOrders(userId, status)).willReturn(orderList);
+
+        // when & then
+        mockMvc.perform(get("/users/{userId}/orders", userId)
+                        .param("status", status.name()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(ResponseCode.SUCCESS))
+                .andExpect(jsonPath("$.message").value(ApiMessage.VIEW_SUCCESS))
+                .andExpect(jsonPath("$.data.length()").value(orderList.size()));
     }
 
     @Test
     void 사용자_결제_내역_조회_성공() throws Exception{
+        // given
+        Long userId = 1L;
+        Payment.PaymentStatus status = Payment.PaymentStatus.COMPLETED;
+        List<Payment> paymentList = List.of(new Payment());
 
+        given(paymentService.getUserPayments(userId, status)).willReturn(paymentList);
+
+        // when & then
+        mockMvc.perform(get("/users/{userId}/payments", userId)
+                        .param("status", status.name()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(ResponseCode.SUCCESS))
+                .andExpect(jsonPath("$.message").value(ApiMessage.VIEW_SUCCESS))
+                .andExpect(jsonPath("$.data.length()").value(paymentList.size()));
     }
-
-
-
-
-
 }
