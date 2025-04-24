@@ -33,15 +33,17 @@ public class UserController {
     @GetMapping("/{userId}")
     @Operation(summary = "사용자 조회", description = "사용자 정보를 조회합니다.")
     public CustomApiResponse getUser(@PathVariable("userId") @Parameter(name = "userId", description = "사용자의 ID") Long userId){
-        UserWithPointResponse data = userService.getUser(userId);
-        return CustomApiResponse.success(ApiMessage.VIEW_SUCCESS, data);
+        UserResult userResult = userService.getUser(userId);
+        UserResponse response = UserResponse.from(userResult);
+        return CustomApiResponse.success(ApiMessage.VIEW_SUCCESS, response);
     }
 
     @PostMapping("/")
     @Operation(summary = "사용자 등록", description = "처음 생성되는 사용자의 포인트는 0으로 초기화 됩니다.")
-    public CustomApiResponse registPoint(@RequestBody UserRegisterRequest request){
-        User user = userService.createUser(request.getUserName(), request.isAdmin());
-        return CustomApiResponse.success(ApiMessage.CREATE_SUCCESS, user);
+    public CustomApiResponse registPoint(@RequestBody UserCreateRequest request){
+        UserResult userResult = userService.createUser(request.getUserName(), request.isAdmin());
+        UserResponse response = UserResponse.from(userResult);
+        return CustomApiResponse.success(ApiMessage.CREATE_SUCCESS, response);
     }
 
     @GetMapping("/{userId}/histories")

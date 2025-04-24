@@ -11,22 +11,23 @@ public class UserService {
     private final UserRepository userRepository;
     private final UserPointRepository userPointRepository;
 
-    public User createUser(String userName, boolean isAdmin){
+    public UserResult createUser(String userName, boolean isAdmin){
         User user = new User(userName, isAdmin);
         UserPoint userPoint = new UserPoint(user.getUserId(),0L);
 
         userRepository.save(user);
         userPointRepository.save(userPoint);
 
-        return user;
+        return UserResult.of(user, userPoint);
     }
 
-    public UserWithPointResponse getUser(Long userId){
+    public UserResult getUser(Long userId){
         User user = userRepository.findById(userId);
         if(user == null){
             throw new EntityNotFoundException(UserErrorCode.USER_NOT_FOUND.getMessage());
         }
         UserPoint userPoint = userPointRepository.findByUserId(userId);
-        return new UserWithPointResponse(user, userPoint);
+
+        return UserResult.of(user, userPoint);
     }
 }

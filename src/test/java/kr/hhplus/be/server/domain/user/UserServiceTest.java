@@ -1,7 +1,6 @@
 package kr.hhplus.be.server.domain.user;
 
 import jakarta.persistence.EntityNotFoundException;
-import kr.hhplus.be.server.infrastructure.user.UserJpaRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -29,10 +28,11 @@ public class UserServiceTest {
         User user = new User("하늘", false);
         when(userRepository.save(any(User.class))).thenReturn(user);
 
-        User result = userService.createUser("하늘", false);
+        UserResult result = userService.createUser("하늘", false);
 
         assertFalse(result.isAdmin());
         assertEquals("하늘", result.getUserName());
+        assertEquals(Long.valueOf(0L), result.getPoint());
         verify(userRepository).save(any(User.class));
         verify(userPointRepository).save(any(UserPoint.class));
     }
@@ -42,10 +42,11 @@ public class UserServiceTest {
         User user = new User("관리자", true);
         when(userRepository.save(any(User.class))).thenReturn(user);
 
-        User result = userService.createUser("관리자", true);
+        UserResult result = userService.createUser("관리자", true);
 
         assertTrue(result.isAdmin());
         assertEquals("관리자", result.getUserName());
+        assertEquals(Long.valueOf(0L), result.getPoint());
         verify(userRepository).save(any(User.class));
         verify(userPointRepository).save(any(UserPoint.class));
     }
@@ -57,15 +58,18 @@ public class UserServiceTest {
                 .userName("하늘")
                 .adminYn(false)
                 .build();
-
         ReflectionTestUtils.setField(mockUser, "userId", userId);
 
+        UserPoint mockUserPoint = new UserPoint(userId, 0L);
+
         when(userRepository.findById(userId)).thenReturn(mockUser);
+        when(userPointRepository.findByUserId(userId)).thenReturn((mockUserPoint));
 
-        UserWithPointResponse result = userService.getUser(userId);
+        UserResult result = userService.getUser(userId);
 
-        assertEquals("하늘", result.getUser().getUserName());
-        assertFalse(result.getUser().isAdmin());
+        assertEquals("하늘", result.getUserName());
+        assertFalse(result.isAdmin());
+        assertEquals(Long.valueOf(0L), result.getPoint());
     }
 
     @Test

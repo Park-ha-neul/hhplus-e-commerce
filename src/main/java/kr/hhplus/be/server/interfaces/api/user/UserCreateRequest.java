@@ -1,11 +1,11 @@
 package kr.hhplus.be.server.interfaces.api.user;
 
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import lombok.NoArgsConstructor;
 
 @Getter
-@RequiredArgsConstructor
-public class UserRegisterRequest {
+@NoArgsConstructor
+public class UserCreateRequest {
     private String userName;
     private boolean isAdmin;
 }
