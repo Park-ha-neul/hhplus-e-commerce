@@ -9,7 +9,7 @@ import kr.hhplus.be.server.domain.order.Order;
 import kr.hhplus.be.server.domain.order.OrderService;
 import kr.hhplus.be.server.domain.payment.Payment;
 import kr.hhplus.be.server.domain.payment.PaymentService;
-import kr.hhplus.be.server.domain.point.PointHistory;
+import kr.hhplus.be.server.domain.point.PointHistoryResult;
 import kr.hhplus.be.server.domain.user.*;
 import kr.hhplus.be.server.support.ApiMessage;
 import kr.hhplus.be.server.support.CustomApiResponse;
@@ -50,8 +50,9 @@ public class UserController {
     @Operation(summary = "사용자 포인트 이력 조회", description = "사용자 포인트 사용 이력을 조회합니다.")
     public CustomApiResponse getUserHistory(@PathVariable("userId") @Parameter(name = "userId", description = "사용자의 ID") Long userId){
         try{
-            List<PointHistory> pointHistory = userPointService.getUserPointHistory(userId);
-            return CustomApiResponse.success(ApiMessage.VIEW_SUCCESS, pointHistory);
+            List<PointHistoryResult> pointHistory = userPointService.getUserPointHistory(userId);
+            List<UserPointResponse> userPointResponseList = UserPointResponse.from(pointHistory);
+            return CustomApiResponse.success(ApiMessage.VIEW_SUCCESS, userPointResponseList);
         } catch (RuntimeException e) {
             return CustomApiResponse.badRequest(ApiMessage.INVALID_USER);
         }

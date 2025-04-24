@@ -27,6 +27,9 @@ public class User extends BaseEntity {
         this.adminYn = adminYn;
     }
 
+    protected User(){
+    }
+
     public boolean isAdmin() {
         return this.adminYn;
     }
