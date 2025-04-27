@@ -28,7 +28,7 @@ public class ProductService {
         return productRepository.save(product);
     }
 
-    public Product getProductDetails(Long productId){
+    public Product getProduct(Long productId){
         return productRepository.findById(productId)
                 .orElseThrow(() -> new IllegalArgumentException(ProductErrorCode.PRODUCT_NOT_FOUND.getMessage()));
     }
@@ -42,13 +42,13 @@ public class ProductService {
     }
 
     public void increaseProductBalance(Long productId, Long amount) {
-        Product product = getProductDetails(productId);
+        Product product = getProduct(productId);
         product.increaseBalance(amount);
         productRepository.save(product);
     }
 
     @Transactional
-    public void decreaseProductBalance(Long productId, Long amount) {
+    public void decreaseProductStock(Long productId, Long amount) {
         Product product = productRepository.findByIdForUpdate(productId)
                 .orElseThrow(() -> new IllegalArgumentException(ProductErrorCode.PRODUCT_NOT_FOUND.getMessage()));
 

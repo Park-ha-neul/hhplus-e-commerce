@@ -62,7 +62,7 @@ public class ProductControllerTest {
         // given
         Long productId = 1L;
         Product mockProduct = new Product(productId, "상품1", "상세설명", 10L, 1000L, Product.ProductStatus.AVAILABLE);
-        given(productService.getProductDetails(productId)).willReturn(mockProduct);
+        given(productService.getProduct(productId)).willReturn(mockProduct);
 
         // when & then
         mockMvc.perform(get("/products/{product_id}", productId))

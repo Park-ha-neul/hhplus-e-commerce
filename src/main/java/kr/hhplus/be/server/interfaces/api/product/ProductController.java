@@ -32,7 +32,7 @@ public class ProductController {
     @GetMapping("/{product_id}")
     @Operation(summary = "상품 상세 조회", description = "상품 상세 내용을 조회합니다.")
     public CustomApiResponse getProduct(@PathVariable("product_id") @Parameter(name = "productId", description = "상품 ID") Long productId){
-        Product data = productService.getProductDetails(productId);
+        Product data = productService.getProduct(productId);
         return CustomApiResponse.success(ApiMessage.VIEW_SUCCESS, data);
     }
 

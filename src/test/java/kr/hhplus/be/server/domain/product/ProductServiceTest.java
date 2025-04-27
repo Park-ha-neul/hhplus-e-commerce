@@ -71,7 +71,7 @@ public class ProductServiceTest {
         when(productRepository.findById(productId)).thenReturn(Optional.of(product));
 
         // when
-        Product result = productService.getProductDetails(productId);
+        Product result = productService.getProduct(productId);
 
         // then
         assertEquals(product, result);
@@ -85,7 +85,7 @@ public class ProductServiceTest {
         // when & then
         IllegalArgumentException exception = assertThrows(
                 IllegalArgumentException.class,
-                () -> productService.getProductDetails(productId)
+                () -> productService.getProduct(productId)
         );
 
         assertEquals(ProductErrorCode.PRODUCT_NOT_FOUND.getMessage(), exception.getMessage());
@@ -116,7 +116,7 @@ public class ProductServiceTest {
         when(productRepository.findById(productId)).thenReturn(Optional.of(product));
 
         // when
-        productService.decreaseProductBalance(productId, quantity);
+        productService.decreaseProductStock(productId, quantity);
 
         // then
         verify(product).decreaseBalance(quantity);

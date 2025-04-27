@@ -46,7 +46,7 @@ public class ProductConcurrencyTest {
         for (int i = 0; i < threadCount; i++) {
             executorService.submit(() -> {
                 try {
-                    productService.decreaseProductBalance(productId, amount);
+                    productService.decreaseProductStock(productId, amount);
                 } catch(Exception e){
                     System.out.println("예외 발생 : " + e.getMessage());
                 } finally {
