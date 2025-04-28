@@ -1,11 +1,11 @@
 package kr.hhplus.be.server.interfaces.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import kr.hhplus.be.server.application.facade.OrderCommand;
+import kr.hhplus.be.server.application.facade.OrderFacade;
+import kr.hhplus.be.server.application.facade.OrderFacadeRequest;
+import kr.hhplus.be.server.application.facade.OrderItemFacadeRequest;
 import kr.hhplus.be.server.domain.order.Order;
 import kr.hhplus.be.server.domain.order.OrderService;
-import kr.hhplus.be.server.interfaces.api.order.OrderItemRequest;
-import kr.hhplus.be.server.interfaces.api.order.OrderRequest;
 import kr.hhplus.be.server.support.ResponseCode;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,18 +36,20 @@ public class OrderControllerTest {
     private OrderService orderService;
 
     @MockitoBean
-    private OrderCommand orderCommand;
+    private OrderFacade orderFacade;
 
     @Test
     void 주문_등록_성공() throws Exception {
-        OrderItemRequest orderItem1  = new OrderItemRequest();
-        OrderItemRequest orderItem2  = new OrderItemRequest();
-        List<OrderItemRequest> items = List.of(orderItem1, orderItem2);
+        OrderItemFacadeRequest orderItemFacadeRequest1 = new OrderItemFacadeRequest();
+        OrderItemFacadeRequest orderItemFacadeRequest2 = new OrderItemFacadeRequest();
 
-        OrderRequest request = new OrderRequest(1L, 1L, items);
+        List<OrderItemFacadeRequest> items = List.of(orderItemFacadeRequest1, orderItemFacadeRequest2);
+
+        OrderFacadeRequest request = new OrderFacadeRequest(1L, 1L, items);
+
         Order mockOrder = new Order();
 
-        given(orderCommand.order(any(OrderRequest.class))).willReturn(mockOrder);
+        given(orderFacade.order(any(OrderFacadeRequest.class))).willReturn(mockOrder);
 
         mockMvc.perform(post("/orders/")
                         .contentType(MediaType.APPLICATION_JSON)

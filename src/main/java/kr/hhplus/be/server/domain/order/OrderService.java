@@ -6,8 +6,6 @@ import kr.hhplus.be.server.domain.product.ProductRepository;
 import kr.hhplus.be.server.domain.product.ProductErrorCode;
 import kr.hhplus.be.server.domain.user.User;
 import kr.hhplus.be.server.domain.user.UserRepository;
-import kr.hhplus.be.server.interfaces.api.order.OrderItemRequest;
-import kr.hhplus.be.server.interfaces.api.order.OrderRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -23,27 +21,27 @@ public class OrderService {
     private final UserCouponRepository userCouponRepository;
     private final ProductRepository productRepository;
 
-    public Order create(OrderRequest request){
-        User user = userRepository.findById(request.getUserId());
-        Optional<UserCoupon> userCoupon = userCouponRepository.findById(request.getUserCouponId());
+    public OrderResult create(OrderCommand command){
+        User user = userRepository.findById(command.getUserId());
+        Optional<UserCoupon> userCoupon = userCouponRepository.findById(command.getUserCouponId());
 
         Order order = new Order(user.getUserId(), userCoupon.get().getCouponId());
 
-        for (OrderItemRequest orderItemRequest : request.getOrderItems()) {
-            Product product = productRepository.findById(orderItemRequest.getProductId())
+        for (OrderItemCommand orderItemCommand : command.getOrderItems()) {
+            Product product = productRepository.findById(orderItemCommand.getProductId())
                     .orElseThrow(() -> new IllegalArgumentException(ProductErrorCode.PRODUCT_NOT_FOUND.getMessage()));
 
-            if(product.getQuantity() < orderItemRequest.getQuantity()){
+            if(product.getQuantity() < orderItemCommand.getQuantity()){
                 throw new IllegalArgumentException(ProductErrorCode.NOT_ENOUGH_STOCK.getMessage());
             }
-            product.decreaseBalance(orderItemRequest.getQuantity());
-            OrderItem orderItem = new OrderItem(order, orderItemRequest.getProductId(), orderItemRequest.getQuantity(), product.getPrice());
+            product.decreaseBalance(orderItemCommand.getQuantity());
+            OrderItem orderItem = new OrderItem(order, orderItemCommand.getProductId(), orderItemCommand.getQuantity(), product.getPrice());
             order.addOrderItem(orderItem);
         }
 
         orderRepository.save(order);
         order.complete();
-        return order;
+        return OrderResult.of(order);
     }
 
     public List<Order> getOrders(Order.OrderStatus status){

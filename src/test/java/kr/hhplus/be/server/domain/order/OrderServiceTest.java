@@ -5,11 +5,7 @@ import kr.hhplus.be.server.domain.coupon.UserCouponRepository;
 import kr.hhplus.be.server.domain.product.Product;
 import kr.hhplus.be.server.domain.product.ProductRepository;
 import kr.hhplus.be.server.domain.user.User;
-import kr.hhplus.be.server.domain.user.UserPoint;
-import kr.hhplus.be.server.domain.user.UserPointRepository;
 import kr.hhplus.be.server.domain.user.UserRepository;
-import kr.hhplus.be.server.interfaces.api.order.OrderItemRequest;
-import kr.hhplus.be.server.interfaces.api.order.OrderRequest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -50,12 +46,12 @@ public class OrderServiceTest {
         Long quantity = 3L;
         long price = 1000L;
 
-        OrderItemRequest itemRequest = new OrderItemRequest(productId, quantity);
-        OrderRequest request = new OrderRequest(userId, couponId, List.of(itemRequest));
+        OrderItemCommand itemCommand = new OrderItemCommand(productId, quantity);
+        OrderCommand command = new OrderCommand(userId, couponId, List.of(itemCommand));
 
         User user = User.builder().userName("하늘").adminYn(true).build();
         UserCoupon userCoupon = UserCoupon.builder().userId(userId).couponId(couponId).build();
-        Product product = Product.builder().productId(productId).price(price).build();
+        Product product = Product.builder().productId(productId).price(price).quantity(100L).build();
 
         when(userRepository.findById(userId)).thenReturn(user);
         when(userCouponRepository.findById(couponId)).thenReturn(Optional.of(userCoupon));
@@ -63,12 +59,12 @@ public class OrderServiceTest {
         when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> invocation.getArgument(0)); // save stub
 
         // when
-        Order order = orderService.create(request);
+        OrderResult orderResult = orderService.create(command);
 
         // then
-        assertNotNull(order);
-        assertEquals(Order.OrderStatus.SUCCESS, order.getStatus());
-        assertEquals(1, order.getItems().size());
+        assertNotNull(orderResult);
+        assertEquals(Order.OrderStatus.SUCCESS, orderResult.getStatus());
+        assertEquals(1, orderResult.getItem().size());
         verify(orderRepository).save(any(Order.class));
     }
 
