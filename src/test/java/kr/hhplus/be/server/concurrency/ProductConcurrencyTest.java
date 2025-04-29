@@ -1,9 +1,9 @@
 package kr.hhplus.be.server.concurrency;
 
 import kr.hhplus.be.server.domain.product.Product;
+import kr.hhplus.be.server.domain.product.ProductCommand;
 import kr.hhplus.be.server.domain.product.ProductRepository;
 import kr.hhplus.be.server.domain.product.ProductService;
-import kr.hhplus.be.server.interfaces.api.product.ProductRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,8 +28,8 @@ public class ProductConcurrencyTest {
 
     @BeforeEach
     void setUp() {
-        ProductRequest request = new ProductRequest("상품", "설명", 2000L, 10L);
-        Product product = Product.create(request);
+        ProductCommand command = new ProductCommand("상품", "설명", 2000L, 100L);
+        Product product = Product.create(command);
         productRepository.save(product);
         productId = product.getProductId();
     }

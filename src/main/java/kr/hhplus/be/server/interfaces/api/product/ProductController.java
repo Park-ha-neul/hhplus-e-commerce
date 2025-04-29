@@ -26,14 +26,16 @@ public class ProductController {
             @RequestParam(value = "status", required = false) Product.ProductStatus status
     ){
         List<Product> data = productService.getProducts(status);
-        return CustomApiResponse.success(ApiMessage.VIEW_SUCCESS, data);
+        List<ProductResponse> response = ProductResponse.fromProducts(data);
+        return CustomApiResponse.success(ApiMessage.VIEW_SUCCESS, response);
     }
 
     @GetMapping("/{product_id}")
     @Operation(summary = "상품 상세 조회", description = "상품 상세 내용을 조회합니다.")
     public CustomApiResponse getProduct(@PathVariable("product_id") @Parameter(name = "productId", description = "상품 ID") Long productId){
         Product data = productService.getProduct(productId);
-        return CustomApiResponse.success(ApiMessage.VIEW_SUCCESS, data);
+        ProductResponse response = ProductResponse.fromProdcut(data);
+        return CustomApiResponse.success(ApiMessage.VIEW_SUCCESS, response);
     }
 
     @PostMapping("/")
@@ -43,8 +45,10 @@ public class ProductController {
             @RequestParam(value = "userId", required = false) Long userId
     ){
         try{
-            Product result = productService.createProduct(request, userId);
-            return CustomApiResponse.success(ApiMessage.CREATE_SUCCESS, result);
+            ProductCommand command = request.toCommand();
+            ProductResult productResult = productService.createProduct(command, userId);
+            ProductResponse response = ProductResponse.from(productResult);
+            return CustomApiResponse.success(ApiMessage.CREATE_SUCCESS, response);
         }catch (IllegalArgumentException e ){
             return CustomApiResponse.notFound(ApiMessage.INVALID_USER);
         }catch (ForbiddenException e){

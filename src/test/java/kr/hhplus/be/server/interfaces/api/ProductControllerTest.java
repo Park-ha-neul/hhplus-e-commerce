@@ -1,11 +1,7 @@
 package kr.hhplus.be.server.interfaces.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import kr.hhplus.be.server.domain.product.Product;
-import kr.hhplus.be.server.domain.product.ProductService;
-import kr.hhplus.be.server.domain.product.TopProduct;
-import kr.hhplus.be.server.domain.product.TopProductService;
-import kr.hhplus.be.server.interfaces.api.product.ProductRequest;
+import kr.hhplus.be.server.domain.product.*;
 import kr.hhplus.be.server.support.ResponseCode;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -75,19 +71,19 @@ public class ProductControllerTest {
     void 상품_등록_성공() throws Exception {
         // given
         Long userId = 1L;
-        ProductRequest request = new ProductRequest("상품3", "설명3", 1000L, 10L);
-        Product mockProduct = new Product(3L, "상품3", "설명3", 10L, 1000L, Product.ProductStatus.AVAILABLE);
 
-        given(productService.createProduct(any(ProductRequest.class), eq(userId))).willReturn(mockProduct);
+        ProductCommand command = new ProductCommand("상품 A", "설명", 3000L, 2000L);
+        ProductResult mockProduct = mock(ProductResult.class);
+        given(productService.createProduct(any(ProductCommand.class), eq(userId))).willReturn(mockProduct);
 
         // when & then
         mockMvc.perform(post("/products/")
                         .param("userId", String.valueOf(userId))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(new ObjectMapper().writeValueAsString(request)))
+                        .content(new ObjectMapper().writeValueAsString(command)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(ResponseCode.SUCCESS))
-                .andExpect(jsonPath("$.data.name").value("상품3"));
+                .andExpect(jsonPath("$.data.name").value("상품 A"));
     }
 
     @Test

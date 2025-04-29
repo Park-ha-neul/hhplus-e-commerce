@@ -2,7 +2,6 @@ package kr.hhplus.be.server.domain.product;
 
 import kr.hhplus.be.server.domain.user.User;
 import kr.hhplus.be.server.domain.user.UserRepository;
-import kr.hhplus.be.server.interfaces.api.product.ProductRequest;
 import kr.hhplus.be.server.support.ForbiddenException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -32,7 +31,7 @@ public class ProductServiceTest {
         // given
         Long userId = 1L;
         Long productId = 2L;
-        ProductRequest request = new ProductRequest("Product Name", "Description", 100L, 10L);
+        ProductCommand command = new ProductCommand("Product Name", "Description", 100L, 10L);
 
         User user = mock(User.class);
         when(user.isAdmin()).thenReturn(true);
@@ -40,7 +39,7 @@ public class ProductServiceTest {
         Product savedProduct = new Product(productId, "상품 1", "상품 설명", 2000L, 30L, Product.ProductStatus.AVAILABLE);
         when(productRepository.save(any(Product.class))).thenReturn(savedProduct);
 
-        Product result = productService.createProduct(request, userId);
+        ProductResult result = productService.createProduct(command, userId);
 
         assertNotNull(result);
         verify(productRepository).save(any(Product.class));
@@ -49,7 +48,7 @@ public class ProductServiceTest {
     @Test
     void 상품_생성_실패_관리자만() {
         Long userId = 1L;
-        ProductRequest request = new ProductRequest("Product", "desc", 100L, 5L);
+        ProductCommand command = new ProductCommand("Product", "desc", 100L, 5L);
 
         User nonAdminUser = mock(User.class);
         when(userRepository.findById(userId)).thenReturn(nonAdminUser);
@@ -58,7 +57,7 @@ public class ProductServiceTest {
         // when & then
         ForbiddenException exception = assertThrows(
                 ForbiddenException.class,
-                () -> productService.createProduct(request, userId)
+                () -> productService.createProduct(command, userId)
         );
 
         assertEquals(ProductErrorCode.CREATE_PRODUCT_MUST_BE_ADMIN.getMessage(), exception.getMessage());
@@ -113,7 +112,7 @@ public class ProductServiceTest {
         Long quantity = 2L;
 
         Product product = mock(Product.class);
-        when(productRepository.findById(productId)).thenReturn(Optional.of(product));
+        when(productRepository.findByIdForUpdate(anyLong())).thenReturn(Optional.of(product));
 
         // when
         productService.decreaseProductStock(productId, quantity);

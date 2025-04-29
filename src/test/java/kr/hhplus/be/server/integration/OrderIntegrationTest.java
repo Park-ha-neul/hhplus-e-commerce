@@ -12,12 +12,12 @@ import kr.hhplus.be.server.domain.order.Order;
 import kr.hhplus.be.server.domain.payment.Payment;
 import kr.hhplus.be.server.domain.payment.PaymentRepository;
 import kr.hhplus.be.server.domain.product.Product;
+import kr.hhplus.be.server.domain.product.ProductCommand;
 import kr.hhplus.be.server.domain.product.ProductRepository;
 import kr.hhplus.be.server.domain.user.User;
 import kr.hhplus.be.server.domain.user.UserPoint;
 import kr.hhplus.be.server.domain.user.UserPointRepository;
 import kr.hhplus.be.server.domain.user.UserRepository;
-import kr.hhplus.be.server.interfaces.api.product.ProductRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -70,10 +70,10 @@ public class OrderIntegrationTest {
         userRepository.save(user);
         userId = user.getUserId();
 
-        ProductRequest request = new ProductRequest("상품", "설명", 2000L, 100L);
+        ProductCommand command = new ProductCommand("상품", "설명", 2000L, 100L);
 
         // 상품 등록
-        Product product = Product.create(request);
+        Product product = Product.create(command);
         productRepository.save(product);
         productId = product.getProductId();
         totalStock = product.getQuantity();
@@ -113,8 +113,8 @@ public class OrderIntegrationTest {
     @Test
     @DisplayName("재고 부족으로 주문이 실패합니다.")
     void 주문_재고_부족(){
-        ProductRequest productRequest = new ProductRequest("상품", "설명", 2000L, 0L);
-        Product product = Product.create(productRequest);
+        ProductCommand command = new ProductCommand("상품", "설명", 2000L, 0L);
+        Product product = Product.create(command);
         productRepository.save(product);
 
         OrderItemFacadeRequest orderItemFacadeRequest = new OrderItemFacadeRequest(productId, quantity);

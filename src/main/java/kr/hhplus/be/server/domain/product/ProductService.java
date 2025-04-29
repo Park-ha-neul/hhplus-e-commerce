@@ -3,7 +3,6 @@ package kr.hhplus.be.server.domain.product;
 import jakarta.transaction.Transactional;
 import kr.hhplus.be.server.domain.user.User;
 import kr.hhplus.be.server.domain.user.UserRepository;
-import kr.hhplus.be.server.interfaces.api.product.ProductRequest;
 import kr.hhplus.be.server.support.ForbiddenException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -17,15 +16,16 @@ public class ProductService {
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
 
-    public Product createProduct(ProductRequest request, Long userId){
+    public ProductResult createProduct(ProductCommand command, Long userId){
         User user = userRepository.findById(userId);
 
         if(!user.isAdmin()){
             throw new ForbiddenException(ProductErrorCode.CREATE_PRODUCT_MUST_BE_ADMIN.getMessage());
         }
 
-        Product product = Product.create(request);
-        return productRepository.save(product);
+        Product product = Product.create(command);
+        productRepository.save(product);
+        return ProductResult.of(product);
     }
 
     public Product getProduct(Long productId){
