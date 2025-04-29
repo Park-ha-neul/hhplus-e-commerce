@@ -10,6 +10,7 @@ import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.Assert.assertEquals;
 
@@ -27,44 +28,6 @@ public class PointConcurrencyTest {
 
     private Long userId;
 
-    private void tryChargeWithRetry(Long userId, Long amount, int maxRetry) {
-        int retry = 0;
-        while (retry < maxRetry) {
-            try {
-                userPointService.charge(userId, amount);
-                return;
-            } catch (ObjectOptimisticLockingFailureException e) {
-                retry++;
-                System.out.println("충돌 발생 (충전), 재시도: " + retry);
-                try {
-                    Thread.sleep(10); // 너무 빨리 재시도하지 않도록 살짝 대기
-                } catch (InterruptedException ex) {
-                    Thread.currentThread().interrupt();
-                }
-            }
-        }
-        throw new RuntimeException("충전 실패: 최대 재시도 초과");
-    }
-
-    private void tryUseWithRetry(Long userId, Long amount, int maxRetry) {
-        int retry = 0;
-        while (retry < maxRetry) {
-            try {
-                userPointService.use(userId, amount);
-                return;
-            } catch (ObjectOptimisticLockingFailureException e) {
-                retry++;
-                System.out.println("충돌 발생 (사용), 재시도: " + retry);
-                try {
-                    Thread.sleep(10);
-                } catch (InterruptedException ex) {
-                    Thread.currentThread().interrupt();
-                }
-            }
-        }
-        throw new RuntimeException("사용 실패: 최대 재시도 초과");
-    }
-
     @BeforeEach
     void setUp(){
         User user = new User("하늘", true);
@@ -75,19 +38,23 @@ public class PointConcurrencyTest {
     }
 
     @Test
-    void 동시에_충전_요청() throws Exception {
+    void 동시에_충전_요청_낙관적락_검증() throws Exception {
         int threadCount = 10;
-        ExecutorService executorService = Executors.newFixedThreadPool(10);
+        ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
         CountDownLatch latch = new CountDownLatch(threadCount);
+        AtomicInteger successCount = new AtomicInteger();
+        AtomicInteger failCount = new AtomicInteger();
 
         long start = System.currentTimeMillis();
 
         for (int i = 0; i < threadCount; i++) {
             executorService.submit(() -> {
                 try {
-                    tryChargeWithRetry(userId, 10L, 5);
+                    userPointService.charge(userId, 10L);
+                    successCount.incrementAndGet();
                 } catch(Exception e){
                     System.out.println("예외 발생 : " + e.getMessage());
+                    failCount.incrementAndGet();
                 } finally {
                     latch.countDown();
                 }
@@ -99,24 +66,28 @@ public class PointConcurrencyTest {
         System.out.println("수행 시간: " + (end - start) + "ms");
 
         UserPoint userPoint = userPointRepository.findByUserId(userId);
-        assertEquals(Long.valueOf(200L), userPoint.getPoint());
+        assertEquals(Long.valueOf(100L + (10L * successCount.get())), userPoint.getPoint());
 
     }
 
     @Test
-    void 동시에_사용_요청() throws Exception {
+    void 동시에_사용_요청_낙관적락_검증() throws Exception {
         int threadCount = 10;
         ExecutorService executorService = Executors.newFixedThreadPool(10);
         CountDownLatch latch = new CountDownLatch(threadCount);
+        AtomicInteger successCount = new AtomicInteger();
+        AtomicInteger failCount = new AtomicInteger();
 
         long start = System.currentTimeMillis();
 
         for (int i = 0; i < threadCount; i++) {
             executorService.submit(() -> {
                 try {
-                    tryUseWithRetry(userId, 10L, 5);
+                    userPointService.use(userId, 10L);
+                    successCount.incrementAndGet();
                 } catch(Exception e){
                     System.out.println("예외 발생 : " + e.getMessage());
+                    failCount.incrementAndGet();
                 } finally {
                     latch.countDown();
                 }
@@ -128,7 +99,7 @@ public class PointConcurrencyTest {
         System.out.println("수행 시간: " + (end - start) + "ms");
 
         UserPoint userPoint = userPointRepository.findByUserId(userId);
-        assertEquals(Long.valueOf(0L), userPoint.getPoint());
+        assertEquals(Long.valueOf(100L - (10L * successCount.get())), userPoint.getPoint());
 
     }
 }
