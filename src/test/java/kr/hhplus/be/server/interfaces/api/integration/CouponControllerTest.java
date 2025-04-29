@@ -1,4 +1,4 @@
-package kr.hhplus.be.server.interfaces.api;
+package kr.hhplus.be.server.interfaces.api.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import kr.hhplus.be.server.domain.coupon.Coupon;
@@ -13,11 +13,10 @@ import kr.hhplus.be.server.support.ApiMessage;
 import kr.hhplus.be.server.support.ForbiddenException;
 import kr.hhplus.be.server.support.ResponseCode;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
@@ -36,10 +35,10 @@ public class CouponControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @MockitoBean
+    @MockBean
     private CouponService couponService;
 
-    @MockitoBean
+    @MockBean
     private UserService userService;
 
     @Test
@@ -54,7 +53,7 @@ public class CouponControllerTest {
         given(couponService.getCoupons(Coupon.CouponStatus.ACTIVE)).willReturn(couponResults);
 
         // When & Then
-        mockMvc.perform(get("/coupons/")
+        mockMvc.perform(get("/coupons")
                         .param("status", Coupon.CouponStatus.ACTIVE.name()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(ResponseCode.SUCCESS))
@@ -94,7 +93,7 @@ public class CouponControllerTest {
         given(couponService.create(any(CouponCommand.class), any(Long.class))).willReturn(couponResult);
 
         // When & Then
-        mockMvc.perform(post("/coupons/")
+        mockMvc.perform(post("/coupons")
                         .contentType("application/json")
                         .content(new ObjectMapper().writeValueAsString(request))
                         .param("userId", userId.toString()))
@@ -114,7 +113,7 @@ public class CouponControllerTest {
                 .willThrow(new ForbiddenException(ApiMessage.FORBIDDEN_ACCESS));
 
         // When & Then
-        mockMvc.perform(post("/coupons/")
+        mockMvc.perform(post("/coupons")
                         .contentType("application/json")
                         .content(new ObjectMapper().writeValueAsString(request))
                         .param("userId", userId.toString()))
@@ -133,7 +132,7 @@ public class CouponControllerTest {
                 .willThrow(new RuntimeException("서버 오류"));
 
         // When & Then
-        mockMvc.perform(post("/coupons/")
+        mockMvc.perform(post("/coupons")
                         .contentType("application/json")
                         .content(new ObjectMapper().writeValueAsString(request))
                         .param("userId", userId.toString()))

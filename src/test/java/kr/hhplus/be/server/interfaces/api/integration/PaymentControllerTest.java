@@ -1,18 +1,15 @@
-package kr.hhplus.be.server.interfaces.api;
+package kr.hhplus.be.server.interfaces.api.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import kr.hhplus.be.server.application.facade.ProcessPayment;
-import kr.hhplus.be.server.domain.payment.Payment;
-import kr.hhplus.be.server.domain.payment.PaymentCommand;
-import kr.hhplus.be.server.domain.payment.PaymentResult;
-import kr.hhplus.be.server.domain.payment.PaymentService;
+import kr.hhplus.be.server.domain.payment.*;
 import kr.hhplus.be.server.support.ApiMessage;
 import kr.hhplus.be.server.support.ResponseCode;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import org.springframework.test.web.servlet.ResultActions;
@@ -32,10 +29,10 @@ public class PaymentControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @MockitoBean
+    @MockBean
     private PaymentService paymentService;
 
-    @MockitoBean
+    @MockBean
     private ProcessPayment processPayment;
 
     @Test
