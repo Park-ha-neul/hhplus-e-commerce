@@ -9,15 +9,15 @@ import java.util.List;
 
 @Getter
 @AllArgsConstructor
-public class OrderResult {
+public class OrderFacadeResponse {
     private Long id;
     private Long userId;
     private List<OrderItem> item;
     private Long userCouponId;
     private Order.OrderStatus status;
 
-    public static OrderResult of(Order order) {
-        return new OrderResult(
+    public static OrderFacadeResponse of(Order order) {
+        return new OrderFacadeResponse(
                 order.getOrderId(),
                 order.getUserId(),
                 order.getItems(),

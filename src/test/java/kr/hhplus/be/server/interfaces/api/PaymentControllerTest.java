@@ -3,8 +3,9 @@ package kr.hhplus.be.server.interfaces.api;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import kr.hhplus.be.server.application.facade.ProcessPayment;
 import kr.hhplus.be.server.domain.payment.Payment;
+import kr.hhplus.be.server.domain.payment.PaymentCommand;
+import kr.hhplus.be.server.domain.payment.PaymentResult;
 import kr.hhplus.be.server.domain.payment.PaymentService;
-import kr.hhplus.be.server.interfaces.api.payment.PaymentCreateRequest;
 import kr.hhplus.be.server.support.ApiMessage;
 import kr.hhplus.be.server.support.ResponseCode;
 import org.junit.jupiter.api.Test;
@@ -40,15 +41,15 @@ public class PaymentControllerTest {
     @Test
     void 결제_생성_성공() throws Exception {
         // Given
-        PaymentCreateRequest request = new PaymentCreateRequest(1L);
-        Payment mockPayment = new Payment(1L, 1000L);
+        PaymentCommand command = new PaymentCommand(1L);
+        PaymentResult mockPayment = new PaymentResult(1L, 1L, 1000L, Payment.PaymentStatus.COMPLETED, "");
 
-        given(paymentService.create(any(PaymentCreateRequest.class))).willReturn(mockPayment);
+        given(paymentService.create(any(PaymentCommand.class))).willReturn(mockPayment);
 
         // When & Then
         ResultActions result = mockMvc.perform(post("/payments/")
                 .contentType("application/json")
-                .content(new ObjectMapper().writeValueAsString(request)));
+                .content(new ObjectMapper().writeValueAsString(command)));
 
         result.andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(ResponseCode.SUCCESS))

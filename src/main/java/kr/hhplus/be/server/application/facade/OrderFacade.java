@@ -6,8 +6,6 @@ import kr.hhplus.be.server.domain.order.OrderCommand;
 import kr.hhplus.be.server.domain.order.OrderResult;
 import kr.hhplus.be.server.domain.order.OrderService;
 import kr.hhplus.be.server.domain.payment.PaymentService;
-import kr.hhplus.be.server.interfaces.api.order.OrderRequest;
-import kr.hhplus.be.server.interfaces.api.payment.PaymentCreateRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -20,16 +18,24 @@ public class OrderFacade {
 
     @Transactional
     public Order order(OrderFacadeRequest request){
-        Order order = new Order();
+        OrderResult orderResult = null;
+        Order order = null;
         try{
             OrderCommand command = request.toCommand();
-            OrderResult orderResult = orderService.create(command);
-            PaymentCreateRequest paymentCreateRequest = new PaymentCreateRequest(order.getOrderId());
-            paymentService.create(paymentCreateRequest);
+            orderResult = orderService.create(command);
+
+            PaymentFacadeRequest paymentFacadeRequest = new PaymentFacadeRequest(orderResult.getId());
+            paymentService.create(paymentFacadeRequest.toCommand());
+
+            order = orderService.getOrder(orderResult.getId());
             order.complete();
         } catch (Exception e){
-            order.fail();
+            if(orderResult != null){
+                order = orderService.getOrder(orderResult.getId());
+                order.fail();
+            }
         }
+
         return order;
     }
 }

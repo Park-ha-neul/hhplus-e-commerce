@@ -2,7 +2,6 @@ package kr.hhplus.be.server.interfaces.api.user;
 
 import kr.hhplus.be.server.domain.point.PointHistory;
 import kr.hhplus.be.server.domain.point.PointHistoryResult;
-import kr.hhplus.be.server.domain.user.UserResult;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 

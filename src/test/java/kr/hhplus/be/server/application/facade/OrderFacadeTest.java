@@ -2,8 +2,8 @@ package kr.hhplus.be.server.application.facade;
 
 import kr.hhplus.be.server.domain.order.*;
 import kr.hhplus.be.server.domain.order.OrderResult;
+import kr.hhplus.be.server.domain.payment.PaymentCommand;
 import kr.hhplus.be.server.domain.payment.PaymentService;
-import kr.hhplus.be.server.interfaces.api.payment.PaymentCreateRequest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -33,10 +33,7 @@ public class OrderFacadeTest {
         Long couponId = 1L;
         Long productId = 1L;
         Long quantity = 200L;
-
-        OrderItemCommand orderItemCommand = new OrderItemCommand(productId, quantity);
-        List<OrderItemCommand> items = List.of(orderItemCommand);
-        OrderCommand command = new OrderCommand(userId, couponId, items);
+        Long orderId = 123L;
 
         OrderItemFacadeRequest orderItemFacadeRequest = new OrderItemFacadeRequest(productId, quantity);
         List<OrderItemFacadeRequest> facadeItems = List.of(orderItemFacadeRequest);
@@ -44,15 +41,19 @@ public class OrderFacadeTest {
 
         Order mockOrder = mock(Order.class);
         OrderResult mockOrderResult = mock(OrderResult.class);
-        when(orderService.create(command)).thenReturn(mockOrderResult);
-        doAnswer(invocation -> null).when(paymentService).create(any(PaymentCreateRequest.class));
+
+        when(orderService.create(any(OrderCommand.class))).thenReturn(mockOrderResult);
+        when(mockOrderResult.getId()).thenReturn(orderId);
+        when(orderService.getOrder(orderId)).thenReturn(mockOrder);
+
+        doAnswer(invocation -> null).when(paymentService).create(any(PaymentCommand.class));
 
         // when
         Order result = orderFacade.order(orderFacadeRequest);
 
         // then
-        verify(orderService).create(command);
-        verify(paymentService).create(any(PaymentCreateRequest.class));
+        verify(orderService).create(any(OrderCommand.class));
+        verify(paymentService).create(any(PaymentCommand.class));
         verify(mockOrder).complete();
         verify(mockOrder, never()).fail();
         assertEquals(mockOrder, result);
@@ -64,10 +65,7 @@ public class OrderFacadeTest {
         Long couponId = 1L;
         Long productId = 1L;
         Long quantity = 200L;
-
-        OrderItemCommand orderItemCommand = new OrderItemCommand(productId, quantity);
-        List<OrderItemCommand> items = List.of(orderItemCommand);
-        OrderCommand command = new OrderCommand(userId, couponId, items);
+        Long orderId = 123L;
 
         OrderItemFacadeRequest orderItemFacadeRequest = new OrderItemFacadeRequest(productId, quantity);
         List<OrderItemFacadeRequest> facadeItems = List.of(orderItemFacadeRequest);
@@ -75,16 +73,19 @@ public class OrderFacadeTest {
 
         Order mockOrder = mock(Order.class);
         OrderResult mockOrderResult = mock(OrderResult.class);
-        when(orderService.create(command)).thenReturn(mockOrderResult);
 
-        doThrow(new RuntimeException("결제 생성 실패")).when(paymentService).create(any(PaymentCreateRequest.class));
+        when(orderService.create(any(OrderCommand.class))).thenReturn(mockOrderResult);
+        when(mockOrderResult.getId()).thenReturn(orderId);
+        when(orderService.getOrder(orderId)).thenReturn(mockOrder);
+
+        doThrow(new RuntimeException("결제 생성 실패")).when(paymentService).create(any(PaymentCommand.class));
 
         // when
         Order result = orderFacade.order(orderFacadeRequest);
 
         // then
-        verify(orderService).create(command);
-        verify(paymentService).create(any(PaymentCreateRequest.class));
+        verify(orderService).create(any(OrderCommand.class));
+        verify(paymentService).create(any(PaymentCommand.class));
         verify(mockOrder, never()).complete();
         verify(mockOrder).fail();
         assertEquals(mockOrder, result);

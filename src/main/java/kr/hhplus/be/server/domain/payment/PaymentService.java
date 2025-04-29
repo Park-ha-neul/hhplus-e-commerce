@@ -4,7 +4,6 @@ import kr.hhplus.be.server.domain.order.Order;
 import kr.hhplus.be.server.domain.order.OrderRepository;
 import kr.hhplus.be.server.domain.order.OrderErrorCode;
 import kr.hhplus.be.server.domain.order.OrderItem;
-import kr.hhplus.be.server.interfaces.api.payment.PaymentCreateRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -46,19 +45,19 @@ public class PaymentService {
                     .filter(Objects::nonNull)
                     .collect(Collectors.toList());
         }
-
     }
 
-    public Payment create(PaymentCreateRequest request){
-        Order order = orderRepository.findById(request.getOrderId())
+    public PaymentResult create(PaymentCommand command){
+        Order order = orderRepository.findById(command.getOrderId())
                 .orElseThrow(() -> new IllegalArgumentException(OrderErrorCode.ORDER_ITEM_NOT_FOUND.getMessage()));
 
         Long totalAmount = order.getItems()
                 .stream()
                 .mapToLong(OrderItem::getTotalPrice)
                 .sum();
-        Payment payment = new Payment(request.getOrderId(), totalAmount);
-        return paymentRepository.save(payment);
+        Payment payment = new Payment(command.getOrderId(), totalAmount);
+        paymentRepository.save(payment);
+        return PaymentResult.of(payment);
     }
 
     public void updateStatusComplete(Long paymentId){

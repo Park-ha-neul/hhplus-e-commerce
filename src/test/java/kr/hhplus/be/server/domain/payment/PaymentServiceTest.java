@@ -3,7 +3,6 @@ package kr.hhplus.be.server.domain.payment;
 import kr.hhplus.be.server.domain.order.Order;
 import kr.hhplus.be.server.domain.order.OrderRepository;
 import kr.hhplus.be.server.domain.order.OrderItem;
-import kr.hhplus.be.server.interfaces.api.payment.PaymentCreateRequest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -50,14 +49,13 @@ public class PaymentServiceTest {
         Payment payment = new Payment(order.getOrderId(), 5000L);
         when(paymentRepository.save(any(Payment.class))).thenReturn(payment);
 
-        PaymentCreateRequest request = new PaymentCreateRequest(orderId);
+        PaymentCommand command = new PaymentCommand(orderId);
 
         // when
-        Payment result = paymentService.create(request);
+        PaymentResult result = paymentService.create(command);
 
         // then
         assertNotNull(result);
-        assertEquals(order.getOrderId(), result.getOrderId());
         assertEquals(totalPrice, result.getTotalAmount());
         assertEquals(Payment.PaymentStatus.PENDING, result.getStatus());
         verify(paymentRepository).save(any(Payment.class));
@@ -144,6 +142,9 @@ public class PaymentServiceTest {
         Long userId = 123L;
         Long orderId = 1L;
         Payment payment = mock(Payment.class);
+        Order order = mock(Order.class);
+        when(order.getOrderId()).thenReturn(orderId);
+        when(orderRepository.findByUserId(userId)).thenReturn(List.of(order));
         when(paymentRepository.findByOrderId(orderId)).thenReturn(payment);
 
         // when

@@ -5,6 +5,8 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import kr.hhplus.be.server.application.facade.ProcessPayment;
 import kr.hhplus.be.server.domain.payment.Payment;
+import kr.hhplus.be.server.domain.payment.PaymentCommand;
+import kr.hhplus.be.server.domain.payment.PaymentResult;
 import kr.hhplus.be.server.domain.payment.PaymentService;
 import kr.hhplus.be.server.support.ApiMessage;
 import kr.hhplus.be.server.support.CustomApiResponse;
@@ -26,8 +28,10 @@ public class PaymentController {
     @Operation(summary = "결제 생성", description = "결제 생성합니다.")
     public CustomApiResponse createPayment(@RequestBody PaymentCreateRequest request){
         try{
-            Payment result = paymentService.create(request);
-            return CustomApiResponse.success(ApiMessage.CREATE_SUCCESS, result);
+            PaymentCommand command = request.toCommand();
+            PaymentResult result = paymentService.create(command);
+            PaymentResponse response = PaymentResponse.from(result);
+            return CustomApiResponse.success(ApiMessage.CREATE_SUCCESS, response);
         } catch(IllegalArgumentException e){
             return CustomApiResponse.badRequest(e.getMessage());
         }catch(Exception e){
@@ -48,7 +52,8 @@ public class PaymentController {
             @RequestParam(value = "status", required = false)Payment.PaymentStatus status
     ){
         List<Payment> data = paymentService.getPayments(status);
-        return CustomApiResponse.success(ApiMessage.VIEW_SUCCESS, data);
+        List<PaymentResponse> response = PaymentResponse.fromPaymentList(data);
+        return CustomApiResponse.success(ApiMessage.VIEW_SUCCESS, response);
     }
 
     @GetMapping("/{payment_id}")
@@ -57,6 +62,7 @@ public class PaymentController {
             @PathVariable("payment_id") @Parameter(name = "paymentId", description = "결제 id") Long paymentId
     ){
         Payment data = paymentService.getPayment(paymentId);
-        return CustomApiResponse.success(ApiMessage.VIEW_SUCCESS, data);
+        PaymentResponse response = PaymentResponse.fromPayment(data);
+        return CustomApiResponse.success(ApiMessage.VIEW_SUCCESS, response);
     }
 }

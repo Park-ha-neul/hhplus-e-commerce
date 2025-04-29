@@ -1,24 +1,17 @@
 package kr.hhplus.be.server.application.facade;
 
-import kr.hhplus.be.server.domain.coupon.Coupon;
-import kr.hhplus.be.server.domain.coupon.CouponResult;
 import kr.hhplus.be.server.domain.coupon.CouponService;
+import kr.hhplus.be.server.domain.coupon.UserCouponService;
 import kr.hhplus.be.server.domain.order.Order;
-import kr.hhplus.be.server.domain.order.OrderItem;
 import kr.hhplus.be.server.domain.order.OrderService;
 import kr.hhplus.be.server.domain.payment.Payment;
 import kr.hhplus.be.server.domain.payment.PaymentService;
-import kr.hhplus.be.server.domain.user.UserPoint;
-import kr.hhplus.be.server.domain.user.UserResult;
-import kr.hhplus.be.server.domain.user.UserService;
-import kr.hhplus.be.server.domain.user.UserWithPointResponse;
+import kr.hhplus.be.server.domain.user.UserPointService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.List;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
@@ -33,10 +26,13 @@ public class ProcessPaymentTest {
     private OrderService orderService;
 
     @Mock
-    private CouponService couponService;
+    private UserPointService userPointService;
 
     @Mock
-    private UserService userService;
+    private UserCouponService userCouponService;
+
+    @Mock
+    private CouponService couponService;
 
     @InjectMocks
     private ProcessPayment processPayment;
@@ -49,23 +45,20 @@ public class ProcessPaymentTest {
 
         Payment payment = mock(Payment.class);
         Order order = mock(Order.class);
-        Coupon coupon = mock(Coupon.class);
-        CouponResult couponResult = mock(CouponResult.class);
-        UserPoint point = mock(UserPoint.class);
 
-        List<OrderItem> items = List.of(new OrderItem(order, 1L, 1L, 500L));  // 총 1000원
         when(payment.getOrderId()).thenReturn(orderId);
+        when(payment.getTotalAmount()).thenReturn(1000L);
         when(order.getUserId()).thenReturn(userId);
-        when(order.getItems()).thenReturn(items);
-        when(coupon.calculateDiscount(anyLong())).thenReturn(200L);
-
         when(paymentService.getPayment(paymentId)).thenReturn(payment);
         when(orderService.getOrder(orderId)).thenReturn(order);
-        when(couponService.getCoupon(any())).thenReturn(couponResult);
+        when(couponService.calculateDiscount(anyLong(), anyLong())).thenReturn(200L);
+
+        doNothing().when(userCouponService).use(anyLong());
+        doNothing().when(userPointService).use(userId, 800L);
 
         Payment result = processPayment.processPayment(paymentId);
 
-        verify(point).use(300L); // 1000 - 200
+        verify(userPointService).use(userId,800L);
         verify(payment).complete();
         verify(order).complete();
         assertEquals(payment, result);
@@ -79,22 +72,16 @@ public class ProcessPaymentTest {
 
         Payment payment = mock(Payment.class);
         Order order = mock(Order.class);
-        Coupon coupon = mock(Coupon.class);
-        CouponResult couponResult = mock(CouponResult.class);
-        UserPoint point = mock(UserPoint.class);
 
-        List<OrderItem> items = List.of(new OrderItem(order, 1L, 1L, 500L)); // 총 1000원
         when(payment.getOrderId()).thenReturn(orderId);
+        when(payment.getTotalAmount()).thenReturn(1000L);  // Assuming total amount is 1000
         when(order.getUserId()).thenReturn(userId);
-        when(order.getItems()).thenReturn(items);
-        when(coupon.calculateDiscount(anyLong())).thenReturn(0L);
 
         when(paymentService.getPayment(paymentId)).thenReturn(payment);
         when(orderService.getOrder(orderId)).thenReturn(order);
-        when(couponService.getCoupon(any())).thenReturn(couponResult);
+        when(couponService.calculateDiscount(anyLong(), anyLong())).thenReturn(0L); // No discount
 
-        // 포인트 부족 예외
-        doThrow(new IllegalArgumentException("포인트가 부족합니다")).when(point).use(anyLong());
+        doThrow(new IllegalArgumentException("포인트가 부족합니다")).when(userPointService).use(userId, 1000L);  // Trying to deduct 1000 points
 
         Payment result = processPayment.processPayment(paymentId);
 

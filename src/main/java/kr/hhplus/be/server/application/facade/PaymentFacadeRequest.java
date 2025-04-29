@@ -1,16 +1,12 @@
-package kr.hhplus.be.server.interfaces.api.payment;
+package kr.hhplus.be.server.application.facade;
 
-import io.swagger.v3.oas.annotations.media.Schema;
 import kr.hhplus.be.server.domain.payment.PaymentCommand;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 @Getter
 @AllArgsConstructor
-@NoArgsConstructor
-public class PaymentCreateRequest {
-    @Schema(description = "주문 ID", example = "123")
+public class PaymentFacadeRequest {
     private Long orderId;
 
     public PaymentCommand toCommand(){

@@ -17,7 +17,6 @@ public class ProcessPayment {
     private final PaymentService paymentService;
     private final OrderService orderService;
     private final CouponService couponService;
-    private final UserService userService;
     private final UserPointService userPointService;
     private final UserCouponService userCouponService;
 
