@@ -5,7 +5,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.orm.ObjectOptimisticLockingFailureException;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -36,6 +35,7 @@ public class PointConcurrencyTest {
         UserPoint userPoint = new UserPoint(userId, 100L);
         userPointRepository.save(userPoint);
     }
+
 
     @Test
     void 동시에_충전_요청_낙관적락_검증() throws Exception {
