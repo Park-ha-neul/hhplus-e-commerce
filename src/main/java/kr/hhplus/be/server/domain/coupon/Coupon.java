@@ -43,6 +43,9 @@ public class Coupon extends BaseEntity {
     @Column(name = "end_date")
     private LocalDateTime endDate;
 
+    public Coupon(){
+    }
+
     public enum DiscountType{
         RATE, AMOUNT;
     }

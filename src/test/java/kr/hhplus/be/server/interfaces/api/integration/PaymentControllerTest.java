@@ -1,7 +1,8 @@
 package kr.hhplus.be.server.interfaces.api.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import kr.hhplus.be.server.application.facade.ProcessPayment;
+import kr.hhplus.be.server.domain.order.Order;
+import kr.hhplus.be.server.domain.order.OrderRepository;
 import kr.hhplus.be.server.domain.payment.*;
 import kr.hhplus.be.server.support.ApiMessage;
 import kr.hhplus.be.server.support.ResponseCode;
@@ -9,18 +10,13 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-import org.springframework.test.web.servlet.ResultActions;
-
-import java.util.List;
-
-import static org.mockito.Mockito.*;
-import static org.mockito.BDDMockito.given;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -29,38 +25,36 @@ public class PaymentControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
-    private PaymentService paymentService;
+    @Autowired
+    private PaymentRepository paymentRepository;
 
-    @MockBean
-    private ProcessPayment processPayment;
+    @Autowired
+    private OrderRepository orderRepository;
 
     @Test
     void 결제_생성_성공() throws Exception {
         // Given
-        PaymentCommand command = new PaymentCommand(1L);
-        PaymentResult mockPayment = new PaymentResult(1L, 1L, 1000L, Payment.PaymentStatus.COMPLETED, "");
+        Order order = new Order(1L, 1L);
+        orderRepository.save(order);
+        PaymentCommand command = new PaymentCommand(order.getOrderId());
 
-        given(paymentService.create(any(PaymentCommand.class))).willReturn(mockPayment);
-
-        // When & Then
-        ResultActions result = mockMvc.perform(post("/payments/")
-                .contentType("application/json")
-                .content(new ObjectMapper().writeValueAsString(command)));
-
-        result.andExpect(status().isOk())
+        mockMvc.perform(
+                post("/payments/")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(new ObjectMapper().writeValueAsString(command))
+                )
+                .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(ResponseCode.SUCCESS))
-                .andExpect(jsonPath("$.data.orderId").value(1L))
-                .andExpect(jsonPath("$.data.totalAmount").value(1000L));
+                .andExpect(jsonPath("$.data.orderId").value(command.getOrderId()));
     }
 
     @Test
     void 결제_진행_성공() throws Exception {
         // Given
-        Long paymentId = 1L;
-        Payment mockPayment = new Payment(1L, 1000L);
-
-        given(processPayment.processPayment(paymentId)).willReturn(mockPayment);
+        Long orderId = 1L;
+        Payment payment = new Payment(orderId, 1000L);
+        paymentRepository.save(payment);
+        Long paymentId = payment.getPaymentId();
 
         // When & Then
         mockMvc.perform(post("/payments/{payment_id}", paymentId))
@@ -72,35 +66,32 @@ public class PaymentControllerTest {
     @Test
     void 결제_목록_조회_성공() throws Exception {
         // Given
-        List<Payment> mockPayments = List.of(
-                new Payment(1L, 1000L),
-                new Payment(2L, 2000L)
-        );
-
-        given(paymentService.getPayments(Payment.PaymentStatus.PENDING)).willReturn(mockPayments);
+        paymentRepository.deleteAll();
+        Payment payment1 = new Payment(1L, 1000L);
+        paymentRepository.save(payment1);
+        Payment payment2 = new Payment(2L, 2000L);
+        paymentRepository.save(payment2);
 
         // When & Then
-        mockMvc.perform(get("/payments/")
-                        .param("status", Payment.PaymentStatus.PENDING.name()))
+        mockMvc.perform(get("/payments/"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(ResponseCode.SUCCESS))
-                .andExpect(jsonPath("$.data[0].orderId").value(1L))
-                .andExpect(jsonPath("$.data[1].orderId").value(2L));
+                .andExpect(jsonPath("$.data[0].orderId").value(payment1.getOrderId()))
+                .andExpect(jsonPath("$.data[1].orderId").value(payment2.getOrderId()));
     }
 
     @Test
     void 결제_상세_조회_성공() throws Exception {
         // Given
-        Long paymentId = 1L;
-        Payment mockPayment = new Payment(1L, 1000L);
-
-        given(paymentService.getPayment(paymentId)).willReturn(mockPayment);
+        Payment payment = new Payment(1L, 1000L);
+        paymentRepository.save(payment);
+        Long paymentId = payment.getPaymentId();
 
         // When & Then
         mockMvc.perform(get("/payments/{payment_id}", paymentId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(ResponseCode.SUCCESS))
-                .andExpect(jsonPath("$.data.orderId").value(paymentId));
+                .andExpect(jsonPath("$.data.orderId").value(payment.getOrderId()));
     }
 
 

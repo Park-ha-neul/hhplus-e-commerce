@@ -34,8 +34,8 @@ public class OrderFacade {
                 order = orderService.getOrder(orderResult.getId());
                 order.fail();
             }
+            throw e;
         }
-
         return order;
     }
 }

@@ -26,6 +26,9 @@ public class OrderItem extends BaseEntity {
     @Column(name = "unit_price")
     private Long unitPrice;
 
+    public OrderItem(){
+    }
+
     @Builder
     public OrderItem(Order order, Long productId, Long quantity, Long price) {
         this.order = order;

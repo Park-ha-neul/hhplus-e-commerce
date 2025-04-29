@@ -1,5 +1,6 @@
 package kr.hhplus.be.server.domain.payment;
 
+import jakarta.transaction.Transactional;
 import kr.hhplus.be.server.domain.order.Order;
 import kr.hhplus.be.server.domain.order.OrderRepository;
 import kr.hhplus.be.server.domain.order.OrderErrorCode;
@@ -47,6 +48,7 @@ public class PaymentService {
         }
     }
 
+    @Transactional
     public PaymentResult create(PaymentCommand command){
         Order order = orderRepository.findById(command.getOrderId())
                 .orElseThrow(() -> new IllegalArgumentException(OrderErrorCode.ORDER_ITEM_NOT_FOUND.getMessage()));

@@ -10,4 +10,5 @@ public interface PaymentRepository{
     Payment findByOrderIdAndStatus(Long orderId, Payment.PaymentStatus status);
     List<Payment> findAllByStatus(Payment.PaymentStatus status);
     List<Payment> findAllPayments();
+    void deleteAll();
 }

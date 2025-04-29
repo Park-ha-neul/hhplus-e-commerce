@@ -35,6 +35,7 @@ public class PaymentController {
         } catch(IllegalArgumentException e){
             return CustomApiResponse.badRequest(e.getMessage());
         }catch(Exception e){
+            System.out.println("e : " + e.getMessage());
             return CustomApiResponse.internalError(ApiMessage.SERVER_ERROR);
         }
     }

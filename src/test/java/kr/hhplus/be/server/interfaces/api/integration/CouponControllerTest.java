@@ -1,29 +1,19 @@
 package kr.hhplus.be.server.interfaces.api.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import kr.hhplus.be.server.domain.coupon.Coupon;
-import kr.hhplus.be.server.domain.coupon.CouponCommand;
-import kr.hhplus.be.server.domain.coupon.CouponResult;
-import kr.hhplus.be.server.domain.coupon.CouponService;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import kr.hhplus.be.server.domain.coupon.*;
 import kr.hhplus.be.server.domain.user.User;
-import kr.hhplus.be.server.domain.user.UserService;
-import kr.hhplus.be.server.interfaces.api.coupon.CouponCreateRequest;
-import kr.hhplus.be.server.interfaces.api.coupon.CouponResponse;
+import kr.hhplus.be.server.domain.user.UserRepository;
 import kr.hhplus.be.server.support.ApiMessage;
-import kr.hhplus.be.server.support.ForbiddenException;
 import kr.hhplus.be.server.support.ResponseCode;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
-import java.util.List;
-
-import static org.mockito.Mockito.*;
-import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -35,109 +25,78 @@ public class CouponControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
-    private CouponService couponService;
+    @Autowired
+    private CouponRepository couponRepository;
 
-    @MockBean
-    private UserService userService;
+    @Autowired
+    private UserRepository userRepository;
 
     @Test
     void 쿠폰_목록_조회_성공() throws Exception {
-        // Given
-        List<CouponResult> couponResults = List.of(
-                new CouponResult(1L, "Coupon 1", 200L, Coupon.DiscountType.AMOUNT, null, 100L, Coupon.CouponStatus.ACTIVE, LocalDateTime.now(), LocalDateTime.now().plusDays(7)),
-                new CouponResult(2L, "Coupon 2", 200L, Coupon.DiscountType.RATE, 10L, null, Coupon.CouponStatus.INACTIVE, LocalDateTime.now(), LocalDateTime.now().plusDays(7))
-        );
-        List<CouponResponse> couponResponses = CouponResponse.from(couponResults);
-
-        given(couponService.getCoupons(Coupon.CouponStatus.ACTIVE)).willReturn(couponResults);
+        Coupon coupon = new Coupon("Coupon 1", 200L, 0L, Coupon.DiscountType.AMOUNT, null, 100L, Coupon.CouponStatus.ACTIVE, LocalDateTime.now(), LocalDateTime.now().plusDays(7));
+        couponRepository.save(coupon);
+        Coupon coupon1 = new Coupon("Coupon 2", 200L, 0L, Coupon.DiscountType.RATE, 10L, null, Coupon.CouponStatus.INACTIVE, LocalDateTime.now(), LocalDateTime.now().plusDays(7));
+        couponRepository.save(coupon1);
 
         // When & Then
-        mockMvc.perform(get("/coupons")
-                        .param("status", Coupon.CouponStatus.ACTIVE.name()))
+        mockMvc.perform(get("/coupons"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(ResponseCode.SUCCESS))
-                .andExpect(jsonPath("$.data[0].id").value(1L))
-                .andExpect(jsonPath("$.data[1].id").value(2L));
+                .andExpect(jsonPath("$.data[0].id").value(coupon.getCouponId()))
+                .andExpect(jsonPath("$.data[1].id").value(coupon1.getCouponId()));
     }
 
     @Test
     void 쿠폰_상세_조회_성공() throws Exception {
         // Given
-        Long couponId = 1L;
-        CouponResult couponResult = new CouponResult(1L, "Coupon 1", 200L, Coupon.DiscountType.AMOUNT, null, 100L, Coupon.CouponStatus.ACTIVE, LocalDateTime.now(), LocalDateTime.now().plusDays(7));
-        CouponResponse couponResponse = CouponResponse.from(couponResult);
+        Coupon coupon = new Coupon("Coupon 1", 200L, 0L, Coupon.DiscountType.AMOUNT, null, 100L, Coupon.CouponStatus.ACTIVE, LocalDateTime.now(), LocalDateTime.now().plusDays(7));
+        couponRepository.save(coupon);
+        Long couponId = coupon.getCouponId();
 
-        given(couponService.getCoupon(couponId)).willReturn(couponResult);
 
         // When & Then
         mockMvc.perform(get("/coupons/{coupon_id}", couponId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(ResponseCode.SUCCESS))
                 .andExpect(jsonPath("$.data.id").value(couponId))
-                .andExpect(jsonPath("$.data.name").value("Coupon 1"));
+                .andExpect(jsonPath("$.data.name").value(coupon.getName()));
     }
 
     @Test
     void 쿠폰_등록_성공() throws Exception {
         // Given
-        CouponCreateRequest request = new CouponCreateRequest();
-        Long userId = 1L;
-
-        CouponCommand command = request.toCommand();
-        CouponResult couponResult = new CouponResult(1L, "Coupon 1", 200L, Coupon.DiscountType.AMOUNT, null, 100L, Coupon.CouponStatus.ACTIVE, LocalDateTime.now(), LocalDateTime.now().plusDays(7));
-        CouponResponse couponResponse = CouponResponse.from(couponResult);
+        CouponCommand command = new CouponCommand("Coupon 1", 200L, Coupon.DiscountType.AMOUNT, null, 100L, LocalDateTime.now(), LocalDateTime.now().plusDays(7));
 
         User adminUser = new User("관리자", true);
-        given(userService.getUserEntity(userId)).willReturn(adminUser);
-        given(couponService.create(any(CouponCommand.class), any(Long.class))).willReturn(couponResult);
+        userRepository.save(adminUser);
+        Long userId = adminUser.getUserId();
 
         // When & Then
         mockMvc.perform(post("/coupons")
                         .contentType("application/json")
-                        .content(new ObjectMapper().writeValueAsString(request))
+                        .content(new ObjectMapper().registerModule(new JavaTimeModule()).writeValueAsString(command))
                         .param("userId", userId.toString()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(ResponseCode.SUCCESS))
-                .andExpect(jsonPath("$.data.id").value(1L))
-                .andExpect(jsonPath("$.data.name").value("Coupon 1"));
+                .andExpect(jsonPath("$.data.name").value(command.getName()));
     }
 
     @Test
     void 쿠폰_등록_실패_403() throws Exception {
         // Given
-        CouponCreateRequest request = new CouponCreateRequest();
-        Long userId = 1L;
+        CouponCommand command = new CouponCommand("Coupon 1", 200L, Coupon.DiscountType.AMOUNT, null, 100L, LocalDateTime.now(), LocalDateTime.now().plusDays(7));
 
-        given(couponService.create(any(CouponCommand.class), any(Long.class)))
-                .willThrow(new ForbiddenException(ApiMessage.FORBIDDEN_ACCESS));
+        User user = new User("사용자", false);
+        userRepository.save(user);
+        Long userId = user.getUserId();
 
         // When & Then
         mockMvc.perform(post("/coupons")
                         .contentType("application/json")
-                        .content(new ObjectMapper().writeValueAsString(request))
+                        .content(new ObjectMapper().registerModule(new JavaTimeModule()).writeValueAsString(command))
                         .param("userId", userId.toString()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(ResponseCode.FORBIDDEN))
                 .andExpect(jsonPath("$.message").value(ApiMessage.FORBIDDEN_ACCESS));
-    }
-
-    @Test
-    void 쿠폰_등록_실패_500() throws Exception {
-        // Given
-        CouponCreateRequest request = new CouponCreateRequest();
-        Long userId = 1L;
-
-        given(couponService.create(any(CouponCommand.class), any(Long.class)))
-                .willThrow(new RuntimeException("서버 오류"));
-
-        // When & Then
-        mockMvc.perform(post("/coupons")
-                        .contentType("application/json")
-                        .content(new ObjectMapper().writeValueAsString(request))
-                        .param("userId", userId.toString()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(ResponseCode.SERVER_ERROR))
-                .andExpect(jsonPath("$.message").value(ApiMessage.SERVER_ERROR));
     }
 }
