@@ -1,9 +1,7 @@
 package kr.hhplus.be.server.application.facade;
 
 import jakarta.transaction.Transactional;
-import kr.hhplus.be.server.domain.coupon.Coupon;
-import kr.hhplus.be.server.domain.coupon.CouponService;
-import kr.hhplus.be.server.domain.coupon.UserCouponService;
+import kr.hhplus.be.server.domain.coupon.*;
 import kr.hhplus.be.server.domain.order.Order;
 import kr.hhplus.be.server.domain.order.OrderService;
 import kr.hhplus.be.server.domain.payment.Payment;
@@ -19,7 +17,6 @@ public class ProcessPayment {
     private final PaymentService paymentService;
     private final OrderService orderService;
     private final CouponService couponService;
-    private final UserService userService;
     private final UserPointService userPointService;
     private final UserCouponService userCouponService;
 
@@ -34,9 +31,8 @@ public class ProcessPayment {
 
             long discount = 0L;
             if (order.getCouponId() != null){
-                Coupon coupon = couponService.getCoupon(order.getCouponId());
                 userCouponService.use(order.getCouponId());
-                discount = coupon.calculateDiscount(totalAmount);
+                discount = couponService.calculateDiscount(order.getCouponId(), totalAmount);
             }
             long finalAmount = totalAmount - discount;
 

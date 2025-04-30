@@ -2,6 +2,8 @@ package kr.hhplus.be.server.domain.user;
 
 import kr.hhplus.be.server.domain.point.PointHistory;
 import kr.hhplus.be.server.domain.point.PointHistoryRepository;
+import kr.hhplus.be.server.domain.point.PointHistoryResult;
+import kr.hhplus.be.server.interfaces.api.user.UserPointResponse;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -73,11 +75,12 @@ public class UserPointServiceTest {
         when(pointHistoryRepository.findByUserId(userId)).thenReturn(historyList);
 
         // when
-        List<PointHistory> result = userPointService.getUserPointHistory(userId);
+        List<PointHistoryResult> result = userPointService.getUserPointHistory(userId);
+        List<UserPointResponse> userPointResponseList = UserPointResponse.from(result);
 
         // then
-        assertEquals(2, result.size());
-        assertEquals(Long.valueOf(100L), result.get(0).getAmount());
+        assertEquals(2, userPointResponseList.size());
+        assertEquals(Long.valueOf(100L), userPointResponseList.get(0).getAmount());
         verify(pointHistoryRepository).findByUserId(userId);
     }
 }

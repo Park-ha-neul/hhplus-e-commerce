@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -17,7 +18,7 @@ public class UserCouponService {
     private final CouponRepository couponRepository;
 
     @Transactional
-    public UserCoupon issue(Long userId, Long couponId){
+    public UserCouponResult issue(Long userId, Long couponId){
         User user = userRepository.findById(userId);
 
         Coupon coupon = couponRepository.findById(couponId)
@@ -31,20 +32,20 @@ public class UserCouponService {
         userCouponRepository.save(userCoupon);
         coupon.increaseIssuedCount();
 
-        return userCoupon;
+        return UserCouponResult.of(userCoupon);
     }
 
-    public UserCoupon getUserCoupon(Long userCouponId){
-        return userCouponRepository.findById(userCouponId)
-                .orElseThrow(() -> new IllegalArgumentException(ErrorCode.USER_COUPON_NOT_FOUND.getMessage()));
-    }
-
-    public List<UserCoupon> getUserCoupons(Long userId, UserCoupon.UserCouponStatus status){
-        userRepository.findById(userId);
+    public List<UserCouponResult> getUserCoupons(Long userId, UserCoupon.UserCouponStatus status){
         if(status == null){
-            return userCouponRepository.findByUserId(userId);
+            List<UserCoupon> userCoupons = userCouponRepository.findByUserId(userId);
+            return userCoupons.stream()
+                    .map(UserCouponResult::of)
+                    .collect(Collectors.toList());
         } else{
-            return userCouponRepository.findByUserIdAndStatus(userId, status);
+            List<UserCoupon> userCoupons = userCouponRepository.findByUserIdAndStatus(userId, status);
+            return userCoupons.stream()
+                    .map(UserCouponResult::of)
+                    .collect(Collectors.toList());
         }
     }
 

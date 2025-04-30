@@ -1,6 +1,5 @@
 package kr.hhplus.be.server.domain.product;
 
-import kr.hhplus.be.server.interfaces.api.product.ProductRequest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -13,37 +12,37 @@ public class ProductTest {
     @Test
     void 상품_생성_성공() {
         // given
-        ProductRequest request = ProductRequest.builder()
-                .name("Test Product")
-                .description("Test Description")
-                .price(1000L)
-                .quantity(100L)
-                .build();
+        ProductCommand command = new ProductCommand(
+                "상품 A",
+                "설명",
+                3000L,
+                2000L
+        );
 
         // when
-        Product product = Product.create(request);
+        Product product = Product.create(command);
 
         // then
         assertNotNull(product);
-        assertEquals("Test Product", product.getName());
-        assertEquals(Long.valueOf(1000L), product.getPrice());
-        assertEquals(Long.valueOf(100L), product.getQuantity());
+        assertEquals("상품 A", product.getName());
+        assertEquals(Long.valueOf(3000L), product.getPrice());
+        assertEquals(Long.valueOf(2000L), product.getQuantity());
         assertEquals(Product.ProductStatus.AVAILABLE, product.getStatus());
     }
 
     @Test
     void 상품_가격이_음수일_때_예외_발생() {
         // given
-        ProductRequest request = ProductRequest.builder()
-                .name("Test Product")
-                .description("Test Description")
-                .price(-100L) // 잘못된 가격
-                .quantity(100L)
-                .build();
+        ProductCommand command = new ProductCommand(
+                "상품 A",
+                "설명",
+                -3000L,
+                2000L
+        );
 
         // when & then
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-            Product.create(request);
+            Product.create(command);
         });
         assertEquals(ProductErrorCode.PRODUCT_PRICE_MUST_BE_POSITIVE.getMessage(), exception.getMessage());
     }
@@ -51,16 +50,16 @@ public class ProductTest {
     @Test
     void 상품_재고가_음수일_때_예외_발생() {
         // given
-        ProductRequest request = ProductRequest.builder()
-                .name("Test Product")
-                .description("Test Description")
-                .price(1000L)
-                .quantity(-10L)
-                .build();
+        ProductCommand command = new ProductCommand(
+                "상품 A",
+                "설명",
+                3000L,
+                -2000L
+        );
 
         // when & then
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-            Product.create(request);
+            Product.create(command);
         });
         assertEquals(ProductErrorCode.PRODUCT_STOCK_MUST_BE_POSITIVE.getMessage(), exception.getMessage());
     }
@@ -68,14 +67,14 @@ public class ProductTest {
     @Test
     void 재고_증가_성공() {
         // given
-        ProductRequest request = ProductRequest.builder()
-                .name("Test Product")
-                .description("Test Description")
-                .price(1000L)
-                .quantity(100L)
-                .build();
+        ProductCommand command = new ProductCommand(
+                "상품 A",
+                "설명",
+                3000L,
+                100L
+        );
 
-        Product product = Product.create(request);
+        Product product = Product.create(command);
 
         // when
         product.increaseBalance(50L);
@@ -88,14 +87,14 @@ public class ProductTest {
     @Test
     void 재고_감소_성공() {
         // given
-        ProductRequest request = ProductRequest.builder()
-                .name("Test Product")
-                .description("Test Description")
-                .price(1000L)
-                .quantity(100L)
-                .build();
+        ProductCommand command = new ProductCommand(
+                "상품 A",
+                "설명",
+                3000L,
+                100L
+        );
 
-        Product product = Product.create(request);
+        Product product = Product.create(command);
 
         // when
         product.decreaseBalance(50L);
@@ -108,14 +107,14 @@ public class ProductTest {
     @Test
     void 재고_감소_후_품절_상태로_변경() {
         // given
-        ProductRequest request = ProductRequest.builder()
-                .name("Test Product")
-                .description("Test Description")
-                .price(1000L)
-                .quantity(10L)
-                .build();
+        ProductCommand command = new ProductCommand(
+                "상품 A",
+                "설명",
+                3000L,
+                10L
+        );
 
-        Product product = Product.create(request);
+        Product product = Product.create(command);
 
         // when
         product.decreaseBalance(10L); // 재고를 모두 소진

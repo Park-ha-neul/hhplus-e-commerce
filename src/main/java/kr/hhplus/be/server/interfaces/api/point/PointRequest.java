@@ -2,6 +2,7 @@ package kr.hhplus.be.server.interfaces.api.point;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 
 @Getter
@@ -12,4 +13,9 @@ public class PointRequest {
 
     @Schema(description = "충전할 포인트", example = "5000")
     private Long point;
+
+    public PointRequest(Long userId, Long point) {
+        this.userId = userId;
+        this.point = point;
+    }
 }

@@ -55,12 +55,12 @@ public class UserCouponServiceTest {
         when(userCouponRepository.save(any(UserCoupon.class))).thenReturn(UserCoupon.create(userId, couponId));
 
         // Act
-        UserCoupon userCoupon = userCouponService.issue(userId, couponId);
+        UserCouponResult userCouponResult = userCouponService.issue(userId, couponId);
 
         // Assert
-        assertNotNull(userCoupon);
-        assertEquals(userId, userCoupon.getUserId());
-        assertEquals(couponId, userCoupon.getCouponId());
+        assertNotNull(userCouponResult);
+        assertEquals(userId, userCouponResult.getUserId());
+        assertEquals(couponId, userCouponResult.getCouponId());
     }
 
     @Test
