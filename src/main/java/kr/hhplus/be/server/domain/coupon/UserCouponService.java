@@ -26,7 +26,7 @@ public class UserCouponService {
         RLock lock = redissonClient.getLock(lockKey);
 
         int retry = 0;
-        int maxRetries = 10;
+        int maxRetries = 50;
         while(retry++ < maxRetries){
             try{
                 if(lock.tryLock(0, 1, TimeUnit.SECONDS)) {
@@ -44,7 +44,6 @@ public class UserCouponService {
                 throw new RuntimeException("락 대기 중 인터럽트 발생", e);
             }
         }
-
         throw new RuntimeException("쿠폰 발급 실패: 락 획득에 반복적으로 실패하였습니다.");
     }
 
@@ -82,6 +81,27 @@ public class UserCouponService {
             return userCoupons.stream()
                     .map(UserCouponResult::of)
                     .collect(Collectors.toList());
+        }
+    }
+
+    public void useWithLock(Long userCouponId){
+        String lockKey = "lock:userCoupon:" + userCouponId;
+        RLock lock = redissonClient.getLock(lockKey);
+
+        try{
+            if(lock.tryLock(0, 1, TimeUnit.SECONDS)) {
+                try{
+                    use(userCouponId);
+                }finally {
+                    if(lock.isHeldByCurrentThread()){
+                        lock.unlock();
+                    }
+                }
+            } else {
+                throw new RuntimeException("Lock 획득 실패");
+            }
+        }catch (InterruptedException e){
+            throw new RuntimeException("락 대기 중 인터럽트 발생", e);
         }
     }
 
