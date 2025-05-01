@@ -28,6 +28,10 @@ public class UserCouponService {
             throw new IllegalArgumentException(ErrorCode.INACTIVE_COUPON.getMessage());
         }
 
+        if(coupon.getIssuedCount() >=  coupon.getTotalCount()){
+            throw new IllegalArgumentException(ErrorCode.COUPON_ISSUED_EXCEED.getMessage());
+        }
+
         UserCoupon userCoupon = UserCoupon.create(userId, couponId);
         userCouponRepository.save(userCoupon);
         coupon.increaseIssuedCount();
@@ -49,6 +53,7 @@ public class UserCouponService {
         }
     }
 
+    @Transactional
     public void use(Long userCouponId){
         UserCoupon userCoupon = userCouponRepository.findById(userCouponId)
                 .orElseThrow(() -> new IllegalArgumentException(ErrorCode.USER_COUPON_NOT_FOUND.getMessage()));
