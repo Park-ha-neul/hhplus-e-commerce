@@ -4,9 +4,12 @@ import jakarta.transaction.Transactional;
 import kr.hhplus.be.server.domain.user.User;
 import kr.hhplus.be.server.domain.user.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Service
@@ -16,6 +19,30 @@ public class UserCouponService {
     private final UserCouponRepository userCouponRepository;
     private final UserRepository userRepository;
     private final CouponRepository couponRepository;
+    private final RedissonClient redissonClient;
+
+    public UserCouponResult issueWithLock(Long userId, Long couponId){
+        String lockKey = "lock:coupon:" + couponId;
+        RLock lock = redissonClient.getLock(lockKey);
+
+        while(true){
+            try{
+                if(lock.tryLock(0, 1, TimeUnit.SECONDS)) {
+                    try{
+                        return issue(userId, couponId);
+                    }finally {
+                        if(lock.isHeldByCurrentThread()){
+                            lock.unlock();
+                        }
+                    }
+                } else {
+                    Thread.sleep(10);
+                }
+            }catch (InterruptedException e){
+                throw new RuntimeException("락 대기 중 인터럽트 발생", e);
+            }
+        }
+    }
 
     @Transactional
     public UserCouponResult issue(Long userId, Long couponId){
@@ -35,6 +62,7 @@ public class UserCouponService {
         UserCoupon userCoupon = UserCoupon.create(userId, couponId);
         userCouponRepository.save(userCoupon);
         coupon.increaseIssuedCount();
+        couponRepository.save(coupon);
 
         return UserCouponResult.of(userCoupon);
     }
