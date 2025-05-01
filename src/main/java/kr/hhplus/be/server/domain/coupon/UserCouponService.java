@@ -25,7 +25,9 @@ public class UserCouponService {
         String lockKey = "lock:coupon:" + couponId;
         RLock lock = redissonClient.getLock(lockKey);
 
-        while(true){
+        int retry = 0;
+        int maxRetries = 10;
+        while(retry++ < maxRetries){
             try{
                 if(lock.tryLock(0, 1, TimeUnit.SECONDS)) {
                     try{
@@ -42,6 +44,8 @@ public class UserCouponService {
                 throw new RuntimeException("락 대기 중 인터럽트 발생", e);
             }
         }
+
+        throw new RuntimeException("쿠폰 발급 실패: 락 획득에 반복적으로 실패하였습니다.");
     }
 
     @Transactional
