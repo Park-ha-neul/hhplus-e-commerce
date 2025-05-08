@@ -2,6 +2,7 @@ package kr.hhplus.be.server.interfaces.api.product;
 
 import kr.hhplus.be.server.domain.product.Product;
 import kr.hhplus.be.server.domain.product.ProductResult;
+import kr.hhplus.be.server.domain.product.TopProduct;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;

@@ -13,6 +13,6 @@ import java.util.Optional;
 public interface ProductJpaRepository extends JpaRepository<Product, Long> {
     List<Product> findAllByStatus(Product.ProductStatus status);
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("SELECT p FROM Product p WHERE p.productId = :productId")
+    @Query("SELECT p FROM Product p WHERE p.productId IN :productIds ORDER BY p.productId ASC")
     Optional<Product> findByIdForUpdate(@Param("productId") Long productId);
 }
