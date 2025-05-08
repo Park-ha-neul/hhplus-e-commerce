@@ -14,12 +14,15 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cache.Cache;
+import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.time.Duration;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.*;
 
@@ -37,6 +40,9 @@ public class TopProductServiceTest {
 
     @Autowired
     private TopProductRepository topProductRepository;
+
+    @Autowired
+    private RedisCacheManager redisCacheManager;
 
     @BeforeEach
     void setUp() {
@@ -130,5 +136,36 @@ public class TopProductServiceTest {
         assertNotNull(redisTemplate.opsForValue().get(dailyCacheKey));
         assertNotNull(redisTemplate.opsForValue().get(weeklyCacheKey));
         assertNotNull(redisTemplate.opsForValue().get(monthlyCacheKey));
+    }
+
+    @Test
+    void 캐시에_저장된_key와_TTL_확인() {
+        Long topProductId = 1L;
+
+        // 캐시 저장 유도
+        TopProduct topProduct = topProductService.getTopProductById(topProductId);
+        logger.info("캐시 저장 후 topProduct : " + topProduct);
+
+        // 캐시 key 구성
+        String cacheKey = "topProducts::" + topProductId;
+        logger.info("캐시 key : " + cacheKey);
+
+        // 캐시에서 값 가져오기
+        Cache cache = redisCacheManager.getCache("topProducts");
+        assertNotNull(cache);
+
+        TopProduct cachedTopProduct = cache.get(topProductId, TopProduct.class);
+        logger.info("캐시에서 가져온 값: " + cachedTopProduct);
+
+        // 캐시에서 가져온 값이 null이 아니면 검증
+        assertNotNull(cachedTopProduct);
+        assertEquals(topProduct, cachedTopProduct);
+
+        // TTL 확인
+        Long ttl = redisTemplate.getExpire(cacheKey, TimeUnit.SECONDS);
+        assertNotNull(ttl);
+
+        long expectedTtl = Duration.ofDays(30).getSeconds();
+        assertTrue(ttl > expectedTtl - 5 && ttl <= expectedTtl);
     }
 }
