@@ -51,12 +51,11 @@ public class TopProductService {
     }
 
     @Cacheable(value = "topProducts", key = "#topProductId", condition = "#topProductId != null", cacheManager = "redisCacheManager")
-    public TopProduct getTopProductById(Long topProductId) {
+    public Product getTopProductById(Long topProductId) {
         TopProduct topProduct = topProductRepository.findById(topProductId);
         Product product = productRepository.findById(topProduct.getProductId())
                 .orElseThrow(() -> new EntityNotFoundException(ProductErrorCode.PRODUCT_NOT_FOUND.getMessage()));
 
-        topProduct.setProduct(product);
-        return topProduct;
+        return product;
     }
 }

@@ -1,6 +1,5 @@
 package kr.hhplus.be.server.interfaces.api.product;
 
-import kr.hhplus.be.server.domain.product.Product;
 import kr.hhplus.be.server.domain.product.TopProduct;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -20,7 +19,6 @@ public class TopProductResponse {
     private Long totalCount;
     private LocalDate calculateDate;
     private TopProduct.PeriodType periodType;
-    private Product product;
 
     public static TopProductResponse fromTopProduct(TopProduct topProduct){
         return TopProductResponse.builder()
@@ -30,7 +28,6 @@ public class TopProductResponse {
                 .totalCount(topProduct.getTotalCount())
                 .calculateDate(topProduct.getCalculateDate())
                 .periodType(topProduct.getPeriodType())
-                .product(topProduct.getProduct())
                 .build();
     }
 

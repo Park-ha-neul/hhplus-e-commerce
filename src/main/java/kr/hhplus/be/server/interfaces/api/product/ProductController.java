@@ -72,8 +72,8 @@ public class ProductController {
     @Operation(summary = "인기 상품 상세 조회", description = "인기 상품 상세 내용을 조회합니다.")
     public CustomApiResponse getPopularProduct(@PathVariable("topProduct_id") @Parameter(name = "topProductId", description = "상위 상품 ID") Long topProductId
     ) {
-        TopProduct data = topProductService.getTopProductById(topProductId);
-        TopProductResponse response = TopProductResponse.fromTopProduct(data);
+        Product data = topProductService.getTopProductById(topProductId);
+        ProductResponse response = ProductResponse.fromProdcut(data);
         return CustomApiResponse.success(ApiMessage.VIEW_SUCCESS, response);
     }
 }
