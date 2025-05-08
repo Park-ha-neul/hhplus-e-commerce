@@ -59,11 +59,21 @@ public class ProductController {
     };
 
     @GetMapping("/popular")
-    @Operation(summary = "인기 상품 조회", description = "top5 상품을 기간별로 조회합니다.")
+    @Operation(summary = "인기 상품 목록 조회", description = "top5 상품을 기간별로 조회합니다.")
     public CustomApiResponse getPopularProducts(
             @RequestParam(value = "periodType") TopProduct.PeriodType periodType
     ) {
         List<TopProduct> data = topProductService.getTopProductsByPeriod(periodType);
-        return CustomApiResponse.success(ApiMessage.VIEW_SUCCESS, data);
+        List<TopProductResponse> response = TopProductResponse.fromTopProducts(data);
+        return CustomApiResponse.success(ApiMessage.VIEW_SUCCESS, response);
+    }
+
+    @GetMapping("/popular/{topProduct_id}")
+    @Operation(summary = "인기 상품 상세 조회", description = "인기 상품 상세 내용을 조회합니다.")
+    public CustomApiResponse getPopularProduct(@PathVariable("topProduct_id") @Parameter(name = "topProductId", description = "상위 상품 ID") Long topProductId
+    ) {
+        TopProduct data = topProductService.getTopProductById(topProductId);
+        TopProductResponse response = TopProductResponse.fromTopProduct(data);
+        return CustomApiResponse.success(ApiMessage.VIEW_SUCCESS, response);
     }
 }

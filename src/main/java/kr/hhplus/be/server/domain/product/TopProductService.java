@@ -2,7 +2,9 @@ package kr.hhplus.be.server.domain.product;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.type.TypeReference;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
@@ -17,6 +19,7 @@ public class TopProductService {
     private final RedisTemplate<String, Object> redisTemplate;
     private final TopProductRepository topProductRepository;
     private final ObjectMapper objectMapper;
+    private final ProductRepository productRepository;
 
     private Duration getTTLByPeriodType(TopProduct.PeriodType periodType) {
         return switch (periodType) {
@@ -45,5 +48,15 @@ public class TopProductService {
         redisTemplate.opsForValue().set(cacheKey, topProducts, ttl);
 
         return topProducts;
+    }
+
+    @Cacheable(value = "topProducts", key = "#topProductId", condition = "#topProductId != null", cacheManager = "redisCacheManager")
+    public TopProduct getTopProductById(Long topProductId) {
+        TopProduct topProduct = topProductRepository.findById(topProductId);
+        Product product = productRepository.findById(topProduct.getProductId())
+                .orElseThrow(() -> new EntityNotFoundException(ProductErrorCode.PRODUCT_NOT_FOUND.getMessage()));
+
+        topProduct.setProduct(product);
+        return topProduct;
     }
 }

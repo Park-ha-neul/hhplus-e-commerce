@@ -2,6 +2,7 @@ package kr.hhplus.be.server.domain.product;
 
 import jakarta.persistence.*;
 import lombok.Getter;
+import lombok.Setter;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -31,6 +32,10 @@ public class TopProduct {
     @Enumerated(EnumType.STRING)
     @Column(name = "period_type")
     private PeriodType periodType;
+
+    @Setter
+    @Transient
+    private Product product;
 
     public enum PeriodType{
         DAILY, WEEKLY, MONTHLY

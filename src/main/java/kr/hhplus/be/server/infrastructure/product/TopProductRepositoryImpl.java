@@ -1,5 +1,7 @@
 package kr.hhplus.be.server.infrastructure.product;
 
+import jakarta.persistence.EntityNotFoundException;
+import kr.hhplus.be.server.domain.product.ProductErrorCode;
 import kr.hhplus.be.server.domain.product.TopProduct;
 import kr.hhplus.be.server.domain.product.TopProductRepository;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +17,12 @@ import java.util.Optional;
 public class TopProductRepositoryImpl implements TopProductRepository {
 
     private final TopProductJpaRepository topProductJpaRepository;
+
+    @Override
+    public TopProduct findById(Long topProductId) {
+        return topProductJpaRepository.findById(topProductId)
+                .orElseThrow(() -> new EntityNotFoundException(ProductErrorCode.PRODUCT_NOT_FOUND.getMessage()));
+    }
 
     @Override
     public TopProduct save(TopProduct topProduct) {

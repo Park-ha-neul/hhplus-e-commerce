@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface TopProductRepository{
+    TopProduct findById(Long topProductId);
     TopProduct save (TopProduct topProduct);
     Optional<TopProduct> findByProductId(Long productId);
     List<TopProduct> findByPeriodTypeAndCalculateDateOrderByRankAsc(
