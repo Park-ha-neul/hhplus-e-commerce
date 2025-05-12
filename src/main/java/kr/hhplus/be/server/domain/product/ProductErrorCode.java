@@ -8,7 +8,7 @@ public enum ProductErrorCode {
     INCREASE_MUST_BE_POSITIVE("증가량은 0보다 커야 합니다."),
     NOT_ENOUGH_STOCK("재고 부족"),
     PRODUCT_NOT_FOUND("상품이 존재하지 않습니다."),
-    TOP_PRODUCT_PERIOD_NOT_FOUND("정의되지 않은 날짜 기준입니다.."),
+    POPULAR_PRODUCT_PERIOD_NOT_FOUND("정의되지 않은 날짜 기준입니다.."),
     CREATE_PRODUCT_MUST_BE_ADMIN("상품 등록은 관리자만 가능합니다.");
 
     private final String message;

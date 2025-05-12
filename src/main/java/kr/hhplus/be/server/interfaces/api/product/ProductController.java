@@ -18,7 +18,7 @@ import java.util.List;
 @Tag(name = "📌 상품 관리", description = "상품 관련 API 모음")
 public class ProductController {
     private final ProductService productService;
-    private final TopProductService topProductService;
+    private final PopularProductService popularProductService;
 
     @GetMapping("/")
     @Operation(summary = "상품 목록 조회", description = "상품 목록을 조회합니다.")
@@ -59,21 +59,14 @@ public class ProductController {
     };
 
     @GetMapping("/popular")
-    @Operation(summary = "인기 상품 목록 조회", description = "top5 상품을 기간별로 조회합니다.")
+    @Operation(summary = "인기 상품 목록 조회", description = "topN 상품을 기간별로 조회합니다.")
     public CustomApiResponse getPopularProducts(
-            @RequestParam(value = "periodType") TopProduct.PeriodType periodType
+            @RequestParam(value = "periodType")PopularProduct.PeriodType periodType,
+            @RequestParam(value = "ascending") boolean ascending,
+            @RequestParam(value = "limit") int limit
     ) {
-        List<TopProduct> data = topProductService.getTopProductsByPeriod(periodType);
-        List<TopProductResponse> response = TopProductResponse.fromTopProducts(data);
-        return CustomApiResponse.success(ApiMessage.VIEW_SUCCESS, response);
-    }
-
-    @GetMapping("/popular/{topProduct_id}")
-    @Operation(summary = "인기 상품 상세 조회", description = "인기 상품 상세 내용을 조회합니다.")
-    public CustomApiResponse getPopularProduct(@PathVariable("topProduct_id") @Parameter(name = "topProductId", description = "상위 상품 ID") Long topProductId
-    ) {
-        Product data = topProductService.getTopProductById(topProductId);
-        ProductResponse response = ProductResponse.fromProdcut(data);
+        List<PopularProduct> data = popularProductService.getPopularProducts(periodType, ascending, limit);
+        List<PopularProductResponse> response = PopularProductResponse.fromPopularProducts(data);
         return CustomApiResponse.success(ApiMessage.VIEW_SUCCESS, response);
     }
 }

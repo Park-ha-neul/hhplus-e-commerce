@@ -1,6 +1,9 @@
 package kr.hhplus.be.server.interfaces.api.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import kr.hhplus.be.server.domain.order.Order;
+import kr.hhplus.be.server.domain.order.OrderItem;
+import kr.hhplus.be.server.domain.order.OrderRepository;
 import kr.hhplus.be.server.domain.product.*;
 import kr.hhplus.be.server.support.ResponseCode;
 import org.junit.jupiter.api.Test;
@@ -10,8 +13,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.MockMvc;
 
 import org.springframework.http.MediaType;
-
-import java.time.LocalDate;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -30,7 +31,7 @@ public class ProductControllerTest {
     private ProductRepository productRepository;
 
     @Autowired
-    private TopProductRepository topProductRepository;
+    private OrderRepository orderRepository;
 
     @Test
     void 상품_목록_조회_성공() throws Exception {
@@ -79,15 +80,24 @@ public class ProductControllerTest {
     @Test
     void 인기_상품_조회_성공() throws Exception {
         // given
-        Product product = productRepository.save(new Product(1L, "상품 1", "설명 1", 1000L, 200L, Product.ProductStatus.AVAILABLE));
-        TopProduct topProduct = new TopProduct(product.getProductId(), 1, 100L, LocalDate.now(), TopProduct.PeriodType.WEEKLY);
-        topProductRepository.save(topProduct);
+        Product productA = productRepository.save(new Product(1L, "상품 A", "설명 A", 1000L, 200L, Product.ProductStatus.AVAILABLE));
+        Product productB = productRepository.save(new Product(2L, "상품 B", "설명 B", 2000L, 300L, Product.ProductStatus.AVAILABLE));
 
-        // when & then
+        Order order = new Order(1L, 1L);
+        order.addOrderItem(new OrderItem(order, productA.getProductId(), 10L, productA.getPrice()));
+        order.addOrderItem(new OrderItem(order, productB.getProductId(), 20L, productB.getPrice()));
+        order.complete();
+        orderRepository.save(order);
+
+        // when + then
         mockMvc.perform(get("/products/popular")
-                        .param("periodType", "WEEKLY"))
+                        .param("periodType", "DAILY")
+                        .param("ascending", "true")
+                        .param("limit", "2"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(ResponseCode.SUCCESS))
-                .andExpect(jsonPath("$.data[0].rank").value(1));
+                .andExpect(jsonPath("$.message").value("조회에 성공하였습니다."))
+                .andExpect(jsonPath("$.data[0].productName").value("상품 B"))
+                .andExpect(jsonPath("$.data[1].productName").value("상품 A"));
     }
 }
