@@ -26,9 +26,9 @@ import static org.junit.Assert.assertNotNull;
 
 @SpringBootTest
 @ExtendWith(SpringExtension.class)
-public class PopularProductServiceTest {
+public class PopularProductServiceCacheTest {
 
-    private static final Logger logger = LogManager.getLogger(PopularProductServiceTest.class);
+    private static final Logger logger = LogManager.getLogger(PopularProductServiceCacheTest.class);
 
 
     @Autowired

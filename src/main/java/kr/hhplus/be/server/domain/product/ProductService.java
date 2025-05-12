@@ -5,8 +5,10 @@ import kr.hhplus.be.server.domain.user.User;
 import kr.hhplus.be.server.domain.user.UserRepository;
 import kr.hhplus.be.server.support.ForbiddenException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.util.List;
 
 @Service
@@ -15,6 +17,7 @@ public class ProductService {
 
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
+    private final RedisTemplate<String, Object> redisTemplate;
 
     public ProductResult createProduct(ProductCommand command, Long userId){
         User user = userRepository.findById(userId);
@@ -29,8 +32,19 @@ public class ProductService {
     }
 
     public Product getProduct(Long productId){
-        return productRepository.findById(productId)
+        String cacheKey = "product:detail:" + productId;
+
+        Product cached = (Product) redisTemplate.opsForValue().get(cacheKey);
+        if (cached != null) {
+            return cached;
+        }
+
+        Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new IllegalArgumentException(ProductErrorCode.PRODUCT_NOT_FOUND.getMessage()));
+
+        redisTemplate.opsForValue().set(cacheKey, product, Duration.ofMinutes(10));
+
+        return product;
     }
 
     public List<Product> getProducts(Product.ProductStatus status){

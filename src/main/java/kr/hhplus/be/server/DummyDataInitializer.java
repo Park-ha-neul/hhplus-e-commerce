@@ -1,16 +1,13 @@
 package kr.hhplus.be.server;
 
-import jakarta.transaction.Transactional;
 import kr.hhplus.be.server.domain.coupon.UserCoupon;
 import kr.hhplus.be.server.domain.order.Order;
 import kr.hhplus.be.server.domain.order.OrderItem;
 import kr.hhplus.be.server.domain.point.PointHistory;
 import kr.hhplus.be.server.domain.product.Product;
-import kr.hhplus.be.server.domain.product.TopProduct;
 import kr.hhplus.be.server.domain.user.UserPoint;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.hibernate.StatelessSession;
 import kr.hhplus.be.server.domain.user.User;
 import org.hibernate.Transaction;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,10 +32,6 @@ public class DummyDataInitializer implements CommandLineRunner {
 
         UserCoupon.UserCouponStatus[] userCouponstatuses = UserCoupon.UserCouponStatus.values();
         int userCouponStatusCount = userCouponstatuses.length;
-
-        TopProduct.PeriodType[] periodTypes = TopProduct.PeriodType.values();
-        Random random = new Random();
-        LocalDate today = LocalDate.now();
 
         PointHistory.TransactionType[] transactionTypes = PointHistory.TransactionType.values();
 
