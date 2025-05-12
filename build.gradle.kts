@@ -52,6 +52,10 @@ dependencies {
 	implementation("org.projectlombok:lombok:1.18.28")
 	annotationProcessor("org.projectlombok:lombok:1.18.28")
 
+	// redis
+	implementation("org.springframework.boot:spring-boot-starter-data-redis")
+	implementation("org.redisson:redisson-spring-boot-starter:3.27.2")
+
 	testImplementation("org.junit.jupiter:junit-jupiter:5.10.0")
 	testImplementation("org.mockito:mockito-core:5.11.0")
 }
