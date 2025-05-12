@@ -1,19 +1,21 @@
 package kr.hhplus.be.server.domain.product;
 
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.Comparator;
 
 @Getter
+@NoArgsConstructor
 public class PopularProduct {
-    private final Long productId;
-    private final String productName;
-    private final Long price;
-    private final Long totalCount;
-    private final Integer ranking;
-    private final PeriodType periodType;
+    private Long productId;
+    private String productName;
+    private Long price;
+    private Long totalCount;
+    private Integer ranking;
+    private PeriodType periodType;
 
     public PopularProduct(Long productId, String productName, Long price, Long totalCount, Integer ranking, PeriodType periodType) {
         this.productId = productId;
@@ -43,19 +45,6 @@ public class PopularProduct {
                     return now.with(DayOfWeek.MONDAY);
                 case MONTHLY:
                     return now.withDayOfMonth(1);
-                default:
-                    throw new IllegalArgumentException(ProductErrorCode.POPULAR_PRODUCT_PERIOD_NOT_FOUND.getMessage());
-            }
-        }
-
-        public LocalDate getEndDate(LocalDate now) {
-            switch (this) {
-                case DAILY:
-                    return now;
-                case WEEKLY:
-                    return now.with(DayOfWeek.SUNDAY);
-                case MONTHLY:
-                    return now.withDayOfMonth(now.lengthOfMonth());
                 default:
                     throw new IllegalArgumentException(ProductErrorCode.POPULAR_PRODUCT_PERIOD_NOT_FOUND.getMessage());
             }

@@ -33,7 +33,7 @@ public class PopularProductServiceTest {
         PopularProduct.PeriodType periodType = PopularProduct.PeriodType.DAILY; // 예시로 DAILY로 설정
         LocalDate now = LocalDate.now();
         LocalDateTime startDate = periodType.getStartDate(now).atStartOfDay();
-        LocalDateTime endDate = periodType.getEndDate(now).atTime(LocalTime.MAX);
+        LocalDateTime endDate = now.atTime(LocalTime.MAX);
         int limit = 5;
         boolean ascending = true;
 
@@ -75,7 +75,7 @@ public class PopularProductServiceTest {
         PopularProduct.PeriodType periodType = PopularProduct.PeriodType.DAILY;
         LocalDate now = LocalDate.now();
         LocalDateTime startDate = periodType.getStartDate(now).atStartOfDay();
-        LocalDateTime endDate = periodType.getEndDate(now).atTime(LocalTime.MAX);
+        LocalDateTime endDate = now.atTime(LocalTime.MAX);
         int limit = 5;
 
         boolean ascending = true;

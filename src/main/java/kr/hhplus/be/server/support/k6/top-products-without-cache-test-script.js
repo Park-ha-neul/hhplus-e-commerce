@@ -10,9 +10,11 @@ const BASE_URL = 'http://localhost:8080';
 
 export default function () {
   const periodType = 'DAILY';
+  const ascending = 'true';
+  const limit = '5';
 
   // 캐시를 미적용한 요청
-  const resWithoutCache = http.get(`${BASE_URL}/products/popular?periodType=${periodType}&force=true`);
+  const resWithoutCache = http.get(`${BASE_URL}/products/popular?periodType=${periodType}?ascending=${ascending}?limit=${limit}&force=true`);
 
   check(resWithoutCache, {
     'status is 200 for no cache': (r) => r.status === 200,
@@ -39,7 +41,7 @@ export function handleSummary(data) {
 
 ---
 
-> 테스트 대상 URL: \`${BASE_URL}/products/popular?periodType=DAILY&force=true\`
+> 테스트 대상 URL: \`${BASE_URL}/products/popular?periodType=DAILY?ascending=true?limit=5&force=true\`
 >
 > 보고서 생성일: ${new Date().toISOString()}
 
