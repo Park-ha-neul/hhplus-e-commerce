@@ -7,11 +7,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
-import java.time.Duration;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
+import java.time.*;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Service
@@ -69,5 +68,14 @@ public class PopularProductService {
                     .sorted(PopularProduct.rankDescComparator())
                     .collect(Collectors.toList());
         }
+    }
+
+    public void incrementProductScore(Long productId, Long salesCount){
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
+        String dateKey = LocalDate.now().format(formatter);
+        String redisKey = "popular:products:" + dateKey;
+
+        redisTemplate.opsForZSet().incrementScore(redisKey, productId.toString(), salesCount.doubleValue());
+        redisTemplate.expire(redisKey, 30, TimeUnit.DAYS);
     }
 }
