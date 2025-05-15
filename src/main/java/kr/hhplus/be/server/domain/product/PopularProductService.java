@@ -1,15 +1,14 @@
 package kr.hhplus.be.server.domain.product;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import kr.hhplus.be.server.infrastructure.product.PopularProductProjection;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
 
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -17,57 +16,35 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class PopularProductService {
     private final RedisTemplate<String, Object> redisTemplate;
-    private final ObjectMapper objectMapper;
-    private final PopularProductRepository popularProductRepository;
-
-    private Duration getTTLByPeriodType(PopularProduct.PeriodType periodType) {
-        return switch (periodType) {
-            case DAILY -> Duration.ofDays(1);
-            case WEEKLY -> Duration.ofDays(7);
-            case MONTHLY -> Duration.ofDays(30);
-        };
-    }
+    private final PopularProductRedisService popularProductRedisService;
+    private final PopularProductMapper popularProductMapper;
 
     public List<PopularProduct> getPopularProducts(PopularProduct.PeriodType periodType, boolean ascending, int limit) {
         LocalDate now = LocalDate.now();
-        LocalDateTime startDate = periodType.getStartDate(now).atStartOfDay();
-        LocalDateTime endDate = now.atTime(LocalTime.MAX);
-        String cacheKey = "top:products:" + periodType.name() + ":" + now;
+        String zsetKey = popularProductRedisService.getPeriodKey(periodType, now);
 
-        Object cached = redisTemplate.opsForValue().get(cacheKey);
-        if (cached != null) {
-            return objectMapper.convertValue(
-                    cached,
-                    new TypeReference<List<PopularProduct>>() {}
-            );
+        Set<ZSetOperations.TypedTuple<Object>> tuples = popularProductRedisService.getZSetData(zsetKey);
+        
+        if (tuples == null || tuples.isEmpty()) {
+            List<String> dailyKeys = popularProductRedisService.getDailyKeysForPeriod(periodType, now);
+
+            if (!dailyKeys.isEmpty()) {
+                String baseKey = dailyKeys.get(0);
+                List<String> otherKeys = dailyKeys.subList(1, dailyKeys.size());
+
+                redisTemplate.opsForZSet().unionAndStore(baseKey, otherKeys, zsetKey);
+
+                tuples = popularProductRedisService.getZSetData(zsetKey);
+
+                if (tuples != null && !tuples.isEmpty()) {
+                    Duration ttl = popularProductRedisService.getTTLByPeriodType(periodType);
+                    redisTemplate.expire(zsetKey, ttl);
+                }
+            }
         }
 
-        List<PopularProductProjection> projections = popularProductRepository
-                .findByPeriodAndDateRange(startDate, endDate, limit);
-
-        List<PopularProduct> popularProducts = projections.stream()
-                .map(p -> new PopularProduct(
-                        p.getProductId(),
-                        p.getProductName(),
-                        p.getPrice(),
-                        p.getTotalCount(),
-                        p.getRanking(),
-                        periodType
-                ))
-                .collect(Collectors.toList());
-
-        Duration ttl = getTTLByPeriodType(periodType);
-        redisTemplate.opsForValue().set(cacheKey, popularProducts, ttl);
-
-        if(ascending){
-            return popularProducts.stream()
-                    .sorted(PopularProduct.rankAscComparator())
-                    .collect(Collectors.toList());
-        }else{
-            return popularProducts.stream()
-                    .sorted(PopularProduct.rankDescComparator())
-                    .collect(Collectors.toList());
-        }
+        List<PopularProduct> popularProducts = popularProductMapper.fromRedisTuples(tuples, ascending);
+        return popularProducts.stream().limit(limit).collect(Collectors.toList());
     }
 
     public void incrementProductScore(Long productId, Long salesCount){

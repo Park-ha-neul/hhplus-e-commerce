@@ -54,6 +54,8 @@ public class RedisConfig {
         redisTemplate.setHashValueSerializer(serializer);
         redisTemplate.setDefaultSerializer(serializer);
 
+        redisTemplate.afterPropertiesSet();
+
         return redisTemplate;
     }
 }
