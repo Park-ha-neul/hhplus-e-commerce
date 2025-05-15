@@ -1,12 +1,14 @@
 package kr.hhplus.be.server.domain.coupon;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
 
 @Getter
 @AllArgsConstructor
+@Builder
 public class CouponCommand {
     private String name;
     private Long totalCount;
