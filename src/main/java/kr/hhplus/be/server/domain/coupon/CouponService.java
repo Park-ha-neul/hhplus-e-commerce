@@ -1,10 +1,12 @@
 package kr.hhplus.be.server.domain.coupon;
 
+import jakarta.transaction.Transactional;
 import kr.hhplus.be.server.domain.user.User;
 import kr.hhplus.be.server.domain.user.UserRepository;
 import kr.hhplus.be.server.support.CustomBadRequestException;
 import kr.hhplus.be.server.support.ForbiddenException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -16,6 +18,7 @@ public class CouponService {
 
     private final CouponRepository couponRepository;
     private final UserRepository userRepository;
+    private final RedisTemplate<String, Object> redisTemplate;
 
     public List<CouponResult> getCoupons(Coupon.CouponStatus status){
         if (status != null){
@@ -38,6 +41,7 @@ public class CouponService {
         return CouponResult.of(coupon);
     }
 
+    @Transactional
     public CouponResult create(CouponCommand command, Long userId){
         User user = userRepository.findById(userId);
         if(!user.isAdmin()){
@@ -47,6 +51,13 @@ public class CouponService {
         try {
             Coupon coupon = Coupon.create(command);
             couponRepository.save(coupon);
+
+            long stock = command.getTotalCount();
+            String redisKey = "coupon:" + coupon.getCouponId();
+            for (int i = 0; i < stock; i++) {
+                redisTemplate.opsForList().leftPush(redisKey, "1");
+            }
+
             return CouponResult.of(coupon);
         } catch (IllegalArgumentException e) {
             throw new CustomBadRequestException(e.getMessage());

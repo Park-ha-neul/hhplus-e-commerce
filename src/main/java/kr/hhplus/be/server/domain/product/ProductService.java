@@ -1,5 +1,6 @@
 package kr.hhplus.be.server.domain.product;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
 import kr.hhplus.be.server.domain.user.User;
 import kr.hhplus.be.server.domain.user.UserRepository;
@@ -9,6 +10,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 @Service
@@ -18,6 +20,7 @@ public class ProductService {
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
     private final RedisTemplate<String, Object> redisTemplate;
+    private final ObjectMapper objectMapper;
 
     public ProductResult createProduct(ProductCommand command, Long userId){
         User user = userRepository.findById(userId);
@@ -34,9 +37,15 @@ public class ProductService {
     public Product getProduct(Long productId){
         String cacheKey = "product:detail:" + productId;
 
-        Product cached = (Product) redisTemplate.opsForValue().get(cacheKey);
-        if (cached != null) {
-            return cached;
+        Object cachedObj = redisTemplate.opsForValue().get(cacheKey);
+        if (cachedObj != null) {
+            if (cachedObj instanceof Product) {
+                return (Product) cachedObj;
+            } else if (cachedObj instanceof LinkedHashMap) {
+                return objectMapper.convertValue(cachedObj, Product.class);
+            } else {
+                throw new IllegalStateException("Unexpected cache type: " + cachedObj.getClass());
+            }
         }
 
         Product product = productRepository.findById(productId)
