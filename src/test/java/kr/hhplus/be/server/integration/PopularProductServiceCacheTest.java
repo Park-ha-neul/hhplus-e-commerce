@@ -9,17 +9,24 @@ import kr.hhplus.be.server.domain.product.PopularProductRepository;
 import kr.hhplus.be.server.domain.product.PopularProductService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import java.time.DayOfWeek;
 import java.time.Duration;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.*;
 import static org.junit.Assert.assertNotNull;
@@ -45,6 +52,33 @@ public class PopularProductServiceCacheTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
+    private final LocalDate today = LocalDate.now();
+
+    @BeforeEach
+    void setUp() {
+        for (int i = 0; i < 10; i++) {
+            LocalDate date = today.minusDays(i);
+            String redisKey = "popular:products:" + date.format(formatter);
+
+            redisTemplate.delete(redisKey);
+
+            redisTemplate.opsForZSet().add(redisKey, "1", 10 + i);
+            redisTemplate.opsForZSet().add(redisKey, "2", 20 + i);
+            redisTemplate.opsForZSet().add(redisKey, "3", 30 + i);
+            redisTemplate.opsForZSet().add(redisKey, "4", 40 + i);
+
+            redisTemplate.expire(redisKey, Duration.ofDays(30));
+
+            Set<ZSetOperations.TypedTuple<Object>> zsetValues = redisTemplate.opsForZSet().rangeWithScores(redisKey, 0, -1);
+            if (zsetValues != null && !zsetValues.isEmpty()) {
+                for (ZSetOperations.TypedTuple<Object> tuple : zsetValues) {
+                    logger.info("날짜: {}, 멤버: {}, 점수: {}", redisKey, tuple.getValue(), tuple.getScore());
+                }
+            }
+        }
+    }
 
     @Test
     void 캐시_동작_정상_작동_확인() {
@@ -121,5 +155,120 @@ public class PopularProductServiceCacheTest {
             logger.info("캐시에서 조회한 데이터: " + cached);
             assertNotNull(cached);
         }
+    }
+
+    @Test
+    @DisplayName("인기상품 목록 조회 후 Redis ZSet 점수 및 TTL 확인")
+    void 인기상품_목록_조회_후_redis_디버깅_전체() {
+        PopularProduct.PeriodType periodType = PopularProduct.PeriodType.DAILY;
+        boolean ascending = true;
+        int limit = 3;
+        List<PopularProduct> popularProducts = popularProductService.getPopularProducts(periodType, ascending, limit);
+
+        String redisKey = "popular:products:" + LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+        logger.info("Redis Key: {}", redisKey);
+
+        Boolean hasKey = redisTemplate.hasKey(redisKey);
+        logger.info("Key 존재 여부: {}", hasKey);
+        assertTrue(hasKey);
+
+        // ZSet 값 확인
+        Set<ZSetOperations.TypedTuple<Object>> zsetValues =
+                redisTemplate.opsForZSet().rangeWithScores(redisKey, 0, -1);
+
+        if (zsetValues == null || zsetValues.isEmpty()) {
+            logger.warn("ZSet {} 에 값 없음", redisKey);
+        } else {
+            for (ZSetOperations.TypedTuple<Object> tuple : zsetValues) {
+                logger.info("멤버: {}, 점수: {}", tuple.getValue(), tuple.getScore());
+            }
+        }
+
+        // TTL 값 확인
+        Long ttl = redisTemplate.getExpire(redisKey, TimeUnit.SECONDS);
+        logger.info("TTL (초): {}", ttl);
+        assertTrue("TTL이 30일을 초과합니다: " + ttl, ttl <= 2592000);
+
+        assertNotNull(ttl);
+        assertTrue(ttl > 0);
+
+        assertEquals(limit, popularProducts.size());
+    }
+
+    @Test
+    @DisplayName("주간 인기상품 목록 조회 후 Redis ZSet 점수 및 TTL 확인")
+    void 주간_인기상품_목록_조회_후_redis_디버깅_전체() {
+        PopularProduct.PeriodType periodType = PopularProduct.PeriodType.WEEKLY;
+        boolean ascending = true;
+        int limit = 3;
+        List<PopularProduct> popularProducts = popularProductService.getPopularProducts(periodType, ascending, limit);
+
+        String date = today.with(DayOfWeek.MONDAY).format(formatter);
+        String redisKey = "popular:products:" + periodType.name() + ":" + date;
+        logger.info("Redis Key: {}", redisKey);
+
+        Boolean hasKey = redisTemplate.hasKey(redisKey);
+        logger.info("Key 존재 여부: {}", hasKey);
+        assertTrue(hasKey);
+
+        // ZSet 값 확인
+        Set<ZSetOperations.TypedTuple<Object>> zsetValues =
+                redisTemplate.opsForZSet().rangeWithScores(redisKey, 0, -1);
+
+        if (zsetValues == null || zsetValues.isEmpty()) {
+            logger.warn("ZSet {} 에 값 없음", redisKey);
+        } else {
+            for (ZSetOperations.TypedTuple<Object> tuple : zsetValues) {
+                logger.info("멤버: {}, 점수: {}", tuple.getValue(), tuple.getScore());
+            }
+        }
+
+        // TTL 값 확인
+        Long ttl = redisTemplate.getExpire(redisKey, TimeUnit.SECONDS);
+        logger.info("TTL (초): {}", ttl);
+        assertNotNull(ttl);
+        assertTrue(ttl > 0);
+        long TTL_WEEKLY = 7 * 24 * 60 * 60;
+        assertTrue("TTL이 7일(604800초)을 초과합니다: " + ttl, ttl <= TTL_WEEKLY);
+
+        assertEquals(limit, popularProducts.size());
+    }
+
+    @Test
+    @DisplayName("월간 인기상품 목록 조회 후 Redis ZSet 점수 및 TTL 확인")
+    void 월간_인기상품_목록_조회_후_redis_디버깅_전체() {
+        PopularProduct.PeriodType periodType = PopularProduct.PeriodType.MONTHLY;
+        boolean ascending = true;
+        int limit = 3;
+        List<PopularProduct> popularProducts = popularProductService.getPopularProducts(periodType, ascending, limit);
+
+        String date = today.withDayOfMonth(1).format(formatter);
+        String redisKey = "popular:products:" + periodType.name() + ":" + date;
+        logger.info("Redis Key: {}", redisKey);
+
+        Boolean hasKey = redisTemplate.hasKey(redisKey);
+        logger.info("Key 존재 여부: {}", hasKey);
+        assertTrue(hasKey);
+
+        // ZSet 값 확인
+        Set<ZSetOperations.TypedTuple<Object>> zsetValues =
+                redisTemplate.opsForZSet().rangeWithScores(redisKey, 0, -1);
+
+        if (zsetValues == null || zsetValues.isEmpty()) {
+            logger.warn("ZSet {} 에 값 없음", redisKey);
+        } else {
+            for (ZSetOperations.TypedTuple<Object> tuple : zsetValues) {
+                logger.info("멤버: {}, 점수: {}", tuple.getValue(), tuple.getScore());
+            }
+        }
+
+        // TTL 값 확인
+        Long ttl = redisTemplate.getExpire(redisKey, TimeUnit.SECONDS);
+        logger.info("TTL (초): {}", ttl);
+        assertNotNull(ttl);
+        assertTrue(ttl > 0);
+        assertTrue("TTL이 30일을 초과합니다: " + ttl, ttl <= 2592000);
+
+        assertEquals(limit, popularProducts.size());
     }
 }

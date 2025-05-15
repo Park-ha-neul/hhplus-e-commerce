@@ -3,9 +3,11 @@ package kr.hhplus.be.server.application.facade;
 import jakarta.transaction.Transactional;
 import kr.hhplus.be.server.domain.coupon.*;
 import kr.hhplus.be.server.domain.order.Order;
+import kr.hhplus.be.server.domain.order.OrderItem;
 import kr.hhplus.be.server.domain.order.OrderService;
 import kr.hhplus.be.server.domain.payment.Payment;
 import kr.hhplus.be.server.domain.payment.PaymentService;
+import kr.hhplus.be.server.domain.product.PopularProductService;
 import kr.hhplus.be.server.domain.user.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -19,6 +21,7 @@ public class ProcessPayment {
     private final CouponService couponService;
     private final UserPointService userPointService;
     private final UserCouponService userCouponService;
+    private final PopularProductService popularProductService;
 
     @Transactional
     public Payment processPayment(Long paymentId){
@@ -32,13 +35,19 @@ public class ProcessPayment {
             long discount = 0L;
             if (order.getCouponId() != null){
                 userCouponService.use(order.getCouponId());
-                discount = couponService.calculateDiscount(order.getCouponId(), totalAmount);
+
+                UserCoupon userCoupon = userCouponService.getUserCoupon(order.getCouponId());
+                discount = couponService.calculateDiscount(userCoupon.getCouponId(), totalAmount);
             }
             long finalAmount = totalAmount - discount;
 
             userPointService.use(order.getUserId(), finalAmount);
             payment.complete();
             order.complete();
+
+            for (OrderItem item : order.getItems()) {
+                popularProductService.incrementProductScore(item.getProductId(), item.getQuantity());
+            }
         }catch (Exception e){
             String failReason = e.getMessage();
             payment.fail(failReason);

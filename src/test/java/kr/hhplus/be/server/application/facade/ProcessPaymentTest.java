@@ -6,6 +6,8 @@ import kr.hhplus.be.server.domain.order.Order;
 import kr.hhplus.be.server.domain.order.OrderService;
 import kr.hhplus.be.server.domain.payment.Payment;
 import kr.hhplus.be.server.domain.payment.PaymentService;
+import kr.hhplus.be.server.domain.product.PopularProduct;
+import kr.hhplus.be.server.domain.product.PopularProductService;
 import kr.hhplus.be.server.domain.user.UserPointService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

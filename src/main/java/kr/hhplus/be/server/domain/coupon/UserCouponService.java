@@ -84,6 +84,13 @@ public class UserCouponService {
         }
     }
 
+    public UserCoupon getUserCoupon(Long userCouponId){
+        UserCoupon userCoupon = userCouponRepository.findById(userCouponId)
+                .orElseThrow(() -> new IllegalArgumentException(ErrorCode.USER_COUPON_NOT_FOUND.getMessage()));
+
+        return userCoupon;
+    }
+
     public void useWithLock(Long userCouponId){
         String lockKey = "lock:userCoupon:" + userCouponId;
         RLock lock = redissonClient.getLock(lockKey);
