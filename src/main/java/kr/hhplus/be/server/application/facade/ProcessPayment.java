@@ -8,6 +8,7 @@ import kr.hhplus.be.server.domain.order.OrderService;
 import kr.hhplus.be.server.domain.payment.Payment;
 import kr.hhplus.be.server.domain.payment.PaymentService;
 import kr.hhplus.be.server.domain.product.PopularProductService;
+import kr.hhplus.be.server.domain.product.ProductService;
 import kr.hhplus.be.server.domain.user.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -22,6 +23,7 @@ public class ProcessPayment {
     private final UserPointService userPointService;
     private final UserCouponService userCouponService;
     private final PopularProductService popularProductService;
+    private final ProductService productService;
 
     @Transactional
     public Payment processPayment(Long paymentId){
@@ -30,8 +32,11 @@ public class ProcessPayment {
         Order order = orderService.getOrder(payment.getOrderId());
 
         try{
-            Long totalAmount = payment.getTotalAmount();
+            for (OrderItem item : order.getItems()) {
+                productService.decreaseProductStock(item.getProductId(), item.getQuantity());
+            }
 
+            Long totalAmount = payment.getTotalAmount();
             long discount = 0L;
             if (order.getCouponId() != null){
                 userCouponService.use(order.getCouponId());
