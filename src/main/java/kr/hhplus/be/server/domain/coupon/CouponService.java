@@ -9,7 +9,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Service
@@ -56,6 +59,12 @@ public class CouponService {
             String redisKey = "coupon:" + coupon.getCouponId();
             for (int i = 0; i < stock; i++) {
                 redisTemplate.opsForList().leftPush(redisKey, "1");
+            }
+
+            // TTL 설정
+            long secondsToExpire = Duration.between(LocalDateTime.now(), command.getEndDate()).getSeconds();
+            if (secondsToExpire > 0) {
+                redisTemplate.expire(redisKey, secondsToExpire, TimeUnit.SECONDS);
             }
 
             return CouponResult.of(coupon);
