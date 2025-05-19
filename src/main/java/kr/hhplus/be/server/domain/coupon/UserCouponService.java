@@ -53,13 +53,17 @@ public class UserCouponService {
     @Transactional
     public UserCouponResult issue(Long userId, Long couponId){
         String issuedSetKey = "coupon:" + couponId + ":users";
-        if (redisTemplate.opsForSet().isMember(issuedSetKey, String.valueOf(userId))) {
+        String stockListKey = "coupon:" + couponId;
+        String userKey = String.valueOf(userId);
+
+        Long added = redisTemplate.opsForSet().add(issuedSetKey, userKey);
+        if (added == null || added == 0) {
             throw new IllegalArgumentException("이미 발급된 쿠폰입니다.");
         }
 
-        String stockListKey = "coupon:" + couponId;
         String popped = (String) redisTemplate.opsForList().leftPop(stockListKey);
         if (popped == null) {
+            redisTemplate.opsForSet().remove(issuedSetKey, userKey);
             throw new IllegalArgumentException(ErrorCode.COUPON_ISSUED_EXCEED.getMessage());
         }
 
@@ -67,6 +71,8 @@ public class UserCouponService {
                 .orElseThrow(() -> new IllegalArgumentException(ErrorCode.COUPON_NOT_FOUND.getMessage()));
 
         if(coupon.getStatus() != Coupon.CouponStatus.ACTIVE){
+            redisTemplate.opsForSet().remove(issuedSetKey, userKey);
+            redisTemplate.opsForList().leftPush(stockListKey, popped);
             throw new IllegalArgumentException(ErrorCode.INACTIVE_COUPON.getMessage());
         }
 
