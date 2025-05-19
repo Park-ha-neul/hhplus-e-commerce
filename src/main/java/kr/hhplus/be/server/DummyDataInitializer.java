@@ -1,5 +1,6 @@
 package kr.hhplus.be.server;
 
+import kr.hhplus.be.server.domain.coupon.Coupon;
 import kr.hhplus.be.server.domain.coupon.UserCoupon;
 import kr.hhplus.be.server.domain.order.Order;
 import kr.hhplus.be.server.domain.order.OrderItem;
@@ -14,8 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDate;
-import java.util.Random;
+import java.time.LocalDateTime;
 
 @Component
 public class DummyDataInitializer implements CommandLineRunner {
@@ -79,6 +79,13 @@ public class DummyDataInitializer implements CommandLineRunner {
             }
             order.complete();
             session.update(order);
+            session.flush();
+        }
+
+        // coupon
+        for (int i = 0; i<1000; i++){
+            Coupon coupon = new Coupon("할인쿠폰", 200L, 0L, Coupon.DiscountType.AMOUNT, null, 100L, Coupon.CouponStatus.ACTIVE, LocalDateTime.now(), LocalDateTime.now().plusDays(7));
+            session.save(coupon);
             session.flush();
         }
 
