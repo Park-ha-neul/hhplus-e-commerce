@@ -3,13 +3,15 @@ package kr.hhplus.be.server.interfaces.api.order;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import kr.hhplus.be.server.application.facade.OrderFacade;
-import kr.hhplus.be.server.application.facade.OrderFacadeRequest;
 import kr.hhplus.be.server.domain.order.Order;
 import kr.hhplus.be.server.domain.order.OrderService;
 import kr.hhplus.be.server.support.ApiMessage;
 import kr.hhplus.be.server.support.CustomApiResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,16 +22,13 @@ import java.util.List;
 @Tag(name = "📌 주문 관리", description = "주문 관련 API 모음")
 public class OrderController {
 
-    private final OrderFacade orderFacade;
     private final OrderService orderService;
 
     @PostMapping("/")
     @Operation(summary = "주문 등록", description = "주문을 등록합니다.")
     public CustomApiResponse create(@RequestBody OrderRequest request){
         try{
-            OrderFacadeRequest orderFacadeRequest = request.toRequest();
-            Order order = orderFacade.order(orderFacadeRequest);
-            OrderResponse response = OrderResponse.fromOrder(order);
+            OrderResponse response = OrderResponse.from(orderService.create(request.toCommand()));
             return CustomApiResponse.success(ApiMessage.CREATE_SUCCESS, response);
         } catch(IllegalArgumentException e){
             return CustomApiResponse.badRequest(e.getMessage());
@@ -41,9 +40,10 @@ public class OrderController {
     @GetMapping("/")
     @Operation(summary = "주문 목록 조회", description = "상태에 따른 주문 목록 조회가 가능합니다.")
     public CustomApiResponse getOrders(
-            @RequestParam(value = "status", required = false) Order.OrderStatus status
+            @RequestParam(value = "status", required = false) Order.OrderStatus status,
+            @PageableDefault(size = 10, sort = "orderId", direction = Sort.Direction.DESC) Pageable pageable
     ){
-        List<Order> data = orderService.getOrders(status);
+        Page<Order> data = orderService.getOrders(status, pageable);
         List<OrderResponse> response = OrderResponse.fromOrderList(data);
         return CustomApiResponse.success(ApiMessage.VIEW_SUCCESS, response);
     }

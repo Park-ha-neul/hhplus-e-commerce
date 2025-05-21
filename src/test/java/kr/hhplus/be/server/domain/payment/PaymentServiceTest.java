@@ -1,8 +1,9 @@
 package kr.hhplus.be.server.domain.payment;
 
+import kr.hhplus.be.server.domain.coupon.Coupon;
+import kr.hhplus.be.server.domain.coupon.CouponRepository;
 import kr.hhplus.be.server.domain.order.Order;
 import kr.hhplus.be.server.domain.order.OrderRepository;
-import kr.hhplus.be.server.domain.order.OrderItem;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -27,38 +28,39 @@ public class PaymentServiceTest {
     @Mock
     private OrderRepository orderRepository;
 
+    @Mock
+    private CouponRepository couponRepository;
+
     @Test
-    void 결제_생성_성공() {
+    void 결제_미리보기_성공() {
         // given
-        Long userId = 1L;
-        Long couponId = 2L;
         Long orderId = 1L;
-        Long totalPrice = 5000L;
+        Long couponId = 2L;
+        long totalPrice = 10_000L;
+        long discountedPrice = 8_000L;
 
-        OrderItem item1 = OrderItem.builder().quantity(1L).price(3000L).build();
-        OrderItem item2 = OrderItem.builder().quantity(1L).price(2000L).build();
-        List<OrderItem> items = List.of(item1, item2);
+        PaymentPreviewCommand command = new PaymentPreviewCommand(orderId);
 
-        Order order = Order.builder()
-                .userId(userId)
-                .couponId(couponId)
-                .build();
-        order.getItems().addAll(items);
+        // mock order
+        Order order = mock(Order.class);
+        when(order.getCouponId()).thenReturn(couponId);
+        when(order.calculateTotalPrice()).thenReturn(totalPrice);
+        when(order.getOrderId()).thenReturn(orderId);
 
+        // mock coupon
+        Coupon coupon = mock(Coupon.class);
+        when(coupon.calculateDiscount(totalPrice)).thenReturn(discountedPrice);
+
+        // mock repository responses
         when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
-        Payment payment = new Payment(order.getOrderId(), 5000L);
-        when(paymentRepository.save(any(Payment.class))).thenReturn(payment);
-
-        PaymentCommand command = new PaymentCommand(orderId);
+        when(couponRepository.findById(couponId)).thenReturn(Optional.of(coupon));
 
         // when
-        PaymentResult result = paymentService.create(command);
+        PaymentPreviewResult result = paymentService.preview(command);
 
         // then
-        assertNotNull(result);
-        assertEquals(totalPrice, result.getTotalAmount());
-        assertEquals(Payment.PaymentStatus.PENDING, result.getStatus());
-        verify(paymentRepository).save(any(Payment.class));
+        assertEquals(orderId, result.getOrderId());
+        assertEquals(Long.valueOf(discountedPrice), result.getPreviewAmount());
     }
 
     @Test

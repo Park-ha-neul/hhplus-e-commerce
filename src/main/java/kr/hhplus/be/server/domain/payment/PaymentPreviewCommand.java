@@ -5,7 +5,6 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public class PaymentCommand {
+public class PaymentPreviewCommand {
     private Long orderId;
-    private Long totalAmount;
 }

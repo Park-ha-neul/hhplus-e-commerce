@@ -32,14 +32,14 @@ public class PaymentControllerTest {
     private OrderRepository orderRepository;
 
     @Test
-    void 결제_생성_성공() throws Exception {
+    void 결제_금액_미리보기_성공() throws Exception {
         // Given
         Order order = new Order(1L, 1L);
         orderRepository.save(order);
-        PaymentCommand command = new PaymentCommand(order.getOrderId());
+        PaymentPreviewCommand command = new PaymentPreviewCommand(order.getOrderId());
 
         mockMvc.perform(
-                post("/payments/")
+                post("/payments/preview")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(new ObjectMapper().writeValueAsString(command))
                 )
@@ -52,12 +52,15 @@ public class PaymentControllerTest {
     void 결제_진행_성공() throws Exception {
         // Given
         Long orderId = 1L;
-        Payment payment = new Payment(orderId, 1000L);
-        paymentRepository.save(payment);
-        Long paymentId = payment.getPaymentId();
+        Long totalAmount = 1000L;
+        PaymentCommand command = new PaymentCommand(orderId, totalAmount);
 
         // When & Then
-        mockMvc.perform(post("/payments/{payment_id}", paymentId))
+        mockMvc.perform(
+                post("/payments/")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(new ObjectMapper().writeValueAsString(command))
+                )
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(ResponseCode.SUCCESS))
                 .andExpect(jsonPath("$.message").value(ApiMessage.PAYMENT_SUCCESS));

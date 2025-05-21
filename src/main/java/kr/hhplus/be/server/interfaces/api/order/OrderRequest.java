@@ -1,8 +1,6 @@
 package kr.hhplus.be.server.interfaces.api.order;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import kr.hhplus.be.server.application.facade.OrderFacadeRequest;
-import kr.hhplus.be.server.application.facade.OrderItemFacadeRequest;
 import kr.hhplus.be.server.domain.order.OrderCommand;
 import kr.hhplus.be.server.domain.order.OrderItemCommand;
 import lombok.AllArgsConstructor;
@@ -27,7 +25,8 @@ public class OrderRequest {
         List<OrderItemCommand> orderItemCommands = this.orderItems.stream()
                 .map(item -> new OrderItemCommand(
                         item.getProductId(),
-                        item.getQuantity()
+                        item.getQuantity(),
+                        item.getPrice()
                 ))
                 .collect(Collectors.toList());
 
@@ -35,21 +34,6 @@ public class OrderRequest {
                 this.getUserId(),
                 this.getUserCouponId(),
                 orderItemCommands
-        );
-    }
-
-    public OrderFacadeRequest toRequest(){
-        List<OrderItemFacadeRequest> orderItemFacadeRequests = this.orderItems.stream()
-                .map(item -> new OrderItemFacadeRequest(
-                        item.getProductId(),
-                        item.getQuantity()
-                ))
-                .collect(Collectors.toList());
-
-        return new OrderFacadeRequest(
-                this.getUserId(),
-                this.getUserCouponId(),
-                orderItemFacadeRequests
         );
     }
 }

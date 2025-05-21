@@ -66,4 +66,22 @@ public class OrderTest {
         assertEquals(1, order.getItems().size()); // 아이템이 제대로 추가되었는지 확인
         assertTrue(order.getItems().contains(orderItem));
     }
+
+    @Test
+    void 주문_총_금액_계산(){
+        Long userId = 1L;
+        Long couponId = 2L;
+        Order order = new Order(userId, couponId);
+        Long productId = 1L;
+        Long quantity = 10L;
+        Long price = 2000L;
+        OrderItem orderItem = new OrderItem(order, productId, quantity, price);
+
+        // when
+        order.addOrderItem(orderItem);
+        Long totalAmount = order.calculateTotalPrice();
+
+        // then
+        assertEquals(Long.valueOf(20000L), totalAmount);
+    }
 }
