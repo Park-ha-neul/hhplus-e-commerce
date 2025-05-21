@@ -3,7 +3,7 @@ package kr.hhplus.be.server.interfaces.api.payment;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import kr.hhplus.be.server.application.facade.ProcessPayment;
+import kr.hhplus.be.server.application.facade.PaymentFacade;
 import kr.hhplus.be.server.domain.payment.*;
 import kr.hhplus.be.server.support.ApiMessage;
 import kr.hhplus.be.server.support.CustomApiResponse;
@@ -19,7 +19,7 @@ import java.util.List;
 public class PaymentController {
 
     private final PaymentService paymentService;
-    private final ProcessPayment processPayment;
+    private final PaymentFacade paymentFacade;
 
     @PostMapping("/preview")
     @Operation(summary = "결제 금액 preview", description = "주문 완료 후 결제 전 총 금액 확인")
@@ -37,11 +37,15 @@ public class PaymentController {
         }
     }
 
-    @PostMapping("/{payment_id}")
-    @Operation(summary = "결제 진행", description = "결제를 진행합니다.")
-    public CustomApiResponse processPayment(@PathVariable("payment_id") @Parameter(name = "paymentId", description = "결제 ID") Long paymentId){
-        Payment data = processPayment.processPayment(paymentId);
-        return CustomApiResponse.success(ApiMessage.PAYMENT_SUCCESS);
+    @PostMapping("/")
+    @Operation(summary = "결제 진행", description = "주문 id, 결제 금액 기반으로 결제 생싱 및 결제를 진행합니다.")
+    public CustomApiResponse processPayment(
+            @RequestBody PaymentRequest request
+    ){
+        PaymentCommand command = request.toCommand();
+        Payment data = paymentFacade.processPayment(command.getOrderId(), command.getTotalAmount());
+        PaymentResponse response = PaymentResponse.fromPayment(data);
+        return CustomApiResponse.success(ApiMessage.PAYMENT_SUCCESS, response);
     }
 
     @GetMapping("/")

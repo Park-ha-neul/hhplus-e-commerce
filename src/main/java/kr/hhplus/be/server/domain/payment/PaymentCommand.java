@@ -7,4 +7,5 @@ import lombok.Getter;
 @AllArgsConstructor
 public class PaymentCommand {
     private Long orderId;
+    private Long totalAmount;
 }

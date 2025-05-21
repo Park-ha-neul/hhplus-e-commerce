@@ -9,13 +9,18 @@ import lombok.NoArgsConstructor;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
-public class PaymentCreateRequest {
+public class PaymentRequest {
+
     @Schema(description = "주문 ID", example = "123")
     private Long orderId;
 
+    @Schema(description = "할인 적용한 총 금액", example = "40000")
+    private Long totalAmount;
+
     public PaymentCommand toCommand(){
         return new PaymentCommand(
-                this.orderId
+                this.orderId,
+                this.totalAmount
         );
     }
 }
