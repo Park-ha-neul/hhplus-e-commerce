@@ -3,6 +3,8 @@ package kr.hhplus.be.server.infrastructure.order;
 import kr.hhplus.be.server.domain.order.Order;
 import kr.hhplus.be.server.domain.order.OrderRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -35,12 +37,12 @@ public class OrderRepositoryImpl implements OrderRepository {
     }
 
     @Override
-    public List<Order> findByStatus(Order.OrderStatus status) {
-        return orderJpaRepository.findByStatus(status);
+    public Page<Order> findByStatus(Order.OrderStatus status, Pageable pageable) {
+        return orderJpaRepository.findByStatus(status, pageable);
     }
 
     @Override
-    public List<Order> findAll() {
-        return orderJpaRepository.findAll();
+    public Page<Order> findAll(Pageable pageable) {
+        return orderJpaRepository.findAll(pageable);
     }
 }

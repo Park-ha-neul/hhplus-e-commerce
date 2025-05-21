@@ -2,8 +2,6 @@ package kr.hhplus.be.server.interfaces.api.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
-import kr.hhplus.be.server.application.facade.OrderFacadeRequest;
-import kr.hhplus.be.server.application.facade.OrderItemFacadeRequest;
 import kr.hhplus.be.server.domain.coupon.Coupon;
 import kr.hhplus.be.server.domain.coupon.CouponRepository;
 import kr.hhplus.be.server.domain.coupon.UserCoupon;
@@ -13,6 +11,8 @@ import kr.hhplus.be.server.domain.order.OrderRepository;
 import kr.hhplus.be.server.domain.product.ProductErrorCode;
 import kr.hhplus.be.server.domain.user.User;
 import kr.hhplus.be.server.domain.user.UserRepository;
+import kr.hhplus.be.server.interfaces.api.order.OrderItemRequest;
+import kr.hhplus.be.server.interfaces.api.order.OrderRequest;
 import kr.hhplus.be.server.support.ApiMessage;
 import kr.hhplus.be.server.support.ResponseCode;
 import org.junit.jupiter.api.Test;
@@ -63,11 +63,11 @@ public class OrderControllerTest {
         userCouponRepository.save(userCoupon);
         Long userCouponId = userCoupon.getUserCouponId();
 
-        OrderItemFacadeRequest orderItemFacadeRequest1 = new OrderItemFacadeRequest(1L, 1L);
-        OrderItemFacadeRequest orderItemFacadeRequest2 = new OrderItemFacadeRequest(2L, 1L);
-        List<OrderItemFacadeRequest> items = List.of(orderItemFacadeRequest1, orderItemFacadeRequest2);
-
-        OrderFacadeRequest request = new OrderFacadeRequest(userId, userCouponId, items);
+        OrderRequest request = new OrderRequest(
+                userId,
+                userCouponId,
+                List.of(new OrderItemRequest(1L, 2L))
+        );
 
         // 실제 요청 및 응답 검증
         mockMvc.perform(post("/orders/")
@@ -89,11 +89,11 @@ public class OrderControllerTest {
         userCouponRepository.save(userCoupon);
         Long userCouponId = userCoupon.getUserCouponId();
 
-        OrderItemFacadeRequest orderItemFacadeRequest1 = new OrderItemFacadeRequest(1L, 200L);
-        OrderItemFacadeRequest orderItemFacadeRequest2 = new OrderItemFacadeRequest(2L, 300L);
-        List<OrderItemFacadeRequest> items = List.of(orderItemFacadeRequest1, orderItemFacadeRequest2);
-
-        OrderFacadeRequest request = new OrderFacadeRequest(userId, userCouponId, items);
+        OrderRequest request = new OrderRequest(
+                userId,
+                userCouponId,
+                List.of(new OrderItemRequest(1L, 200000000L))
+        );
 
         // 실제 요청 및 응답 검증
         mockMvc.perform(post("/orders/")
@@ -106,14 +106,11 @@ public class OrderControllerTest {
 
     @Test
     void 주문_목록_조회_성공() throws Exception {
-        Order order = new Order(1L, 1L);
-        orderRepository.save(order);
-        Order order1 = new Order(2L, 2L);
-        orderRepository.save(order1);
-
-        mockMvc.perform(get("/orders/"))
+        mockMvc.perform(get("/orders/")
+                        .param("status", "SUCCESS"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(ResponseCode.SUCCESS));
+                .andExpect(jsonPath("$.code").value(ResponseCode.SUCCESS))
+                .andExpect(jsonPath("$.message").value(ApiMessage.VIEW_SUCCESS));
     }
 
     @Test

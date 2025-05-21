@@ -1,5 +1,6 @@
 package kr.hhplus.be.server.domain.order;
 
+import jakarta.transaction.Transactional;
 import kr.hhplus.be.server.domain.coupon.*;
 import kr.hhplus.be.server.domain.product.Product;
 import kr.hhplus.be.server.domain.product.ProductRepository;
@@ -7,6 +8,8 @@ import kr.hhplus.be.server.domain.product.ProductErrorCode;
 import kr.hhplus.be.server.domain.user.User;
 import kr.hhplus.be.server.domain.user.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -21,6 +24,7 @@ public class OrderService {
     private final UserCouponRepository userCouponRepository;
     private final ProductRepository productRepository;
 
+    @Transactional
     public OrderResult create(OrderCommand command){
         User user = userRepository.findById(command.getUserId());
         Optional<UserCoupon> userCoupon = userCouponRepository.findById(command.getUserCouponId());
@@ -44,11 +48,11 @@ public class OrderService {
         return OrderResult.of(order);
     }
 
-    public List<Order> getOrders(Order.OrderStatus status){
+    public Page<Order> getOrders(Order.OrderStatus status, Pageable pageable){
         if(status == null){
-            return orderRepository.findAll();
+            return orderRepository.findAll(pageable);
         } else{
-            return orderRepository.findByStatus(status);
+            return orderRepository.findByStatus(status, pageable);
         }
     }
 

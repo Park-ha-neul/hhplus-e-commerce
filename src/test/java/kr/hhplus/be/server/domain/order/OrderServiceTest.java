@@ -11,6 +11,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Optional;
@@ -69,18 +73,39 @@ public class OrderServiceTest {
     }
 
     @Test
-    void 상태별_주문_조회() {
+    void SUCCESS_상태별_주문_조회() {
         // given
         Order order = mock(Order.class);
-        when(orderRepository.findByStatus(Order.OrderStatus.SUCCESS))
-                .thenReturn(List.of(order));
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Order> orderPage = new PageImpl<>(List.of(order), pageable, 1);
+
+        when(orderRepository.findByStatus(Order.OrderStatus.SUCCESS, pageable))
+                .thenReturn(orderPage);
 
         // when
-        List<Order> result = orderService.getOrders(Order.OrderStatus.SUCCESS);
+        Page<Order> result = orderService.getOrders(Order.OrderStatus.SUCCESS, pageable);
 
         // then
-        assertEquals(1, result.size());
-        verify(orderRepository).findByStatus(Order.OrderStatus.SUCCESS);
+        assertEquals(1, result.getTotalElements());
+        verify(orderRepository).findByStatus(Order.OrderStatus.SUCCESS, pageable);
+    }
+
+    @Test
+    void 전체_주문조회() {
+        // given
+        Order order = mock(Order.class);
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Order> orderPage = new PageImpl<>(List.of(order), pageable, 1);
+
+        when(orderRepository.findAll(pageable))
+                .thenReturn(orderPage);
+
+        // when
+        Page<Order> result = orderService.getOrders(null, pageable);
+
+        // then
+        assertEquals(1, result.getTotalElements());
+        verify(orderRepository).findAll(pageable);
     }
 
     @Test
