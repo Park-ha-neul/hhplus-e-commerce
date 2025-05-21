@@ -25,7 +25,8 @@ public class OrderRequest {
         List<OrderItemCommand> orderItemCommands = this.orderItems.stream()
                 .map(item -> new OrderItemCommand(
                         item.getProductId(),
-                        item.getQuantity()
+                        item.getQuantity(),
+                        item.getPrice()
                 ))
                 .collect(Collectors.toList());
 

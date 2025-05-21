@@ -2,9 +2,6 @@ package kr.hhplus.be.server.domain.order;
 
 import jakarta.transaction.Transactional;
 import kr.hhplus.be.server.domain.coupon.*;
-import kr.hhplus.be.server.domain.product.Product;
-import kr.hhplus.be.server.domain.product.ProductRepository;
-import kr.hhplus.be.server.domain.product.ProductErrorCode;
 import kr.hhplus.be.server.domain.user.User;
 import kr.hhplus.be.server.domain.user.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -12,6 +9,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -22,29 +20,44 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final UserRepository userRepository;
     private final UserCouponRepository userCouponRepository;
-    private final ProductRepository productRepository;
+    private final CouponRepository couponRepository;
+    private final OrderEventPublisher eventPublisher;
 
     @Transactional
     public OrderResult create(OrderCommand command){
         User user = userRepository.findById(command.getUserId());
         Optional<UserCoupon> userCoupon = userCouponRepository.findById(command.getUserCouponId());
 
+
         Order order = new Order(user.getUserId(), userCoupon.get().getCouponId());
 
         for (OrderItemCommand orderItemCommand : command.getOrderItems()) {
-            Product product = productRepository.findById(orderItemCommand.getProductId())
-                    .orElseThrow(() -> new IllegalArgumentException(ProductErrorCode.PRODUCT_NOT_FOUND.getMessage()));
-
-            if(product.getQuantity() < orderItemCommand.getQuantity()){
-                throw new IllegalArgumentException(ProductErrorCode.NOT_ENOUGH_STOCK.getMessage());
-            }
-            product.decreaseBalance(orderItemCommand.getQuantity());
-            OrderItem orderItem = new OrderItem(order, orderItemCommand.getProductId(), orderItemCommand.getQuantity(), product.getPrice());
+            OrderItem orderItem = new OrderItem(order, orderItemCommand.getProductId(), orderItemCommand.getQuantity(), orderItemCommand.getPrice());
             order.addOrderItem(orderItem);
         }
 
+        long totalAmount = command.getOrderItems().stream()
+                .mapToLong(item -> item.getPrice() * item.getQuantity())
+                .sum();
+
+        long couponDiscount = userCoupon
+                .flatMap(uc -> couponRepository.findById(order.getCouponId()))
+                .map(coupon -> coupon.calculateDiscount(totalAmount))
+                .orElse(0L);
+
+        long payAmount = totalAmount - couponDiscount;
+
         orderRepository.save(order);
-        order.complete();
+
+        eventPublisher.publishOrderCreatedEvent(new OrderCreatedEvent(
+                order.getOrderId(),
+                order.getCouponId(),
+                order.getUserId(),
+                payAmount,
+                order.getItems(),
+                LocalDateTime.now())
+        );
+
         return OrderResult.of(order);
     }
 

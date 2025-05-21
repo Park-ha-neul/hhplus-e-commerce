@@ -66,7 +66,7 @@ public class OrderControllerTest {
         OrderRequest request = new OrderRequest(
                 userId,
                 userCouponId,
-                List.of(new OrderItemRequest(1L, 2L))
+                List.of(new OrderItemRequest(1L, 2L, 1000L))
         );
 
         // 실제 요청 및 응답 검증
@@ -92,7 +92,7 @@ public class OrderControllerTest {
         OrderRequest request = new OrderRequest(
                 userId,
                 userCouponId,
-                List.of(new OrderItemRequest(1L, 200000000L))
+                List.of(new OrderItemRequest(1L, 200000000L, 3000L))
         );
 
         // 실제 요청 및 응답 검증

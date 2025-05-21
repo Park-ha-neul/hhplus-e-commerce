@@ -1,5 +1,6 @@
 package kr.hhplus.be.server.domain.order;
 
+import kr.hhplus.be.server.domain.coupon.CouponRepository;
 import kr.hhplus.be.server.domain.coupon.UserCoupon;
 import kr.hhplus.be.server.domain.coupon.UserCouponRepository;
 import kr.hhplus.be.server.domain.product.Product;
@@ -40,6 +41,12 @@ public class OrderServiceTest {
     @Mock
     private OrderRepository orderRepository;
 
+    @Mock
+    private CouponRepository couponRepository;
+
+    @Mock
+    private OrderEventPublisher eventPublisher;
+
     @Test
     void 주문_생성_성공() {
         // given
@@ -50,7 +57,7 @@ public class OrderServiceTest {
         Long quantity = 3L;
         long price = 1000L;
 
-        OrderItemCommand itemCommand = new OrderItemCommand(productId, quantity);
+        OrderItemCommand itemCommand = new OrderItemCommand(productId, quantity, price);
         OrderCommand command = new OrderCommand(userId, couponId, List.of(itemCommand));
 
         User user = User.builder().userName("하늘").adminYn(true).build();
@@ -59,7 +66,6 @@ public class OrderServiceTest {
 
         when(userRepository.findById(userId)).thenReturn(user);
         when(userCouponRepository.findById(couponId)).thenReturn(Optional.of(userCoupon));
-        when(productRepository.findById(productId)).thenReturn(Optional.of(product));
         when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> invocation.getArgument(0)); // save stub
 
         // when
