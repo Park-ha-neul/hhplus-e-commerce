@@ -6,12 +6,14 @@ import kr.hhplus.be.server.domain.payment.Payment;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+
 @Service
 @RequiredArgsConstructor
 public class PaymentFacade {
 
     private final OrderService orderService;
-    private final PaymentCompletedEventPublisher paymentCompletedEventPublisher;
+    private final PaymentCompletedEventPublisher eventPublisher;
 
     public Payment processPayment(Long orderId, Long totalAmount){
 
@@ -22,12 +24,7 @@ public class PaymentFacade {
             payment.complete();
             order.complete();
 
-            paymentCompletedEventPublisher.publishPaymentEvent(new PaymentCompletedEvent(
-                    orderId,
-                    order.getUserId(),
-                    order.getItems(),
-                    order.getUpdatedDate()
-            ));
+            publishPaymentCompletedEvent(order);
         }catch (Exception e){
             String failReason = e.getMessage();
             payment.fail(failReason);
@@ -35,5 +32,12 @@ public class PaymentFacade {
         }
 
         return payment;
+    }
+
+    private void publishPaymentCompletedEvent(Order order){
+        eventPublisher.publish(
+                new PaymentCompletedPopularProductEvent(order.getOrderId()),
+                new PaymentCompletedExternalPlatformEvent(order.getOrderId(), order.getUserId(), order.getItems(), LocalDateTime.now())
+        );
     }
 }

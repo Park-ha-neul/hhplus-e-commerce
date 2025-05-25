@@ -1,6 +1,6 @@
 package kr.hhplus.be.server.application.listener;
 
-import kr.hhplus.be.server.application.facade.PaymentCompletedEvent;
+import kr.hhplus.be.server.application.facade.PaymentCompletedPopularProductEvent;
 import kr.hhplus.be.server.domain.order.OrderItem;
 import kr.hhplus.be.server.domain.order.OrderService;
 import kr.hhplus.be.server.domain.product.PopularProductService;
@@ -24,7 +24,7 @@ public class PaymentCompletedPopularProductHandler {
 
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    public void onPaymentCompleted(PaymentCompletedEvent event) {
+    public void onPaymentCompleted(PaymentCompletedPopularProductEvent event) {
         List<OrderItem> items = orderService.getOrder(event.getOrderId()).getItems();
         for (OrderItem item : items) {
             popularProductService.incrementProductScore(item.getProductId(), item.getQuantity());

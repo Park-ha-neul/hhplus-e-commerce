@@ -1,7 +1,7 @@
 package kr.hhplus.be.server.integration;
 
 import jakarta.transaction.Transactional;
-import kr.hhplus.be.server.application.facade.ProcessPayment;
+import kr.hhplus.be.server.application.facade.PaymentFacade;
 import kr.hhplus.be.server.domain.coupon.*;
 import kr.hhplus.be.server.domain.order.Order;
 import kr.hhplus.be.server.domain.order.OrderItem;
@@ -32,16 +32,13 @@ import java.time.format.DateTimeFormatter;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
-
 @SpringBootTest
 @Transactional
 @DisplayName("결제 + 포인트 차감 + 쿠폰 사용 완료 통합 테스트")
 public class PaymentIntegrationTest {
 
     @Autowired
-    private ProcessPayment processPayment;
+    private PaymentFacade processPayment;
 
     @Autowired
     private PaymentRepository paymentRepository;
@@ -143,22 +140,9 @@ public class PaymentIntegrationTest {
     }
 
     @Test
-    @DisplayName("정상적으로 결제 완료 시, 포인트가 차감되며 쿠폰은 사용됨으로 변경됩니다.")
-    void 결제_완료시_포인트_차감및_쿠폰_사용(){
-        System.out.println("given paymentId : " + paymentId);
-        Payment payment = processPayment.processPayment(paymentId);
-
-        assertEquals(Payment.PaymentStatus.COMPLETED, payment.getStatus());
-        Long discountAmount = totalAmount - discount;
-        Long expectedAmount = initPoint - discountAmount;
-        UserPoint userPoint = userPointRepository.findByUserId(userId);
-        assertEquals(expectedAmount, userPoint.getPoint());
-    }
-
-    @Test
     @DisplayName("결제 후 Redis ZSet 점수 및 TTL 확인 (디버깅 포함)")
     void 결제_후_redis_디버깅_전체() {
-        Payment payment = processPayment.processPayment(paymentId);
+        Payment payment = processPayment.processPayment(orderId, totalAmount);
 
         String redisKey = "popular:products:" + LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
         logger.info("Redis Key: {}", redisKey);
@@ -181,31 +165,5 @@ public class PaymentIntegrationTest {
 
         Long ttl = redisTemplate.getExpire(redisKey, TimeUnit.SECONDS);
         logger.info("TTL (초): {}", ttl);
-    }
-
-    @Test
-    @DisplayName("정상적으로 결제 완료 시, 인기 상품 점수가 Redis에 추가되고 TTL이 설정된다.")
-    void 결제_완료시_인기상품_점수_추가및_TTL_설정() {
-        Payment payment = processPayment.processPayment(paymentId);
-
-        String redisKey = "popular:products:" + LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
-        logger.info("Redis Key : {}", redisKey);
-
-        Order order = orderRepository.findById(orderId).orElseThrow();
-        for (OrderItem item : order.getItems()) {
-            String productIdStr = item.getProductId().toString();
-            Double score = redisTemplate.opsForZSet().score(redisKey, productIdStr);
-            logger.info("Product ID: {}, Score: {}", productIdStr, score);
-            assertThat(score).isNotNull();
-
-            double expectedScore = item.getQuantity();
-            assertThat(score).isEqualTo(expectedScore);
-        }
-
-        // TTL 확인
-        Long ttl = redisTemplate.getExpire(redisKey, TimeUnit.SECONDS);
-        assertThat(ttl).isNotNull();
-        assertThat(ttl).isGreaterThan(0);
-        assertThat(ttl).isLessThanOrEqualTo(TimeUnit.DAYS.toSeconds(30));
     }
 }

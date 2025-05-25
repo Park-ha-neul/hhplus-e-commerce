@@ -11,7 +11,9 @@ public class PaymentCompletedEventPublisher {
         this.eventPublisher = eventPublisher;
     }
 
-    public void publishPaymentEvent(PaymentCompletedEvent event){
-        eventPublisher.publishEvent(event);
+    public void publish(Object... events){
+        for(Object event : events){
+            eventPublisher.publishEvent(event);
+        }
     }
 }

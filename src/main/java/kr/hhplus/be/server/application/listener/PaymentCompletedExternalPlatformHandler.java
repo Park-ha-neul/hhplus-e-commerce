@@ -1,6 +1,6 @@
 package kr.hhplus.be.server.application.listener;
 
-import kr.hhplus.be.server.application.facade.PaymentCompletedEvent;
+import kr.hhplus.be.server.application.facade.PaymentCompletedExternalPlatformEvent;
 import kr.hhplus.be.server.domain.order.OrderService;
 import kr.hhplus.be.server.infrastructure.sender.DataPlatformSender;
 import org.slf4j.Logger;
@@ -22,7 +22,7 @@ public class PaymentCompletedExternalPlatformHandler {
 
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    public void handleOrderCompleted(PaymentCompletedEvent event){
+    public void handleOrderCompleted(PaymentCompletedExternalPlatformEvent event){
         try{
             dataPlatformSender.sendOrder(event);
         } catch (Exception e){
