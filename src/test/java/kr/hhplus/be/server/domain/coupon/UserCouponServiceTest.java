@@ -123,7 +123,7 @@ public class UserCouponServiceTest {
         // Arrange
         Long userCouponId = 1L;
         UserCoupon mockUserCoupon = UserCoupon.create(1L, 1L);
-        when(userCouponRepository.findById(userCouponId)).thenReturn(Optional.of(mockUserCoupon));
+        when(userCouponRepository.findById(userCouponId)).thenReturn(mockUserCoupon);
 
         userCouponService.use(userCouponId);
 
@@ -136,7 +136,8 @@ public class UserCouponServiceTest {
     public void 쿠폰_사용_실패_존재하지_않는_쿠폰_IllegalArgumentException() {
         // Arrange
         Long userCouponId = 1L;
-        given(userCouponRepository.findById(userCouponId)).willReturn(Optional.empty());
+        UserCoupon mockUserCoupon = UserCoupon.create(1L, 1L);
+        given(userCouponRepository.findById(userCouponId)).willReturn(mockUserCoupon);
 
         // when
         IllegalArgumentException e = assertThrows(IllegalArgumentException.class, () -> {
@@ -152,7 +153,7 @@ public class UserCouponServiceTest {
         // Arrange
         Long userCouponId = 2L;
         UserCoupon usedCoupon = mock(UserCoupon.class);
-        given(userCouponRepository.findById(userCouponId)).willReturn(Optional.of(usedCoupon));
+        given(userCouponRepository.findById(userCouponId)).willReturn(usedCoupon);
         given(usedCoupon.getStatus()).willReturn(UserCoupon.UserCouponStatus.USED);
 
         // when

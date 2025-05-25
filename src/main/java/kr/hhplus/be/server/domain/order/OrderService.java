@@ -9,9 +9,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -25,40 +23,53 @@ public class OrderService {
 
     @Transactional
     public OrderResult create(OrderCommand command){
-        User user = userRepository.findById(command.getUserId());
-        Optional<UserCoupon> userCoupon = userCouponRepository.findById(command.getUserCouponId());
+        User user = findUser(command.getUserId());
+        UserCoupon userCoupon = findUserCoupon(command.getUserCouponId());
 
+        Order order = createOrder(user, userCoupon, command.getOrderItems());
+        long payAmount = calculatePayAmount(order, userCoupon);
 
-        Order order = new Order(user.getUserId(), userCoupon.get().getCouponId());
+        orderRepository.save(order);
+        publishOrderCreatedEvent(order, payAmount);
 
-        for (OrderItemCommand orderItemCommand : command.getOrderItems()) {
-            OrderItem orderItem = new OrderItem(order, orderItemCommand.getProductId(), orderItemCommand.getQuantity(), orderItemCommand.getPrice());
-            order.addOrderItem(orderItem);
+        return OrderResult.of(order);
+    }
+
+    private User findUser(Long userId) {
+        return userRepository.findById(userId);
+    }
+
+    private UserCoupon findUserCoupon(Long couponId) {
+        return userCouponRepository.findById(couponId);
+    }
+
+    private Order createOrder(User user, UserCoupon coupon, List<OrderItemCommand> itemCommands) {
+        Order order = new Order(user.getUserId(), coupon.getCouponId());
+        for (OrderItemCommand cmd : itemCommands) {
+            order.addOrderItem(new OrderItem(order, cmd.getProductId(), cmd.getQuantity(), cmd.getPrice()));
         }
+        return order;
+    }
 
-        long totalAmount = command.getOrderItems().stream()
-                .mapToLong(item -> item.getPrice() * item.getQuantity())
+    private long calculatePayAmount(Order order, UserCoupon userCoupon) {
+        long totalAmount = order.getItems().stream()
+                .mapToLong(item -> item.getUnitPrice() * item.getQuantity())
                 .sum();
 
-        long couponDiscount = userCoupon
-                .flatMap(uc -> couponRepository.findById(order.getCouponId()))
+        long couponDiscount = couponRepository.findById(order.getCouponId())
                 .map(coupon -> coupon.calculateDiscount(totalAmount))
                 .orElse(0L);
 
-        long payAmount = totalAmount - couponDiscount;
+        return totalAmount - couponDiscount;
+    }
 
-        orderRepository.save(order);
-
-        eventPublisher.publishOrderCreatedEvent(new OrderCreatedEvent(
-                order.getOrderId(),
-                order.getCouponId(),
-                order.getUserId(),
-                payAmount,
-                order.getItems(),
-                LocalDateTime.now())
+    private void publishOrderCreatedEvent(Order order, long payAmount) {
+        eventPublisher.publish(
+                new OrderCreatedStockDeductEvent(order.getItems()),
+                new OrderCreatedPointUsedEvent(order.getUserId(), payAmount),
+                new OrderCreatedCouponUsedEvent(order.getCouponId()),
+                new OrderCreatedPaymentEvent(order.getOrderId())
         );
-
-        return OrderResult.of(order);
     }
 
     public Page<Order> getOrders(Order.OrderStatus status, Pageable pageable){

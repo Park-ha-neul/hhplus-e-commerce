@@ -1,6 +1,6 @@
 package kr.hhplus.be.server.application.listener;
 
-import kr.hhplus.be.server.domain.order.OrderCreatedEvent;
+import kr.hhplus.be.server.domain.order.OrderCreatedStockDeductEvent;
 import kr.hhplus.be.server.domain.order.OrderItem;
 import kr.hhplus.be.server.domain.product.ProductService;
 import org.springframework.stereotype.Component;
@@ -17,7 +17,7 @@ public class OrderCreatedStockHandler {
     }
 
     @TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
-    public void handleOrderCompleted(OrderCreatedEvent event){
+    public void handleOrderCompleted(OrderCreatedStockDeductEvent event){
         for (OrderItem item : event.getItems()) {
             productService.decreaseProductStock(item.getProductId(), item.getQuantity());
         }

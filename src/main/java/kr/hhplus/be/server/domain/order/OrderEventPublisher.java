@@ -13,7 +13,9 @@ public class OrderEventPublisher {
     }
 
 
-    public void publishOrderCreatedEvent(OrderCreatedEvent orderCreatedEvent) {
-        eventPublisher.publishEvent(orderCreatedEvent);
+    public void publish(Object... events){
+        for(Object event : events){
+            eventPublisher.publishEvent(event);
+        }
     }
 }

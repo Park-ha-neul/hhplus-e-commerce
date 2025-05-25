@@ -1,7 +1,7 @@
 package kr.hhplus.be.server.application.listener;
 
 import kr.hhplus.be.server.domain.coupon.UserCouponService;
-import kr.hhplus.be.server.domain.order.OrderCreatedEvent;
+import kr.hhplus.be.server.domain.order.OrderCreatedCouponUsedEvent;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
@@ -17,7 +17,7 @@ public class OrderCreatedCouponHandler {
     }
 
     @TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
-    public void handleOrderCreatedEvent(OrderCreatedEvent event) {
+    public void handleOrderCreatedEvent(OrderCreatedCouponUsedEvent event) {
         Long couponId = event.getCouponId();
         userCouponService.use(couponId);
     }

@@ -1,6 +1,6 @@
 package kr.hhplus.be.server.application.listener;
 
-import kr.hhplus.be.server.domain.order.OrderCreatedEvent;
+import kr.hhplus.be.server.domain.order.OrderCreatedPaymentEvent;
 import kr.hhplus.be.server.domain.payment.PaymentPreviewCommand;
 import kr.hhplus.be.server.domain.payment.PaymentService;
 import org.springframework.stereotype.Component;
@@ -17,7 +17,7 @@ public class OrderCreatedPaymentHandler {
     }
 
     @TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
-    public void handleOrderCreatedEvent(OrderCreatedEvent event) {
+    public void handleOrderCreatedEvent(OrderCreatedPaymentEvent event) {
         Long orderId = event.getOrderId();
         paymentService.preview(new PaymentPreviewCommand(orderId));
     }
