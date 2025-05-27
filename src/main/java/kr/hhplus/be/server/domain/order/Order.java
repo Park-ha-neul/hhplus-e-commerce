@@ -57,4 +57,10 @@ public class Order extends BaseEntity {
     public void addOrderItem(OrderItem orderItem) {
         this.items.add(orderItem);
     }
+
+    public long calculateTotalPrice(){
+        return items.stream()
+                .mapToLong(OrderItem::getTotalPrice)
+                .sum();
+    }
 }

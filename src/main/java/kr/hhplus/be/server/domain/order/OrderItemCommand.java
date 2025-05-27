@@ -8,4 +8,5 @@ import lombok.Getter;
 public class OrderItemCommand {
     private Long productId;
     private Long quantity;
+    private Long price;
 }

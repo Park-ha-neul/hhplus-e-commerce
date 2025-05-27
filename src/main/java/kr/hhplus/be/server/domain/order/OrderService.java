@@ -1,16 +1,15 @@
 package kr.hhplus.be.server.domain.order;
 
+import jakarta.transaction.Transactional;
 import kr.hhplus.be.server.domain.coupon.*;
-import kr.hhplus.be.server.domain.product.Product;
-import kr.hhplus.be.server.domain.product.ProductRepository;
-import kr.hhplus.be.server.domain.product.ProductErrorCode;
 import kr.hhplus.be.server.domain.user.User;
 import kr.hhplus.be.server.domain.user.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -19,36 +18,65 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final UserRepository userRepository;
     private final UserCouponRepository userCouponRepository;
-    private final ProductRepository productRepository;
+    private final CouponRepository couponRepository;
+    private final OrderEventPublisher eventPublisher;
 
+    @Transactional
     public OrderResult create(OrderCommand command){
-        User user = userRepository.findById(command.getUserId());
-        Optional<UserCoupon> userCoupon = userCouponRepository.findById(command.getUserCouponId());
+        User user = findUser(command.getUserId());
+        UserCoupon userCoupon = findUserCoupon(command.getUserCouponId());
 
-        Order order = new Order(user.getUserId(), userCoupon.get().getCouponId());
-
-        for (OrderItemCommand orderItemCommand : command.getOrderItems()) {
-            Product product = productRepository.findById(orderItemCommand.getProductId())
-                    .orElseThrow(() -> new IllegalArgumentException(ProductErrorCode.PRODUCT_NOT_FOUND.getMessage()));
-
-            if(product.getQuantity() < orderItemCommand.getQuantity()){
-                throw new IllegalArgumentException(ProductErrorCode.NOT_ENOUGH_STOCK.getMessage());
-            }
-            product.decreaseBalance(orderItemCommand.getQuantity());
-            OrderItem orderItem = new OrderItem(order, orderItemCommand.getProductId(), orderItemCommand.getQuantity(), product.getPrice());
-            order.addOrderItem(orderItem);
-        }
+        Order order = createOrder(user, userCoupon, command.getOrderItems());
+        long payAmount = calculatePayAmount(order, userCoupon);
 
         orderRepository.save(order);
-        order.complete();
+        publishOrderCreatedEvent(order, payAmount);
+
         return OrderResult.of(order);
     }
 
-    public List<Order> getOrders(Order.OrderStatus status){
+    private User findUser(Long userId) {
+        return userRepository.findById(userId);
+    }
+
+    private UserCoupon findUserCoupon(Long couponId) {
+        return userCouponRepository.findById(couponId);
+    }
+
+    private Order createOrder(User user, UserCoupon coupon, List<OrderItemCommand> itemCommands) {
+        Order order = new Order(user.getUserId(), coupon.getCouponId());
+        for (OrderItemCommand cmd : itemCommands) {
+            order.addOrderItem(new OrderItem(order, cmd.getProductId(), cmd.getQuantity(), cmd.getPrice()));
+        }
+        return order;
+    }
+
+    private long calculatePayAmount(Order order, UserCoupon userCoupon) {
+        long totalAmount = order.getItems().stream()
+                .mapToLong(item -> item.getUnitPrice() * item.getQuantity())
+                .sum();
+
+        long couponDiscount = couponRepository.findById(order.getCouponId())
+                .map(coupon -> coupon.calculateDiscount(totalAmount))
+                .orElse(0L);
+
+        return totalAmount - couponDiscount;
+    }
+
+    private void publishOrderCreatedEvent(Order order, long payAmount) {
+        eventPublisher.publish(
+                new OrderCreatedStockDeductEvent(order.getItems()),
+                new OrderCreatedPointUsedEvent(order.getUserId(), payAmount),
+                new OrderCreatedCouponUsedEvent(order.getCouponId()),
+                new OrderCreatedPaymentEvent(order.getOrderId())
+        );
+    }
+
+    public Page<Order> getOrders(Order.OrderStatus status, Pageable pageable){
         if(status == null){
-            return orderRepository.findAll();
+            return orderRepository.findAll(pageable);
         } else{
-            return orderRepository.findByStatus(status);
+            return orderRepository.findByStatus(status, pageable);
         }
     }
 

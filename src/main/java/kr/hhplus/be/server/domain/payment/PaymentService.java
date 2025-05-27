@@ -1,10 +1,10 @@
 package kr.hhplus.be.server.domain.payment;
 
-import jakarta.transaction.Transactional;
+import kr.hhplus.be.server.domain.coupon.Coupon;
+import kr.hhplus.be.server.domain.coupon.CouponRepository;
 import kr.hhplus.be.server.domain.order.Order;
 import kr.hhplus.be.server.domain.order.OrderRepository;
 import kr.hhplus.be.server.domain.order.OrderErrorCode;
-import kr.hhplus.be.server.domain.order.OrderItem;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -18,6 +18,7 @@ public class PaymentService {
 
     private final PaymentRepository paymentRepository;
     private final OrderRepository orderRepository;
+    private final CouponRepository couponRepository;
 
     public Payment getPayment(Long paymentId){
         return paymentRepository.findById(paymentId)
@@ -48,18 +49,16 @@ public class PaymentService {
         }
     }
 
-    @Transactional
-    public PaymentResult create(PaymentCommand command){
+    public PaymentPreviewResult preview(PaymentPreviewCommand command){
         Order order = orderRepository.findById(command.getOrderId())
                 .orElseThrow(() -> new IllegalArgumentException(OrderErrorCode.ORDER_ITEM_NOT_FOUND.getMessage()));
 
-        Long totalAmount = order.getItems()
-                .stream()
-                .mapToLong(OrderItem::getTotalPrice)
-                .sum();
-        Payment payment = new Payment(command.getOrderId(), totalAmount);
-        paymentRepository.save(payment);
-        return PaymentResult.of(payment);
+        Coupon coupon = couponRepository.findById(order.getCouponId())
+                .orElseThrow(() -> new IllegalArgumentException(kr.hhplus.be.server.domain.coupon.ErrorCode.COUPON_NOT_FOUND.getMessage()));
+
+        long finalAmount = coupon.calculateDiscount(order.calculateTotalPrice());
+
+        return new PaymentPreviewResult(order.getOrderId(), finalAmount);
     }
 
     public void updateStatusComplete(Long paymentId){

@@ -105,10 +105,7 @@ public class UserCouponService {
     }
 
     public UserCoupon getUserCoupon(Long userCouponId){
-        UserCoupon userCoupon = userCouponRepository.findById(userCouponId)
-                .orElseThrow(() -> new IllegalArgumentException(ErrorCode.USER_COUPON_NOT_FOUND.getMessage()));
-
-        return userCoupon;
+        return userCouponRepository.findById(userCouponId);
     }
 
     public void useWithLock(Long userCouponId){
@@ -134,8 +131,7 @@ public class UserCouponService {
 
     @Transactional
     public void use(Long userCouponId){
-        UserCoupon userCoupon = userCouponRepository.findById(userCouponId)
-                .orElseThrow(() -> new IllegalArgumentException(ErrorCode.USER_COUPON_NOT_FOUND.getMessage()));
+        UserCoupon userCoupon = userCouponRepository.findById(userCouponId);
 
         if (userCoupon.getStatus() == UserCoupon.UserCouponStatus.USED) {
             throw new IllegalArgumentException(ErrorCode.ALREADY_USED_COUPON.getMessage());

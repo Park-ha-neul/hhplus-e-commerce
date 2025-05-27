@@ -1,12 +1,13 @@
 package kr.hhplus.be.server.infrastructure.coupon;
 
+import jakarta.persistence.EntityNotFoundException;
+import kr.hhplus.be.server.domain.coupon.ErrorCode;
 import kr.hhplus.be.server.domain.coupon.UserCoupon;
 import kr.hhplus.be.server.domain.coupon.UserCouponRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.Optional;
 
 @Repository
 @RequiredArgsConstructor
@@ -19,8 +20,9 @@ public class UserCouponRepositoryImpl implements UserCouponRepository {
     }
 
     @Override
-    public Optional<UserCoupon> findById(Long userCouponId) {
-        return userCouponJpaRepository.findById(userCouponId);
+    public UserCoupon findById(Long userCouponId) {
+        return userCouponJpaRepository.findById(userCouponId)
+                .orElseThrow(() -> new EntityNotFoundException(ErrorCode.COUPON_NOT_FOUND.getMessage()));
     }
 
     @Override
