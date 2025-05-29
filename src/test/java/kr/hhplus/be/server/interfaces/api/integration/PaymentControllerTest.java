@@ -1,17 +1,24 @@
 package kr.hhplus.be.server.interfaces.api.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import kr.hhplus.be.server.infrastructure.kafka.PaymentCompletedExternalPlatformMessage;
 import kr.hhplus.be.server.domain.order.Order;
 import kr.hhplus.be.server.domain.order.OrderRepository;
 import kr.hhplus.be.server.domain.payment.*;
+import kr.hhplus.be.server.infrastructure.sender.DataPlatformSender;
 import kr.hhplus.be.server.support.ApiMessage;
 import kr.hhplus.be.server.support.ResponseCode;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.testcontainers.shaded.org.awaitility.Awaitility;
+
+import java.util.concurrent.TimeUnit;
 
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -30,6 +37,35 @@ public class PaymentControllerTest {
 
     @Autowired
     private OrderRepository orderRepository;
+
+    @MockBean
+    private DataPlatformSender dataPlatformSender;
+
+    @Test
+    public void 결제완료_시_외부플랫폼이벤트_kafka전송됨() throws Exception {
+        // Given
+        Long orderId = 1L;
+        Long totalAmount = 1000L;
+        PaymentCommand command = new PaymentCommand(orderId, totalAmount);
+
+        // When & Then (HTTP 응답 검증)
+        mockMvc.perform(
+                        post("/payments/")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(new ObjectMapper().writeValueAsString(command))
+                )
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(ResponseCode.SUCCESS))
+                .andExpect(jsonPath("$.message").value(ApiMessage.PAYMENT_SUCCESS));
+
+        // Then (Kafka 메시지 수신 확인)
+        Awaitility.await()
+                .atMost(5, TimeUnit.SECONDS)
+                .untilAsserted(() ->
+                        Mockito.verify(dataPlatformSender, Mockito.atLeastOnce())
+                                .sendOrder(Mockito.any(PaymentCompletedExternalPlatformMessage.class))
+                );
+    }
 
     @Test
     void 결제_금액_미리보기_성공() throws Exception {

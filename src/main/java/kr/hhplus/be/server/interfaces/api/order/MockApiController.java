@@ -1,7 +1,7 @@
 package kr.hhplus.be.server.interfaces.api.order;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
-import kr.hhplus.be.server.application.facade.PaymentCompletedExternalPlatformEvent;
+import kr.hhplus.be.server.infrastructure.kafka.PaymentCompletedExternalPlatformMessage;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,8 +20,8 @@ public class MockApiController {
     private static final Logger log = LoggerFactory.getLogger(MockApiController.class);
 
     @PostMapping("/order")
-    public ResponseEntity<Void> receiveOrder(@RequestBody PaymentCompletedExternalPlatformEvent event) {
-        log.info("📦 Mock API received order event: {}", event);
+    public ResponseEntity<Void> receiveOrder(@RequestBody PaymentCompletedExternalPlatformMessage message) {
+        log.info("📦 Mock API received order message: {}", message);
         return ResponseEntity.ok().build();
     }
 }

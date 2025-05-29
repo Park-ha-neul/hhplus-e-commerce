@@ -90,7 +90,7 @@ public class CouponServiceCacheTest {
         Long userId = 1L;
         Long couponId = 1L;
 
-        UserCouponResult result = userCouponService.issue(userId, couponId);
+        userCouponService.issue(userId, couponId);
 
         String stockListKey = "coupon:" + couponId;
         Long redisListSize = redisTemplate.opsForList().size(stockListKey);
@@ -102,7 +102,6 @@ public class CouponServiceCacheTest {
         logger.info("Redis Set Key : {}", issuedSetKey);
         logger.info("쿠폰 발급된 사용자 목록 : {}", members);
 
-        assertNotNull(result);
         assertTrue(redisTemplate.opsForSet().isMember("coupon:1:users", String.valueOf(userId)));
 
         Long ttlSeconds = redisTemplate.getExpire(issuedSetKey, TimeUnit.SECONDS);

@@ -86,9 +86,8 @@ public class UserController {
             @RequestBody IssueUserCouponRequest request
     ){
         try{
-            UserCouponResult userCouponResult = userCouponService.issueWithLock(userId, request.getCouponId());
-            UserCouponResponse response = UserCouponResponse.from(userCouponResult);
-            return CustomApiResponse.create(ApiMessage.ISSUED_SUCCESS, response);
+            userCouponService.issue(userId, request.getCouponId());
+            return CustomApiResponse.create(ApiMessage.ISSUED_SUCCESS);
         } catch(Exception e){
             return CustomApiResponse.badRequest(ApiMessage.INVALID_COUPON);
         }

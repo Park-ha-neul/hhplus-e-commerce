@@ -68,7 +68,7 @@ public class CouponUseConcurrencyTest {
 
         latch.await();
 
-        UserCoupon updatedCoupon = userCouponRepository.findById(userCouponId).orElseThrow();
+        UserCoupon updatedCoupon = userCouponRepository.findById(userCouponId);
         assertEquals(updatedCoupon.getStatus(), UserCoupon.UserCouponStatus.USED);
         assertEquals(3, failCount.get());
     }

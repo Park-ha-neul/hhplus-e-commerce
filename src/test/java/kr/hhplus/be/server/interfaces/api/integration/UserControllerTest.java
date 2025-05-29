@@ -13,21 +13,32 @@ import kr.hhplus.be.server.interfaces.api.user.IssueUserCouponRequest;
 import kr.hhplus.be.server.interfaces.api.user.UserCreateRequest;
 import kr.hhplus.be.server.support.ApiMessage;
 import kr.hhplus.be.server.support.ResponseCode;
+import org.apache.kafka.clients.admin.AdminClient;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.SpyBean;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.testcontainers.shaded.org.awaitility.Awaitility;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -56,6 +67,33 @@ public class UserControllerTest {
 
     @Autowired
     private PaymentRepository paymentRepository;
+
+    @SpyBean
+    private UserCouponService userCouponService;
+
+    @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
+
+    @Autowired
+    private AdminClient adminClient;
+
+    private Long couponId;
+    private Logger log = LoggerFactory.getLogger(UserControllerTest.class);
+
+    @BeforeEach
+    void setupRedis() {
+        Coupon coupon = new Coupon("쿠폰 1", 2L, 0L, Coupon.DiscountType.RATE, 10L, null, Coupon.CouponStatus.ACTIVE, LocalDateTime.now(), LocalDateTime.now().plusDays(7));
+        couponRepository.save(coupon);
+
+        couponId = coupon.getCouponId();
+        String redisKey = "coupon:" + couponId;
+
+        redisTemplate.delete(redisKey);
+        redisTemplate.delete(redisKey + ":users");
+
+        redisTemplate.opsForList().leftPush(redisKey, "1");
+        redisTemplate.opsForList().leftPush(redisKey, "1");
+    }
 
     @Test
     void 사용자_조회_성공() throws Exception {
@@ -131,10 +169,7 @@ public class UserControllerTest {
         userRepository.save(user);
         Long userId = user.getUserId();
 
-        Coupon coupon = new Coupon("쿠폰 1", 2000L, 0L, Coupon.DiscountType.RATE, 10L, null, Coupon.CouponStatus.ACTIVE, LocalDateTime.now(), LocalDateTime.now().plusDays(7));
-        couponRepository.save(coupon);
-
-        IssueUserCouponRequest request = new IssueUserCouponRequest(coupon.getCouponId());
+        IssueUserCouponRequest request = new IssueUserCouponRequest(couponId);
 
         // when & then
         mockMvc.perform(post("/users/{userId}/coupons", userId)
@@ -142,8 +177,32 @@ public class UserControllerTest {
                         .content(new ObjectMapper().writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(ResponseCode.CREATE_SUCCESS))
-                .andExpect(jsonPath("$.message").value(ApiMessage.ISSUED_SUCCESS))
-                .andExpect(jsonPath("$.data.id").exists());
+                .andExpect(jsonPath("$.message").value(ApiMessage.ISSUED_SUCCESS));
+    }
+
+    @Test
+    void 쿠폰_발급_성공_및_Kafka_수신_처리_까지() throws Exception {
+        // Given: 사용자와 쿠폰 등록
+        User user = userRepository.save(new User("하늘", false));
+        Long userId = user.getUserId();
+
+        IssueUserCouponRequest request = new IssueUserCouponRequest(couponId);
+
+        // When: 발급 API 호출
+        mockMvc.perform(post("/users/{userId}/coupons", userId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(new ObjectMapper().writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(ResponseCode.CREATE_SUCCESS))
+                .andExpect(jsonPath("$.message").value(ApiMessage.ISSUED_SUCCESS));
+
+        // Then: Kafka를 통해 실제로 수신(consume)되었는지 검증
+        Awaitility.await()
+                .atMost(5, TimeUnit.SECONDS)
+                .untilAsserted(() ->
+                        verify(userCouponService, atLeastOnce())
+                                .issueToUser(eq(userId), eq(couponId))
+                );
     }
 
     @Test
