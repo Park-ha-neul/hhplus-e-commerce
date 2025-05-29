@@ -8,11 +8,15 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.redis.core.ListOperations;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.SetOperations;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.*;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
@@ -24,6 +28,15 @@ public class UserCouponServiceTest {
 
     @Mock
     private UserCouponRepository userCouponRepository;
+
+    @Mock
+    private RedisTemplate<String, Object> redisTemplate;
+
+    @Mock
+    private SetOperations<String, Object> setOperations;
+
+    @Mock
+    private ListOperations<String, Object> listOperations;
 
     @Mock
     private UserRepository userRepository;
@@ -40,25 +53,30 @@ public class UserCouponServiceTest {
         mockUser = new User("하늘", true);
 
         // Mocking Coupon
-        mockCoupon = new Coupon("Test Coupon", 100L, 0L, Coupon.DiscountType.RATE, 10L, 0L, Coupon.CouponStatus.ACTIVE, null, null);
+        mockCoupon = new Coupon("Test Coupon", 100L, 0L, Coupon.DiscountType.RATE, 10L, 0L, Coupon.CouponStatus.ACTIVE, LocalDateTime.now(), LocalDateTime.now().plusDays(7));
+        when(redisTemplate.opsForSet()).thenReturn(setOperations);
+        when(redisTemplate.opsForList()).thenReturn(listOperations);
     }
 
     @Test
-    public void 쿠폰_발급_성공() {
-        // Arrange
+    void 쿠폰_발급_성공() {
         Long userId = 1L;
         Long couponId = 1L;
-        when(userRepository.findById(userId)).thenReturn(mockUser);
+        String issuedSetKey = "coupon:" + couponId + ":users";
+        String stockListKey = "coupon:" + couponId;
+
+        // Set에 정상적으로 추가된 경우
+        when(setOperations.add(eq(issuedSetKey), eq(String.valueOf(userId)))).thenReturn(1L);
+        // 재고 리스트에서 하나 꺼냄
+        when(listOperations.leftPop(stockListKey)).thenReturn("dummyCouponStock");
+
         when(couponRepository.findById(couponId)).thenReturn(Optional.of(mockCoupon));
-        when(userCouponRepository.save(any(UserCoupon.class))).thenReturn(UserCoupon.create(userId, couponId));
 
-        // Act
-        UserCouponResult userCouponResult = userCouponService.issue(userId, couponId);
+        userCouponService.issue(userId, couponId);
 
-        // Assert
-        assertNotNull(userCouponResult);
-        assertEquals(userId, userCouponResult.getUserId());
-        assertEquals(couponId, userCouponResult.getCouponId());
+        verify(setOperations).add(issuedSetKey, String.valueOf(userId));
+        verify(listOperations).leftPop(stockListKey);
+        verify(redisTemplate).expire(eq(issuedSetKey), anyLong(), eq(TimeUnit.SECONDS));
     }
 
     @Test
