@@ -4,11 +4,11 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
 @Component
-public class PaymentCompletedProducer {
+public class PaymentProducer {
 
     private final KafkaTemplate<String, PaymentCompletedExternalPlatformMessage> kafkaTemplate;
 
-    public PaymentCompletedProducer(KafkaTemplate<String, PaymentCompletedExternalPlatformMessage> kafkaTemplate) {
+    public PaymentProducer(KafkaTemplate<String, PaymentCompletedExternalPlatformMessage> kafkaTemplate) {
         this.kafkaTemplate = kafkaTemplate;
     }
 

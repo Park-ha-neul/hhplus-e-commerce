@@ -5,7 +5,7 @@ import kr.hhplus.be.server.domain.order.OrderService;
 import kr.hhplus.be.server.domain.payment.Payment;
 import kr.hhplus.be.server.infrastructure.kafka.OrderItemDto;
 import kr.hhplus.be.server.infrastructure.kafka.PaymentCompletedExternalPlatformMessage;
-import kr.hhplus.be.server.infrastructure.kafka.PaymentCompletedProducer;
+import kr.hhplus.be.server.infrastructure.kafka.PaymentProducer;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -18,7 +18,7 @@ public class PaymentFacade {
 
     private final OrderService orderService;
     private final PaymentCompletedEventPublisher eventPublisher;
-    private final PaymentCompletedProducer kafkaProducer;
+    private final PaymentProducer kafkaProducer;
 
     public Payment processPayment(Long orderId, Long totalAmount){
 
