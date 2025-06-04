@@ -1,7 +1,8 @@
 package kr.hhplus.be.server.domain.coupon;
 
 import jakarta.transaction.Transactional;
-import kr.hhplus.be.server.domain.user.UserRepository;
+import kr.hhplus.be.server.infrastructure.kafka.coupon.CouponIssuedMessage;
+import kr.hhplus.be.server.infrastructure.kafka.coupon.CouponIssuedProducer;
 import lombok.RequiredArgsConstructor;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
@@ -19,12 +20,12 @@ import java.util.stream.Collectors;
 public class UserCouponService {
 
     private final UserCouponRepository userCouponRepository;
-    private final UserRepository userRepository;
     private final CouponRepository couponRepository;
     private final RedissonClient redissonClient;
     private final RedisTemplate<String, Object> redisTemplate;
+    private final CouponIssuedProducer kafkaProducer;
 
-    public UserCouponResult issueWithLock(Long userId, Long couponId){
+    public void issueWithLock(Long userId, Long couponId){
         String lockKey = "lock:coupon:" + couponId;
         RLock lock = redissonClient.getLock(lockKey);
 
@@ -34,7 +35,7 @@ public class UserCouponService {
             try{
                 if(lock.tryLock(0, 1, TimeUnit.SECONDS)) {
                     try{
-                        return issue(userId, couponId);
+                        issue(userId, couponId);
                     }finally {
                         if(lock.isHeldByCurrentThread()){
                             lock.unlock();
@@ -51,7 +52,16 @@ public class UserCouponService {
     }
 
     @Transactional
-    public UserCouponResult issue(Long userId, Long couponId){
+    public void issue(Long userId, Long couponId){
+        Coupon coupon = couponRepository.findById(couponId)
+                .orElseThrow(() -> new IllegalArgumentException(ErrorCode.COUPON_NOT_FOUND.getMessage()));
+
+        // kafka 발행
+        kafkaProducer.send(new CouponIssuedMessage(userId, couponId, coupon.getEndDate()));
+    }
+
+    @Transactional
+    public void issueToUser(Long userId, Long couponId){
         String issuedSetKey = "coupon:" + couponId + ":users";
         String stockListKey = "coupon:" + couponId;
         String userKey = String.valueOf(userId);
@@ -76,18 +86,15 @@ public class UserCouponService {
             throw new IllegalArgumentException(ErrorCode.INACTIVE_COUPON.getMessage());
         }
 
-        UserCoupon userCoupon = UserCoupon.create(userId, couponId);
-        userCouponRepository.save(userCoupon);
-        coupon.increaseIssuedCount();
-        couponRepository.save(coupon);
-
-        redisTemplate.opsForSet().add(issuedSetKey, String.valueOf(userId));
-
         // TTL 설정
         long secondsToExpire = Duration.between(LocalDateTime.now(), coupon.getEndDate()).getSeconds();
         redisTemplate.expire(issuedSetKey, secondsToExpire, TimeUnit.SECONDS);
 
-        return UserCouponResult.of(userCoupon);
+        UserCoupon userCoupon = UserCoupon.create(userId, couponId);
+        userCouponRepository.save(userCoupon);
+
+        coupon.increaseIssuedCount();
+        couponRepository.save(coupon);
     }
 
     public List<UserCouponResult> getUserCoupons(Long userId, UserCoupon.UserCouponStatus status){

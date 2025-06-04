@@ -3,10 +3,14 @@ package kr.hhplus.be.server.application.facade;
 import kr.hhplus.be.server.domain.order.Order;
 import kr.hhplus.be.server.domain.order.OrderService;
 import kr.hhplus.be.server.domain.payment.Payment;
+import kr.hhplus.be.server.infrastructure.kafka.OrderItemDto;
+import kr.hhplus.be.server.infrastructure.kafka.PaymentCompletedExternalPlatformMessage;
+import kr.hhplus.be.server.infrastructure.kafka.PaymentProducer;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -14,6 +18,7 @@ public class PaymentFacade {
 
     private final OrderService orderService;
     private final PaymentCompletedEventPublisher eventPublisher;
+    private final PaymentProducer kafkaProducer;
 
     public Payment processPayment(Long orderId, Long totalAmount){
 
@@ -36,8 +41,17 @@ public class PaymentFacade {
 
     private void publishPaymentCompletedEvent(Order order){
         eventPublisher.publish(
-                new PaymentCompletedPopularProductEvent(order.getOrderId()),
-                new PaymentCompletedExternalPlatformEvent(order.getOrderId(), order.getUserId(), order.getItems(), LocalDateTime.now())
+                new PaymentCompletedPopularProductEvent(order.getOrderId())
         );
+
+        PaymentCompletedExternalPlatformMessage message = new PaymentCompletedExternalPlatformMessage(
+                order.getOrderId(),
+                order.getUserId(),
+                order.getItems().stream()
+                        .map(item -> new OrderItemDto(item.getProductId(), item.getQuantity(),item.getUnitPrice()))
+                        .collect(Collectors.toList()),
+                LocalDateTime.now()
+        );
+        kafkaProducer.send(message);
     }
 }

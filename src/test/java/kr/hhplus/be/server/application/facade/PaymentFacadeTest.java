@@ -8,6 +8,7 @@ import kr.hhplus.be.server.domain.payment.Payment;
 import kr.hhplus.be.server.domain.payment.PaymentService;
 import kr.hhplus.be.server.domain.product.PopularProductService;
 import kr.hhplus.be.server.domain.user.UserPointService;
+import kr.hhplus.be.server.infrastructure.kafka.PaymentCompletedExternalPlatformMessage;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -70,7 +71,7 @@ public class PaymentFacadeTest {
         Object[] publishedEvents = eventCaptor.getValue();
         assertThat(publishedEvents).hasSize(2);
         assertThat(Arrays.stream(publishedEvents)).anyMatch(e -> e instanceof PaymentCompletedPopularProductEvent);
-        assertThat(Arrays.stream(publishedEvents)).anyMatch(e -> e instanceof PaymentCompletedExternalPlatformEvent);
+        assertThat(Arrays.stream(publishedEvents)).anyMatch(e -> e instanceof PaymentCompletedExternalPlatformMessage);
     }
 
     @Test
