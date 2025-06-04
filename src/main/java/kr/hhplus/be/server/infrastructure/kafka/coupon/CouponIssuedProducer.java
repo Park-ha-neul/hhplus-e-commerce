@@ -23,13 +23,13 @@ public class CouponIssuedProducer {
     }
 
     public void send(CouponIssuedMessage message){
-        String topic = "inside.coupon." + message.getCouponId();
+        String topic = "inside.coupon";
 
         LocalDateTime now = LocalDateTime.now();
         Long retentionMs = Duration.between(now, message.getEndDate()).toMillis();
 
         createTopicIfNotExists(topic, retentionMs);
-        kafkaTemplate.send(topic, message);
+        kafkaTemplate.send(topic, message.getCouponId().toString(), message);
     }
 
     private void createTopicIfNotExists(String topicName, Long retentionMs) {
