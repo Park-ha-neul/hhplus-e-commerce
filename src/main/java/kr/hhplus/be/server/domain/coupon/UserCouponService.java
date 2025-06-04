@@ -53,6 +53,15 @@ public class UserCouponService {
 
     @Transactional
     public void issue(Long userId, Long couponId){
+        Coupon coupon = couponRepository.findById(couponId)
+                .orElseThrow(() -> new IllegalArgumentException(ErrorCode.COUPON_NOT_FOUND.getMessage()));
+
+        // kafka 발행
+        kafkaProducer.send(new CouponIssuedMessage(userId, couponId, coupon.getEndDate()));
+    }
+
+    @Transactional
+    public void issueToUser(Long userId, Long couponId){
         String issuedSetKey = "coupon:" + couponId + ":users";
         String stockListKey = "coupon:" + couponId;
         String userKey = String.valueOf(userId);
@@ -81,17 +90,9 @@ public class UserCouponService {
         long secondsToExpire = Duration.between(LocalDateTime.now(), coupon.getEndDate()).getSeconds();
         redisTemplate.expire(issuedSetKey, secondsToExpire, TimeUnit.SECONDS);
 
-        // kafka 발행
-        kafkaProducer.send(new CouponIssuedMessage(userId, couponId, coupon.getEndDate()));
-    }
-
-    @Transactional
-    public void issueToUser(Long userId, Long couponId){
         UserCoupon userCoupon = UserCoupon.create(userId, couponId);
         userCouponRepository.save(userCoupon);
 
-        Coupon coupon = couponRepository.findById(couponId)
-                .orElseThrow(() -> new IllegalArgumentException(ErrorCode.COUPON_NOT_FOUND.getMessage()));
         coupon.increaseIssuedCount();
         couponRepository.save(coupon);
     }
