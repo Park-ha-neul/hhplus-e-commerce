@@ -59,6 +59,11 @@ dependencies {
 	// kafka
 	implementation("org.springframework.kafka:spring-kafka:3.3.3")
 
+	// prometheus
+	implementation("org.springframework.boot:spring-boot-starter-actuator:3.4.3")
+	implementation("io.micrometer:micrometer-registry-prometheus:1.14.5")
+
+
 	testImplementation("org.junit.jupiter:junit-jupiter:5.10.0")
 	testImplementation("org.mockito:mockito-core:5.11.0")
 }
